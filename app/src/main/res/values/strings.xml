@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Autodroid</string>
+    <string name="app_name">Autoroid</string>
+    <string name="accessibility_service_description">Autoroid accessibility service for automation features</string>
 </resources>
