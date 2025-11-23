@@ -1,4 +1,4 @@
-package com.aditsyal.autoroid.ui.theme
+package com.aditsyal.autodroid.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

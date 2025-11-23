@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Autoroid"
+rootProject.name = "Autodroid"
 include(":app")
  

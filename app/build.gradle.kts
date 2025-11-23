@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.aditsyal.autoroid"
+    namespace = "com.aditsyal.autodroid"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.aditsyal.autoroid"
+        applicationId = "com.aditsyal.autodroid"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
