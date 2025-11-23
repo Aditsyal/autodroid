@@ -28,7 +28,7 @@ class AutomationForegroundService : Service() {
         Timber.d("AutomationForegroundService: Started")
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Autoroid")
+            .setContentTitle("Autodroid")
             .setContentText("Monitoring automations...")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setPriority(NotificationCompat.PRIORITY_LOW)
