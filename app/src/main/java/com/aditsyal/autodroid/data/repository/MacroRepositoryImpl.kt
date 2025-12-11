@@ -19,7 +19,6 @@ import com.aditsyal.autodroid.domain.repository.MacroRepository
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -91,6 +90,10 @@ class MacroRepositoryImpl @Inject constructor(
 
     override suspend fun toggleMacro(macroId: Long, enabled: Boolean) {
         macroDao.toggleMacro(macroId, enabled)
+    }
+
+    override suspend fun updateExecutionInfo(macroId: Long, timestamp: Long) {
+        macroDao.updateExecutionInfo(macroId, timestamp)
     }
 
     override suspend fun addTrigger(macroId: Long, trigger: TriggerDTO): Long {

@@ -14,6 +14,7 @@ interface MacroRepository {
     suspend fun updateMacro(macro: MacroDTO)
     suspend fun deleteMacro(macroId: Long)
     suspend fun toggleMacro(macroId: Long, enabled: Boolean)
+    suspend fun updateExecutionInfo(macroId: Long, timestamp: Long)
     
     suspend fun addTrigger(macroId: Long, trigger: TriggerDTO): Long
     suspend fun updateTrigger(trigger: TriggerDTO)
