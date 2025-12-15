@@ -17,7 +17,7 @@ import com.aditsyal.autodroid.data.models.MacroDTO
 import com.aditsyal.autodroid.data.models.TriggerDTO
 import com.aditsyal.autodroid.domain.repository.MacroRepository
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.aditsyal.autodroid.data.models.ConflictDTO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -154,6 +154,26 @@ class MacroRepositoryImpl @Inject constructor(
 
     override fun getExecutionLogs(macroId: Long): Flow<List<ExecutionLogDTO>> {
         return executionLogDao.getExecutionLogsByMacroId(macroId).map { logs ->
+            logs.map { it.toDTO() }
+        }
+    }
+
+    override fun getMacroConflicts(): Flow<List<ConflictDTO>> {
+        return macroDao.getAllMacros().map { macros ->
+            macros.groupBy { it.name }
+                .filter { (_, list) -> list.size > 1 }
+                .map { (name, list) ->
+                    ConflictDTO(
+                        macroId = list.first().id,
+                        macroName = name,
+                        duplicateCount = list.size
+                    )
+                }
+        }
+    }
+
+    override fun getAllExecutionLogs(): Flow<List<ExecutionLogDTO>> {
+        return executionLogDao.getAllExecutionLogs().map { logs ->
             logs.map { it.toDTO() }
         }
     }

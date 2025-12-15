@@ -31,5 +31,6 @@ interface MacroRepository {
     
     suspend fun logExecution(log: ExecutionLogDTO)
     fun getExecutionLogs(macroId: Long): Flow<List<ExecutionLogDTO>>
+    fun getMacroConflicts(): Flow<List<ConflictDTO>>
 }
 

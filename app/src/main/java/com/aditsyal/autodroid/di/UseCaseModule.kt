@@ -1,7 +1,9 @@
 package com.aditsyal.autodroid.di
 
 import com.aditsyal.autodroid.domain.repository.MacroRepository
+import com.aditsyal.autodroid.domain.usecase.CheckPermissionsUseCase
 import com.aditsyal.autodroid.domain.usecase.CheckTriggersUseCase
+import com.aditsyal.autodroid.domain.usecase.ManageBatteryOptimizationUseCase
 import com.aditsyal.autodroid.domain.usecase.CreateMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.DeleteMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.ExecuteMacroUseCase
@@ -61,6 +63,16 @@ object UseCaseModule {
         executeMacroUseCase: ExecuteMacroUseCase
     ): CheckTriggersUseCase =
         CheckTriggersUseCase(repository, executeMacroUseCase)
+
+    @Provides
+    @Singleton
+    fun provideCheckPermissionsUseCase(): CheckPermissionsUseCase =
+        CheckPermissionsUseCase()
+
+    @Provides
+    @Singleton
+    fun provideManageBatteryOptimizationUseCase(): ManageBatteryOptimizationUseCase =
+        ManageBatteryOptimizationUseCase()
 }
 
 

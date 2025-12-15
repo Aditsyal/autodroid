@@ -15,7 +15,7 @@ class AutodroidApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        
+
         // Initialize Timber for logging
         // Check if app is debuggable instead of using BuildConfig
         if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {

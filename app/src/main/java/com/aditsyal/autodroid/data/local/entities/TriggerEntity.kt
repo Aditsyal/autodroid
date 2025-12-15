@@ -15,7 +15,10 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["macroId"])]
+    indices = [
+        Index(value = ["macroId"]),
+        Index(value = ["enabled", "triggerType"])
+    ]
 )
 data class TriggerEntity(
     @PrimaryKey(autoGenerate = true)
