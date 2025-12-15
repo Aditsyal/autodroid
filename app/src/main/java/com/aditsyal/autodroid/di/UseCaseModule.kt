@@ -1,6 +1,7 @@
 package com.aditsyal.autodroid.di
 
 import com.aditsyal.autodroid.domain.repository.MacroRepository
+import com.aditsyal.autodroid.domain.usecase.CheckTriggersUseCase
 import com.aditsyal.autodroid.domain.usecase.CreateMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.DeleteMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.ExecuteMacroUseCase
@@ -52,6 +53,14 @@ object UseCaseModule {
     @Singleton
     fun provideExecuteMacroUseCase(repository: MacroRepository): ExecuteMacroUseCase =
         ExecuteMacroUseCase(repository)
+
+    @Provides
+    @Singleton
+    fun provideCheckTriggersUseCase(
+        repository: MacroRepository,
+        executeMacroUseCase: ExecuteMacroUseCase
+    ): CheckTriggersUseCase =
+        CheckTriggersUseCase(repository, executeMacroUseCase)
 }
 
 

@@ -13,6 +13,9 @@ interface TriggerDao {
     @Query("SELECT * FROM triggers WHERE macroId = :macroId")
     fun getTriggersByMacroId(macroId: Long): Flow<List<TriggerEntity>>
 
+    @Query("SELECT * FROM triggers WHERE triggerType = :triggerType AND enabled = 1")
+    suspend fun getEnabledTriggersByType(triggerType: String): List<TriggerEntity>
+
     @Query("SELECT * FROM triggers WHERE id = :triggerId")
     suspend fun getTriggerById(triggerId: Long): TriggerEntity?
 

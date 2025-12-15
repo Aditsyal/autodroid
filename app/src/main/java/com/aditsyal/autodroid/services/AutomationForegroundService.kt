@@ -8,8 +8,13 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.aditsyal.autodroid.R
+import com.aditsyal.autodroid.workers.MacroTriggerWorker
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 
 class AutomationForegroundService : Service() {
 
@@ -36,6 +41,14 @@ class AutomationForegroundService : Service() {
             .build()
 
         startForeground(NOTIFICATION_ID, notification)
+
+        // Ensure background worker is scheduled
+        val workRequest = PeriodicWorkRequestBuilder<MacroTriggerWorker>(15, TimeUnit.MINUTES).build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "MacroTriggerWork",
+            ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
 
         return START_STICKY
     }

@@ -14,6 +14,7 @@ data class MacroDTO(
 
 data class TriggerDTO(
     val id: Long = 0,
+    val macroId: Long = 0,
     val triggerType: String,
     val triggerConfig: Map<String, Any> = emptyMap()
 )

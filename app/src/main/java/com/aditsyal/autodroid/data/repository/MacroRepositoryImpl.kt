@@ -112,6 +112,10 @@ class MacroRepositoryImpl @Inject constructor(
         entity?.let { triggerDao.deleteTrigger(it) }
     }
 
+    override suspend fun getEnabledTriggersByType(triggerType: String): List<TriggerDTO> {
+        return triggerDao.getEnabledTriggersByType(triggerType).map { it.toDTO() }
+    }
+
     override suspend fun addAction(macroId: Long, action: ActionDTO): Long {
         return actionDao.insertAction(action.toEntity(macroId))
     }
@@ -183,6 +187,7 @@ class MacroRepositoryImpl @Inject constructor(
 
     private fun TriggerEntity.toDTO() = TriggerDTO(
         id = id,
+        macroId = macroId,
         triggerType = triggerType,
         triggerConfig = parseJsonToMap(triggerConfig)
     )
