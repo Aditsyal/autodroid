@@ -55,8 +55,6 @@
             android:exported="false"
             android:enabled="true">
             <intent-filter>
-                <action android:name="android.intent.action.BATTERY_CHANGED" />
-                <action android:name="android.intent.action.AIRPLANE_MODE" />
                 <action android:name="android.intent.action.DEVICE_STORAGE_LOW" />
             </intent-filter>
         </receiver>

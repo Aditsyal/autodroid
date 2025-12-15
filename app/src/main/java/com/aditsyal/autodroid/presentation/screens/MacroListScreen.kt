@@ -35,11 +35,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aditsyal.autodroid.presentation.components.MacroCard
+import com.aditsyal.autodroid.presentation.viewmodels.MacroListUiState
 import com.aditsyal.autodroid.presentation.viewmodels.MacroListViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun MacroListScreen(
     onAddMacro: () -> Unit,
     onEditMacro: (Long) -> Unit,
@@ -60,6 +60,28 @@ fun MacroListScreen(
         }
     }
 
+    MacroListScreenContent(
+        uiState = uiState,
+        snackbarHostState = snackbarHostState,
+        onAddMacro = onAddMacro,
+        onEditMacro = onEditMacro,
+        onToggleMacro = viewModel::toggleMacro,
+        onExecuteMacro = viewModel::executeMacro,
+        onDeleteMacro = viewModel::deleteMacro
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MacroListScreenContent(
+    uiState: MacroListUiState,
+    snackbarHostState: SnackbarHostState,
+    onAddMacro: () -> Unit,
+    onEditMacro: (Long) -> Unit,
+    onToggleMacro: (Long, Boolean) -> Unit,
+    onExecuteMacro: (Long) -> Unit,
+    onDeleteMacro: (Long) -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -113,10 +135,10 @@ fun MacroListScreen(
                         items(uiState.macros) { macro ->
                             MacroCard(
                                 macro = macro,
-                                onToggle = { id, enabled -> viewModel.toggleMacro(id, enabled) },
-                                onExecute = { id -> viewModel.executeMacro(id) },
+                                onToggle = onToggleMacro,
+                                onExecute = onExecuteMacro,
                                 onEdit = onEditMacro,
-                                onDelete = { id -> viewModel.deleteMacro(id) }
+                                onDelete = onDeleteMacro
                             )
                         }
                     }
