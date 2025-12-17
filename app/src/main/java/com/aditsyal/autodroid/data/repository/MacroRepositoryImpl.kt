@@ -114,6 +114,10 @@ class MacroRepositoryImpl @Inject constructor(
         entity?.let { triggerDao.deleteTrigger(it) }
     }
 
+    override suspend fun getTriggerById(triggerId: Long): TriggerDTO? {
+        return triggerDao.getTriggerById(triggerId)?.toDTO()
+    }
+
     override suspend fun getEnabledTriggersByType(triggerType: String): List<TriggerDTO> {
         return triggerDao.getEnabledTriggersByType(triggerType).map { it.toDTO() }
     }

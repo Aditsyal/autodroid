@@ -11,7 +11,13 @@ class CheckTriggersUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(triggerType: String, eventData: Map<String, Any> = emptyMap()) {
         Timber.d("Checking triggers for type: $triggerType with data: $eventData")
-        val triggers = repository.getEnabledTriggersByType(triggerType)
+        
+        val firedTriggerId = eventData["fired_trigger_id"] as? Long
+        val triggers = if (firedTriggerId != null) {
+            listOfNotNull(repository.getTriggerById(firedTriggerId))
+        } else {
+            repository.getEnabledTriggersByType(triggerType)
+        }
         
         triggers.forEach { trigger ->
             if (isTriggerMatch(trigger, eventData)) {
@@ -22,14 +28,48 @@ class CheckTriggersUseCase @Inject constructor(
     }
 
     private fun isTriggerMatch(trigger: TriggerDTO, eventData: Map<String, Any>): Boolean {
-        // Simple matching logic for MVP. 
-        // Real implementation would verify conditions like "battery level < 15" vs "event level = 14".
-        // For strictly event-based (e.g. "Screen On"), matching the type is often enough if config is empty.
+        if (trigger.triggerConfig.isEmpty()) return true
         
-        if (eventData.isEmpty()) return true
+        // Example logic: if triggerConfig has "level", and eventData has "level", compare them.
+        // This supports triggers like "Battery Level < 20%"
+        trigger.triggerConfig.forEach { (key, expectedValue) ->
+            val actualValue = eventData[key]
+            if (actualValue != null) {
+                if (!compareValues(actualValue, expectedValue)) return false
+            }
+        }
         
-        // Example: if triggerConfig has "level", and eventData has "level", compare them.
-        // This is a placeholder for complex logic.
         return true
+    }
+
+    private fun compareValues(actual: Any, expected: Any?): Boolean {
+        if (expected == null) return true
+        
+        // Handle Map-based expected values (e.g., {"operator": "less_than", "value": 20})
+        if (expected is Map<*, *>) {
+            val operator = expected["operator"]?.toString()
+            val expectedValue = expected["value"]
+            
+            return when (operator) {
+                "greater_than" -> compareNumbers(actual, expectedValue) { a, b -> a > b }
+                "less_than" -> compareNumbers(actual, expectedValue) { a, b -> a < b }
+                "equals" -> actual.toString() == expectedValue?.toString()
+                "contains" -> actual.toString().contains(expectedValue?.toString() ?: "")
+                "not_equals" -> actual.toString() != expectedValue?.toString()
+                else -> actual.toString() == expectedValue?.toString()
+            }
+        }
+        
+        // Default to strict equality
+        return when {
+            actual is Number && expected is Number -> actual.toDouble() == expected.toDouble()
+            else -> actual.toString() == expected.toString()
+        }
+    }
+
+    private fun compareNumbers(actual: Any, expected: Any?, comparator: (Double, Double) -> Boolean): Boolean {
+        val a = actual.toString().toDoubleOrNull()
+        val b = expected?.toString()?.toDoubleOrNull()
+        return if (a != null && b != null) comparator(a, b) else false
     }
 }

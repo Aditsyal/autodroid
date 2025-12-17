@@ -17,8 +17,11 @@ data class ActionOption(
 )
 
 val actionOptions = listOf(
+    ActionOption("WiFi Toggle", "WIFI_TOGGLE", mapOf("enabled" to true)),
+    ActionOption("Bluetooth Toggle", "BLUETOOTH_TOGGLE", mapOf("enabled" to true)),
+    ActionOption("Volume Control", "VOLUME_CONTROL", mapOf("stream" to "STREAM_MUSIC", "level" to 50)),
+    ActionOption("Show Notification", "NOTIFICATION", mapOf("title" to "AutoDroid", "message" to "Macro Executed")),
     ActionOption("Show Toast", "SHOW_TOAST", mapOf("message" to "Hello from AutoDroid!")),
-    ActionOption("Show Notification", "SHOW_NOTIFICATION", mapOf("title" to "AutoDroid", "message" to "Macro Executed")),
     ActionOption("Log to History", "LOG_HISTORY", emptyMap())
 )
 

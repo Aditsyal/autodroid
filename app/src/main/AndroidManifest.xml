@@ -59,6 +59,16 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".receivers.TriggerAlarmReceiver"
+            android:exported="false"
+            android:enabled="true" />
+
+        <receiver
+            android:name=".receivers.GeofenceBroadcastReceiver"
+            android:exported="false"
+            android:enabled="true" />
+
         <service
             android:name=".services.AutomationForegroundService"
             android:exported="false"

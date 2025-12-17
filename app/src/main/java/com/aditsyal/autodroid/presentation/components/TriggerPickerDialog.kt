@@ -17,6 +17,11 @@ data class TriggerOption(
 )
 
 val triggerOptions = listOf(
+    TriggerOption("Time Trigger", "TIME", mapOf("time" to "12:00", "days" to listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"))),
+    TriggerOption("Location (Geofence)", "LOCATION", mapOf("latitude" to 0.0, "longitude" to 0.0, "radius" to 100.0, "transitionType" to "ENTER")),
+    TriggerOption("Shake Phone", "SENSOR_EVENT", mapOf("sensor" to "SHAKE")),
+    TriggerOption("Proximity Sensor", "SENSOR_EVENT", mapOf("sensor" to "PROXIMITY")),
+    TriggerOption("App Opened", "APP_EVENT", mapOf("packageName" to "com.android.settings")),
     TriggerOption("Battery Level", "SYSTEM_EVENT", mapOf("event" to "BATTERY_CHANGED")),
     TriggerOption("Airplane Mode", "SYSTEM_EVENT", mapOf("event" to "AIRPLANE_MODE")),
     TriggerOption("Device Storage Low", "SYSTEM_EVENT", mapOf("event" to "STORAGE_LOW")),

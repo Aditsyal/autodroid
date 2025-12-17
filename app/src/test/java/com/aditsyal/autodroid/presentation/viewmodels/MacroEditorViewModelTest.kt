@@ -1,5 +1,6 @@
 package com.aditsyal.autodroid.presentation.viewmodels
 
+import androidx.lifecycle.SavedStateHandle
 import com.aditsyal.autodroid.data.models.ActionDTO
 import com.aditsyal.autodroid.data.models.MacroDTO
 import com.aditsyal.autodroid.data.models.TriggerDTO
@@ -22,11 +23,13 @@ class MacroEditorViewModelTest {
     private val getMacroByIdUseCase = mockk<GetMacroByIdUseCase>()
     private val createMacroUseCase = mockk<CreateMacroUseCase>()
     private val updateMacroUseCase = mockk<UpdateMacroUseCase>()
+    private val savedStateHandle = SavedStateHandle()
 
     @Before
     fun setup() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         viewModel = MacroEditorViewModel(
+            savedStateHandle,
             getMacroByIdUseCase,
             createMacroUseCase,
             updateMacroUseCase

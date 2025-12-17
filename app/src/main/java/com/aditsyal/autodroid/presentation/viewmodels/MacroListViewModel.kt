@@ -92,6 +92,10 @@ class MacroListViewModel @Inject constructor(
                         isActionInFlight = false,
                         error = "Macro not found"
                     )
+                    is ExecuteMacroUseCase.ExecutionResult.Skipped -> it.copy(
+                        isActionInFlight = false,
+                        lastActionMessage = "Macro skipped: ${result.reason}"
+                    )
                 }
             }
         }

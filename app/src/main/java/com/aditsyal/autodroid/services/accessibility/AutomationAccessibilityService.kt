@@ -2,8 +2,7 @@ package com.aditsyal.autodroid.services.accessibility
 
 import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityEvent
-import com.aditsyal.autodroid.data.local.dao.TriggerDao
-import com.aditsyal.autodroid.domain.usecase.ExecuteMacroUseCase
+import com.aditsyal.autodroid.domain.usecase.CheckTriggersUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -21,10 +20,7 @@ import timber.log.Timber
 class AutomationAccessibilityService : AccessibilityService() {
 
     @Inject
-    lateinit var triggerDao: TriggerDao
-
-    @Inject
-    lateinit var executeMacroUseCase: ExecuteMacroUseCase
+    lateinit var checkTriggersUseCase: CheckTriggersUseCase
 
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val accessibilityEvents = MutableSharedFlow<AccessibilityEvent>(extraBufferCapacity = 64)
@@ -53,17 +49,14 @@ class AutomationAccessibilityService : AccessibilityService() {
 
     private suspend fun processEvent(event: AccessibilityEvent) {
         try {
-            // Fetch triggers that care about interaction/app events
-            val triggers = triggerDao.getEnabledTriggersByType("APP_EVENT")
+            val eventParams = mutableMapOf<String, Any>(
+                "packageName" to (event.packageName?.toString() ?: ""),
+                "eventType" to event.eventType,
+                "className" to (event.className?.toString() ?: "")
+            )
             
-            triggers.forEach { trigger ->
-                // TODO: Real matching logic based on triggerConfig JSON
-                // For MVP: Simple package name match if config contains it
-                if (trigger.triggerConfig.contains(event.packageName ?: "")) {
-                    Timber.d("Trigger matched: \${trigger.id} for package \${event.packageName}")
-                    executeMacroUseCase(trigger.macroId)
-                }
-            }
+            checkTriggersUseCase("APP_EVENT", eventParams)
+            
         } catch (e: Exception) {
             Timber.e(e, "Error processing accessibility event")
         }

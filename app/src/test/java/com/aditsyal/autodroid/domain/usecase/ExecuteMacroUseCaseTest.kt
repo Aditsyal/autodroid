@@ -7,6 +7,7 @@ import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.just
 import io.mockk.slot
@@ -23,12 +24,22 @@ class ExecuteMacroUseCaseTest {
     @MockK
     lateinit var repository: MacroRepository
 
+    @MockK
+    lateinit var evaluateConstraintsUseCase: EvaluateConstraintsUseCase
+
+    @MockK
+    lateinit var executeActionUseCase: ExecuteActionUseCase
+
     private lateinit var useCase: ExecuteMacroUseCase
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
-        useCase = ExecuteMacroUseCase(repository)
+        useCase = ExecuteMacroUseCase(
+            repository,
+            evaluateConstraintsUseCase,
+            executeActionUseCase
+        )
     }
 
     @After
@@ -50,6 +61,8 @@ class ExecuteMacroUseCaseTest {
     fun `invoke returns Success and logs when execution succeeds`() = runTest {
         val macro = MacroDTO(id = 1, name = "Test Macro")
         coEvery { repository.getMacroById(1) } returns macro
+        every { evaluateConstraintsUseCase(any()) } returns true
+        coEvery { executeActionUseCase(any()) } just Runs
         coEvery { repository.updateExecutionInfo(any(), any()) } just Runs
         val logSlot = slot<ExecutionLogDTO>()
         coEvery { repository.logExecution(capture(logSlot)) } just Runs
@@ -69,6 +82,7 @@ class ExecuteMacroUseCaseTest {
     fun `invoke returns Failure and logs when execution throws exception`() = runTest {
         val macro = MacroDTO(id = 1, name = "Test Macro")
         coEvery { repository.getMacroById(1) } returns macro
+        every { evaluateConstraintsUseCase(any()) } returns true
         
         val exceptionMessage = "Simulated failure"
         coEvery { repository.updateExecutionInfo(any(), any()) } throws RuntimeException(exceptionMessage)
@@ -84,5 +98,19 @@ class ExecuteMacroUseCaseTest {
         coVerify { repository.logExecution(any()) }
         assertEquals("FAILURE", logSlot.captured.executionStatus)
         assertEquals(exceptionMessage, logSlot.captured.errorMessage)
+    }
+
+    @Test
+    fun `invoke returns Skipped when constraints are not satisfied`() = runTest {
+        val macro = MacroDTO(id = 1, name = "Test Macro")
+        coEvery { repository.getMacroById(1) } returns macro
+        every { evaluateConstraintsUseCase(any()) } returns false
+
+        val result = useCase(1, false)
+
+        assertTrue(result is ExecuteMacroUseCase.ExecutionResult.Skipped)
+        assertEquals("Constraints not satisfied", (result as ExecuteMacroUseCase.ExecutionResult.Skipped).reason)
+        coVerify(exactly = 0) { repository.updateExecutionInfo(any(), any()) }
+        coVerify(exactly = 0) { executeActionUseCase(any()) }
     }
 }

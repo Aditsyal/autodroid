@@ -12,6 +12,8 @@ import com.aditsyal.autodroid.domain.usecase.GetAllMacrosUseCase
 import com.aditsyal.autodroid.domain.usecase.GetMacroByIdUseCase
 import com.aditsyal.autodroid.domain.usecase.ToggleMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.UpdateMacroUseCase
+import com.aditsyal.autodroid.domain.usecase.EvaluateConstraintsUseCase
+import com.aditsyal.autodroid.domain.usecase.ExecuteActionUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -55,8 +57,22 @@ object UseCaseModule {
 
     @Provides
     @Singleton
-    fun provideExecuteMacroUseCase(repository: MacroRepository): ExecuteMacroUseCase =
-        ExecuteMacroUseCase(repository)
+    fun provideEvaluateConstraintsUseCase(@ApplicationContext context: Context): EvaluateConstraintsUseCase =
+        EvaluateConstraintsUseCase(context)
+
+    @Provides
+    @Singleton
+    fun provideExecuteActionUseCase(@ApplicationContext context: Context): ExecuteActionUseCase =
+        ExecuteActionUseCase(context)
+
+    @Provides
+    @Singleton
+    fun provideExecuteMacroUseCase(
+        repository: MacroRepository,
+        evaluateConstraintsUseCase: EvaluateConstraintsUseCase,
+        executeActionUseCase: ExecuteActionUseCase
+    ): ExecuteMacroUseCase =
+        ExecuteMacroUseCase(repository, evaluateConstraintsUseCase, executeActionUseCase)
 
     @Provides
     @Singleton

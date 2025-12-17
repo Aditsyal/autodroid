@@ -32,7 +32,14 @@ class AutomationForegroundService : Service() {
     @Inject
     lateinit var checkTriggersUseCase: CheckTriggersUseCase
 
+    @Inject
+    lateinit var triggerManager: com.aditsyal.autodroid.automation.trigger.TriggerManager
+
+    @Inject
+    lateinit var repository: com.aditsyal.autodroid.domain.repository.MacroRepository
+
     private val serviceScope = CoroutineScope(Dispatchers.IO)
+    private var syncJob: kotlinx.coroutines.Job? = null
 
     private val dynamicReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -84,6 +91,18 @@ class AutomationForegroundService : Service() {
             addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED)
         }
         registerReceiver(dynamicReceiver, filter)
+
+        syncJob = serviceScope.launch {
+            repository.getAllMacros().collect { macros ->
+                Timber.d("Syncing ${macros.size} macros to TriggerManager")
+                triggerManager.clearAllTriggers()
+                macros.filter { it.enabled }.forEach { macro ->
+                    macro.triggers.forEach { trigger ->
+                        triggerManager.registerTrigger(trigger)
+                    }
+                }
+            }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -121,6 +140,10 @@ class AutomationForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        syncJob?.cancel()
+        serviceScope.launch {
+            triggerManager.clearAllTriggers()
+        }
         unregisterReceiver(dynamicReceiver)
         Timber.d("AutomationForegroundService: Destroyed")
     }
