@@ -7,18 +7,21 @@ import javax.inject.Inject
 class ExecuteMacroUseCase @Inject constructor(
     private val repository: MacroRepository
 ) {
-    suspend operator fun invoke(macroId: Long): ExecutionResult {
+    suspend operator fun invoke(macroId: Long, isDryRun: Boolean = false): ExecutionResult {
         val macro = repository.getMacroById(macroId) ?: return ExecutionResult.NotFound
         val startTime = System.currentTimeMillis()
 
         return runCatching {
             // TODO: Replace with real trigger/action/constraint execution once implemented.
-            repository.updateExecutionInfo(macro.id, startTime)
+            if (!isDryRun) {
+                repository.updateExecutionInfo(macro.id, startTime)
+            }
+            
             repository.logExecution(
                 ExecutionLogDTO(
                     macroId = macro.id,
                     executedAt = startTime,
-                    executionStatus = "SUCCESS",
+                    executionStatus = if (isDryRun) "SIMULATION_SUCCESS" else "SUCCESS",
                     executionDurationMs = System.currentTimeMillis() - startTime
                 )
             )
@@ -28,7 +31,7 @@ class ExecuteMacroUseCase @Inject constructor(
                 ExecutionLogDTO(
                     macroId = macro.id,
                     executedAt = startTime,
-                    executionStatus = "FAILURE",
+                    executionStatus = if (isDryRun) "SIMULATION_FAILURE" else "FAILURE",
                     errorMessage = throwable.message,
                     executionDurationMs = System.currentTimeMillis() - startTime
                 )

@@ -36,6 +36,7 @@ data class ConstraintDTO(
 data class ExecutionLogDTO(
     val id: Long = 0,
     val macroId: Long,
+    val macroName: String? = null,
     val executedAt: Long = System.currentTimeMillis(),
     val executionStatus: String,
     val errorMessage: String? = null,

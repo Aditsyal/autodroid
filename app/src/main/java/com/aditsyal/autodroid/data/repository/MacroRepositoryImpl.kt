@@ -8,7 +8,9 @@ import com.aditsyal.autodroid.data.local.dao.TriggerDao
 import com.aditsyal.autodroid.data.local.entities.ActionEntity
 import com.aditsyal.autodroid.data.local.entities.ConstraintEntity
 import com.aditsyal.autodroid.data.local.entities.ExecutionLogEntity
+import com.aditsyal.autodroid.data.local.entities.ExecutionLogWithMacro
 import com.aditsyal.autodroid.data.local.entities.MacroEntity
+import com.aditsyal.autodroid.data.local.entities.MacroWithDetails
 import com.aditsyal.autodroid.data.local.entities.TriggerEntity
 import com.aditsyal.autodroid.data.models.ActionDTO
 import com.aditsyal.autodroid.data.models.ConstraintDTO
@@ -35,33 +37,13 @@ class MacroRepositoryImpl @Inject constructor(
     private val gson = Gson()
 
     override fun getAllMacros(): Flow<List<MacroDTO>> {
-        return macroDao.getAllMacros().map { macros ->
-            macros.map { macro ->
-                val macroId = macro.id
-                val triggers = triggerDao.getTriggersByMacroId(macroId).first()
-                val actions = actionDao.getActionsByMacroId(macroId).first()
-                val constraints = constraintDao.getConstraintsByMacroId(macroId).first()
-                
-                macro.toDTO(
-                    triggers = triggers.map { it.toDTO() },
-                    actions = actions.map { it.toDTO() },
-                    constraints = constraints.map { it.toDTO() }
-                )
-            }
+        return macroDao.getAllMacrosWithDetails().map { macros ->
+            macros.map { it.toDTO() }
         }
     }
 
     override suspend fun getMacroById(macroId: Long): MacroDTO? {
-        val macro = macroDao.getMacroById(macroId) ?: return null
-        val triggers = triggerDao.getTriggersByMacroId(macroId).first()
-        val actions = actionDao.getActionsByMacroId(macroId).first()
-        val constraints = constraintDao.getConstraintsByMacroId(macroId).first()
-
-        return macro.toDTO(
-            triggers = triggers.map { it.toDTO() },
-            actions = actions.map { it.toDTO() },
-            constraints = constraints.map { it.toDTO() }
-        )
+        return macroDao.getMacroWithDetailsById(macroId)?.toDTO()
     }
 
     override suspend fun createMacro(macro: MacroDTO): Long {
@@ -69,20 +51,39 @@ class MacroRepositoryImpl @Inject constructor(
         
         // Insert related entities
         macro.triggers.forEach { trigger ->
-            triggerDao.insertTrigger(trigger.toEntity(macroId))
+            triggerDao.insertTrigger(trigger.copy(id = 0).toEntity(macroId))
         }
         macro.actions.forEach { action ->
-            actionDao.insertAction(action.toEntity(macroId))
+            actionDao.insertAction(action.copy(id = 0).toEntity(macroId))
         }
         macro.constraints.forEach { constraint ->
-            constraintDao.insertConstraint(constraint.toEntity(macroId))
+            constraintDao.insertConstraint(constraint.copy(id = 0).toEntity(macroId))
         }
         
         return macroId
     }
 
     override suspend fun updateMacro(macro: MacroDTO) {
+        val macroId = macro.id
         macroDao.updateMacro(macro.toEntity())
+        
+        // Sync triggers: Delete and re-insert for simplicity in MVP
+        triggerDao.deleteTriggersByMacroId(macroId)
+        macro.triggers.forEach { trigger ->
+            triggerDao.insertTrigger(trigger.copy(id = 0).toEntity(macroId))
+        }
+        
+        // Sync actions
+        actionDao.deleteActionsByMacroId(macroId)
+        macro.actions.forEach { action ->
+            actionDao.insertAction(action.copy(id = 0).toEntity(macroId))
+        }
+        
+        // Sync constraints
+        constraintDao.deleteConstraintsByMacroId(macroId)
+        macro.constraints.forEach { constraint ->
+            constraintDao.insertConstraint(constraint.copy(id = 0).toEntity(macroId))
+        }
     }
 
     override suspend fun deleteMacro(macroId: Long) {
@@ -174,12 +175,22 @@ class MacroRepositoryImpl @Inject constructor(
     }
 
     override fun getAllExecutionLogs(): Flow<List<ExecutionLogDTO>> {
-        return executionLogDao.getAllExecutionLogs().map { logs ->
+        return executionLogDao.getAllExecutionLogsWithMacro().map { logs ->
             logs.map { it.toDTO() }
         }
     }
 
     // Mapper extensions
+    private fun MacroWithDetails.toDTO() = macro.toDTO(
+        triggers = triggers.map { it.toDTO() },
+        actions = actions.map { it.toDTO() },
+        constraints = constraints.map { it.toDTO() }
+    )
+
+    private fun ExecutionLogWithMacro.toDTO() = log.toDTO().copy(
+        macroName = macro?.name
+    )
+
     private fun MacroEntity.toDTO(
         triggers: List<TriggerDTO>,
         actions: List<ActionDTO>,

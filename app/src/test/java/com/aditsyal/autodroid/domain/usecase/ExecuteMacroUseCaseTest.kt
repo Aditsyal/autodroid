@@ -40,7 +40,7 @@ class ExecuteMacroUseCaseTest {
     fun `invoke returns NotFound when macro does not exist`() = runTest {
         coEvery { repository.getMacroById(1) } returns null
 
-        val result = useCase(1)
+        val result = useCase(1, false)
 
         assertEquals(ExecuteMacroUseCase.ExecutionResult.NotFound, result)
         coVerify(exactly = 0) { repository.logExecution(any()) }
@@ -54,7 +54,7 @@ class ExecuteMacroUseCaseTest {
         val logSlot = slot<ExecutionLogDTO>()
         coEvery { repository.logExecution(capture(logSlot)) } just Runs
 
-        val result = useCase(1)
+        val result = useCase(1, false)
 
         assertTrue(result is ExecuteMacroUseCase.ExecutionResult.Success)
         
@@ -76,7 +76,7 @@ class ExecuteMacroUseCaseTest {
         val logSlot = slot<ExecutionLogDTO>()
         coEvery { repository.logExecution(capture(logSlot)) } just Runs
 
-        val result = useCase(1)
+        val result = useCase(1, false)
 
         assertTrue(result is ExecuteMacroUseCase.ExecutionResult.Failure)
         assertEquals(exceptionMessage, (result as ExecuteMacroUseCase.ExecutionResult.Failure).reason)

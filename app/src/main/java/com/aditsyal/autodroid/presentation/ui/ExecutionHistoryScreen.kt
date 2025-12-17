@@ -125,7 +125,7 @@ fun ExecutionLogItem(log: ExecutionLogDTO) {
             
             Column(modifier = Modifier.padding(start = 16.dp)) {
                 Text(
-                    text = "Macro ID: ${log.macroId}", // Ideally would fetch name, but DTO might not have it
+                    text = log.macroName ?: "Macro ID: ${log.macroId}",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
