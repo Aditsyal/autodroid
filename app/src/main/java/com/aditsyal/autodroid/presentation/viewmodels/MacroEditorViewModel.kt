@@ -3,6 +3,8 @@ package com.aditsyal.autodroid.presentation.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aditsyal.autodroid.data.models.MacroDTO
+import com.aditsyal.autodroid.data.models.TriggerDTO
+import com.aditsyal.autodroid.data.models.ActionDTO
 import com.aditsyal.autodroid.domain.usecase.CreateMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.GetMacroByIdUseCase
 import com.aditsyal.autodroid.domain.usecase.UpdateMacroUseCase
@@ -23,6 +25,52 @@ class MacroEditorViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(MacroEditorUiState())
     val uiState: StateFlow<MacroEditorUiState> = _uiState.asStateFlow()
+
+    fun addTrigger(trigger: TriggerDTO) {
+        _uiState.update { state ->
+            val updatedMacro = (state.currentMacro ?: createEmptyMacro()).let { 
+                it.copy(triggers = it.triggers + trigger)
+            }
+            state.copy(currentMacro = updatedMacro)
+        }
+    }
+
+    fun removeTrigger(trigger: TriggerDTO) {
+        _uiState.update { state ->
+            val updatedMacro = state.currentMacro?.let { 
+                it.copy(triggers = it.triggers - trigger)
+            }
+            state.copy(currentMacro = updatedMacro)
+        }
+    }
+
+    fun addAction(action: ActionDTO) {
+        _uiState.update { state ->
+            val updatedMacro = (state.currentMacro ?: createEmptyMacro()).let {
+                val newAction = action.copy(executionOrder = it.actions.size)
+                it.copy(actions = it.actions + newAction)
+            }
+            state.copy(currentMacro = updatedMacro)
+        }
+    }
+
+    fun removeAction(action: ActionDTO) {
+        _uiState.update { state ->
+            val updatedMacro = state.currentMacro?.let {
+                it.copy(actions = it.actions - action)
+            }
+            state.copy(currentMacro = updatedMacro)
+        }
+    }
+
+    private fun createEmptyMacro() = MacroDTO(
+        name = "",
+        description = "",
+        enabled = true,
+        triggers = emptyList(),
+        actions = emptyList(),
+        constraints = emptyList()
+    )
 
     fun loadMacro(macroId: Long) {
         if (macroId == 0L) {

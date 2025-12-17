@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -47,6 +48,7 @@ fun MacroListScreen(
     onEditMacro: (Long) -> Unit,
     onShowHistory: () -> Unit,
     onShowConflicts: () -> Unit,
+    onShowSettings: () -> Unit,
     viewModel: MacroListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -71,6 +73,7 @@ fun MacroListScreen(
         onEditMacro = onEditMacro,
         onShowHistory = onShowHistory,
         onShowConflicts = onShowConflicts,
+        onShowSettings = onShowSettings,
         onToggleMacro = viewModel::toggleMacro,
         onExecuteMacro = viewModel::executeMacro,
         onDeleteMacro = viewModel::deleteMacro
@@ -86,6 +89,7 @@ fun MacroListScreenContent(
     onEditMacro: (Long) -> Unit,
     onShowHistory: () -> Unit,
     onShowConflicts: () -> Unit,
+    onShowSettings: () -> Unit,
     onToggleMacro: (Long, Boolean) -> Unit,
     onExecuteMacro: (Long) -> Unit,
     onDeleteMacro: (Long) -> Unit
@@ -112,6 +116,9 @@ fun MacroListScreenContent(
                     }
                     IconButton(onClick = onAddMacro) {
                         Icon(Icons.Default.Add, contentDescription = "Add macro")
+                    }
+                    IconButton(onClick = onShowSettings) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
