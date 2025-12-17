@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -43,6 +45,8 @@ import kotlinx.coroutines.launch
 fun MacroListScreen(
     onAddMacro: () -> Unit,
     onEditMacro: (Long) -> Unit,
+    onShowHistory: () -> Unit,
+    onShowConflicts: () -> Unit,
     viewModel: MacroListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -65,6 +69,8 @@ fun MacroListScreen(
         snackbarHostState = snackbarHostState,
         onAddMacro = onAddMacro,
         onEditMacro = onEditMacro,
+        onShowHistory = onShowHistory,
+        onShowConflicts = onShowConflicts,
         onToggleMacro = viewModel::toggleMacro,
         onExecuteMacro = viewModel::executeMacro,
         onDeleteMacro = viewModel::deleteMacro
@@ -78,6 +84,8 @@ fun MacroListScreenContent(
     snackbarHostState: SnackbarHostState,
     onAddMacro: () -> Unit,
     onEditMacro: (Long) -> Unit,
+    onShowHistory: () -> Unit,
+    onShowConflicts: () -> Unit,
     onToggleMacro: (Long, Boolean) -> Unit,
     onExecuteMacro: (Long) -> Unit,
     onDeleteMacro: (Long) -> Unit
@@ -96,6 +104,12 @@ fun MacroListScreenContent(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onShowHistory) {
+                        Icon(Icons.Default.History, contentDescription = "View history")
+                    }
+                    IconButton(onClick = onShowConflicts) {
+                        Icon(Icons.Default.Warning, contentDescription = "Show conflicts")
+                    }
                     IconButton(onClick = onAddMacro) {
                         Icon(Icons.Default.Add, contentDescription = "Add macro")
                     }

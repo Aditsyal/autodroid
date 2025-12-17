@@ -18,6 +18,7 @@ import com.aditsyal.autodroid.data.models.TriggerDTO
 import com.aditsyal.autodroid.domain.repository.MacroRepository
 import com.google.gson.Gson
 import com.aditsyal.autodroid.data.models.ConflictDTO
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map

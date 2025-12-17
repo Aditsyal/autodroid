@@ -16,6 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.aditsyal.autodroid.data.models.ConflictDTO
 import com.aditsyal.autodroid.presentation.viewmodels.ConflictDetectorViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConflictDetectionScreen(
     onBackClick: () -> Unit,

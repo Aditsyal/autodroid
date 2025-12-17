@@ -19,7 +19,7 @@ class ExecutionHistoryViewModel @Inject constructor(
 ) : ViewModel() {
 
     val uiState: StateFlow<ExecutionHistoryUiState> = repository.getAllExecutionLogs()
-        .map { logs ->
+        .map<List<ExecutionLogDTO>, ExecutionHistoryUiState> { logs: List<ExecutionLogDTO> ->
             ExecutionHistoryUiState.Success(logs)
         }
         .catch { throwable ->

@@ -23,7 +23,7 @@ import com.aditsyal.autodroid.data.local.entities.TriggerEntity
         ConstraintEntity::class,
         ExecutionLogEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AutomationDatabase : RoomDatabase() {

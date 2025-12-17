@@ -13,6 +13,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -33,6 +34,7 @@ class AutomationAccessibilityService : AccessibilityService() {
         observeEvents()
     }
 
+    @OptIn(FlowPreview::class)
     private fun observeEvents() {
         serviceScope.launch {
             accessibilityEvents

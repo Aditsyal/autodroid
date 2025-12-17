@@ -1,5 +1,6 @@
 package com.aditsyal.autodroid.di
 
+import android.content.Context
 import com.aditsyal.autodroid.domain.repository.MacroRepository
 import com.aditsyal.autodroid.domain.usecase.CheckPermissionsUseCase
 import com.aditsyal.autodroid.domain.usecase.CheckTriggersUseCase
@@ -14,6 +15,7 @@ import com.aditsyal.autodroid.domain.usecase.UpdateMacroUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -66,13 +68,13 @@ object UseCaseModule {
 
     @Provides
     @Singleton
-    fun provideCheckPermissionsUseCase(): CheckPermissionsUseCase =
-        CheckPermissionsUseCase()
+    fun provideCheckPermissionsUseCase(@ApplicationContext context: Context): CheckPermissionsUseCase =
+        CheckPermissionsUseCase(context)
 
     @Provides
     @Singleton
-    fun provideManageBatteryOptimizationUseCase(): ManageBatteryOptimizationUseCase =
-        ManageBatteryOptimizationUseCase()
+    fun provideManageBatteryOptimizationUseCase(@ApplicationContext context: Context): ManageBatteryOptimizationUseCase =
+        ManageBatteryOptimizationUseCase(context)
 }
 
 

@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.aditsyal.autodroid.presentation.viewmodels.PermissionHandlerViewModel
 import com.aditsyal.autodroid.domain.usecase.CheckPermissionsUseCase
 import com.aditsyal.autodroid.domain.usecase.ManageBatteryOptimizationUseCase
 import com.aditsyal.autodroid.domain.usecase.PermissionDisplayInfo
@@ -119,6 +120,7 @@ private fun HandleAccessibilityPermission(
     onPermissionGranted: () -> Unit,
     onPermissionDenied: () -> Unit
 ) {
+    val context = LocalContext.current
     var showDialog by remember { mutableStateOf(true) }
 
     if (showDialog) {
@@ -135,7 +137,7 @@ private fun HandleAccessibilityPermission(
                 TextButton(
                     onClick = {
                         showDialog = false
-                        openAccessibilitySettings(LocalContext.current)
+                        openAccessibilitySettings(context)
                         // Note: We can't know immediately if user granted permission
                         // The caller should re-check permission status
                     }
