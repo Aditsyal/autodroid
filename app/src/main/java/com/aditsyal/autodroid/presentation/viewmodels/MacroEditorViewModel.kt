@@ -1,7 +1,6 @@
 package com.aditsyal.autodroid.presentation.viewmodels
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.SavedStateHandle
 import com.aditsyal.autodroid.data.models.MacroDTO
 import com.aditsyal.autodroid.data.models.TriggerDTO
 import com.aditsyal.autodroid.data.models.ActionDTO
@@ -10,6 +9,8 @@ import com.aditsyal.autodroid.domain.usecase.GetMacroByIdUseCase
 import com.aditsyal.autodroid.domain.usecase.UpdateMacroUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,49 +19,49 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class MacroEditorViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val getMacroByIdUseCase: GetMacroByIdUseCase,
     private val createMacroUseCase: CreateMacroUseCase,
     private val updateMacroUseCase: UpdateMacroUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(MacroEditorUiState())
+    private val _uiState = MutableStateFlow(MacroEditorUiState(
+        currentMacro = savedStateHandle.get<MacroDTO>("current_macro")
+    ))
     val uiState: StateFlow<MacroEditorUiState> = _uiState.asStateFlow()
 
+    private fun updateMacroState(macro: MacroDTO?) {
+        savedStateHandle["current_macro"] = macro
+        _uiState.update { it.copy(currentMacro = macro) }
+    }
+
     fun addTrigger(trigger: TriggerDTO) {
-        _uiState.update { state ->
-            val updatedMacro = (state.currentMacro ?: createEmptyMacro()).let { 
-                it.copy(triggers = it.triggers + trigger)
-            }
-            state.copy(currentMacro = updatedMacro)
+        val updatedMacro = (uiState.value.currentMacro ?: createEmptyMacro()).let { 
+            it.copy(triggers = it.triggers + trigger)
         }
+        updateMacroState(updatedMacro)
     }
 
     fun removeTrigger(trigger: TriggerDTO) {
-        _uiState.update { state ->
-            val updatedMacro = state.currentMacro?.let { 
-                it.copy(triggers = it.triggers - trigger)
-            }
-            state.copy(currentMacro = updatedMacro)
+        val updatedMacro = uiState.value.currentMacro?.let { 
+            it.copy(triggers = it.triggers - trigger)
         }
+        updateMacroState(updatedMacro)
     }
 
     fun addAction(action: ActionDTO) {
-        _uiState.update { state ->
-            val updatedMacro = (state.currentMacro ?: createEmptyMacro()).let {
-                val newAction = action.copy(executionOrder = it.actions.size)
-                it.copy(actions = it.actions + newAction)
-            }
-            state.copy(currentMacro = updatedMacro)
+        val updatedMacro = (uiState.value.currentMacro ?: createEmptyMacro()).let {
+            val newAction = action.copy(executionOrder = it.actions.size)
+            it.copy(actions = it.actions + newAction)
         }
+        updateMacroState(updatedMacro)
     }
 
     fun removeAction(action: ActionDTO) {
-        _uiState.update { state ->
-            val updatedMacro = state.currentMacro?.let {
-                it.copy(actions = it.actions - action)
-            }
-            state.copy(currentMacro = updatedMacro)
+        val updatedMacro = uiState.value.currentMacro?.let {
+            it.copy(actions = it.actions - action)
         }
+        updateMacroState(updatedMacro)
     }
 
     private fun createEmptyMacro() = MacroDTO(
@@ -81,12 +82,11 @@ class MacroEditorViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, error = null) }
             runCatching { getMacroByIdUseCase(macroId) }
                 .onSuccess { macro ->
-                    _uiState.update {
-                        if (macro != null) {
-                            it.copy(isLoading = false, currentMacro = macro, error = null)
-                        } else {
-                            it.copy(isLoading = false, error = "Macro not found")
-                        }
+                    if (macro != null) {
+                        updateMacroState(macro)
+                        _uiState.update { it.copy(isLoading = false, error = null) }
+                    } else {
+                        _uiState.update { it.copy(isLoading = false, error = "Macro not found") }
                     }
                 }
                 .onFailure { throwable ->
@@ -113,11 +113,11 @@ class MacroEditorViewModel @Inject constructor(
                 }
             }
                 .onSuccess { savedMacro ->
+                    updateMacroState(savedMacro)
                     _uiState.update {
                         it.copy(
                             isSaving = false,
-                            saved = true,
-                            currentMacro = savedMacro
+                            saved = true
                         )
                     }
                 }

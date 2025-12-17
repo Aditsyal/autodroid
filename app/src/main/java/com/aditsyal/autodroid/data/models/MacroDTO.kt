@@ -1,5 +1,10 @@
 package com.aditsyal.autodroid.data.models
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.RawValue
+
+@Parcelize
 data class MacroDTO(
     val id: Long = 0,
     val name: String,
@@ -10,29 +15,33 @@ data class MacroDTO(
     val triggers: List<TriggerDTO> = emptyList(),
     val actions: List<ActionDTO> = emptyList(),
     val constraints: List<ConstraintDTO> = emptyList()
-)
+) : Parcelable
 
+@Parcelize
 data class TriggerDTO(
     val id: Long = 0,
     val macroId: Long = 0,
     val triggerType: String,
-    val triggerConfig: Map<String, Any> = emptyMap()
-)
+    val triggerConfig: @RawValue Map<String, Any> = emptyMap()
+) : Parcelable
 
+@Parcelize
 data class ActionDTO(
     val id: Long = 0,
     val actionType: String,
-    val actionConfig: Map<String, Any> = emptyMap(),
+    val actionConfig: @RawValue Map<String, Any> = emptyMap(),
     val executionOrder: Int,
     val delayAfter: Long = 0
-)
+) : Parcelable
 
+@Parcelize
 data class ConstraintDTO(
     val id: Long = 0,
     val constraintType: String,
-    val constraintConfig: Map<String, Any> = emptyMap()
-)
+    val constraintConfig: @RawValue Map<String, Any> = emptyMap()
+) : Parcelable
 
+@Parcelize
 data class ExecutionLogDTO(
     val id: Long = 0,
     val macroId: Long,
@@ -41,5 +50,5 @@ data class ExecutionLogDTO(
     val executionStatus: String,
     val errorMessage: String? = null,
     val executionDurationMs: Long = 0
-)
+) : Parcelable
 
