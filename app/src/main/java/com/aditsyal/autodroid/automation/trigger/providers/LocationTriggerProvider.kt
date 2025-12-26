@@ -55,6 +55,7 @@ class LocationTriggerProvider @Inject constructor(
             .build()
 
         val request = GeofencingRequest.Builder()
+            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
             .addGeofence(geofence)
             .build()
 
@@ -69,17 +70,32 @@ class LocationTriggerProvider @Inject constructor(
     }
 
     override suspend fun unregisterTrigger(triggerId: Long) {
-        geofencingClient.removeGeofences(listOf(triggerId.toString())).run {
-            addOnSuccessListener {
-                Timber.d("Geofence removed successfully for trigger $triggerId")
+        try {
+            geofencingClient.removeGeofences(listOf(triggerId.toString())).run {
+                addOnSuccessListener {
+                    Timber.d("Geofence removed successfully for trigger $triggerId")
+                }
+                addOnFailureListener { exception ->
+                    Timber.e(exception, "Failed to remove geofence for trigger $triggerId")
+                }
             }
-            addOnFailureListener {
-                Timber.e(it, "Failed to remove geofence for trigger $triggerId")
-            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to unregister location trigger $triggerId")
         }
     }
 
     override suspend fun clearTriggers() {
-        geofencingClient.removeGeofences(geofencePendingIntent)
+        try {
+            geofencingClient.removeGeofences(geofencePendingIntent).run {
+                addOnSuccessListener {
+                    Timber.d("All geofences cleared")
+                }
+                addOnFailureListener { exception ->
+                    Timber.e(exception, "Failed to clear geofences")
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to clear location triggers")
+        }
     }
 }

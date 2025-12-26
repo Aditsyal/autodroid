@@ -43,10 +43,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aditsyal.autodroid.data.models.MacroDTO
 import com.aditsyal.autodroid.presentation.components.ActionPickerDialog
+import com.aditsyal.autodroid.presentation.components.ConstraintPickerDialog
 import com.aditsyal.autodroid.presentation.components.TriggerPickerDialog
 import com.aditsyal.autodroid.presentation.viewmodels.MacroEditorViewModel
 import com.aditsyal.autodroid.data.models.TriggerDTO
 import com.aditsyal.autodroid.data.models.ActionDTO
+import com.aditsyal.autodroid.data.models.ConstraintDTO
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.HorizontalDivider
@@ -69,6 +71,7 @@ fun MacroEditorScreen(
 
     var showTriggerPicker by remember { mutableStateOf(false) }
     var showActionPicker by remember { mutableStateOf(false) }
+    var showConstraintPicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(macroId) {
         macroId?.let { viewModel.loadMacro(it) }
@@ -207,6 +210,25 @@ fun MacroEditorScreen(
                 )
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            SectionHeader(
+                title = "Constraints",
+                onAddClick = { showConstraintPicker = true }
+            )
+
+            uiState.currentMacro?.constraints?.forEach { constraint ->
+                ConstraintItem(constraint = constraint, onDelete = { viewModel.removeConstraint(constraint) })
+            }
+
+            if (uiState.currentMacro?.constraints?.isEmpty() == true) {
+                Text(
+                    "No constraints added",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                )
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             Button(
@@ -244,6 +266,16 @@ fun MacroEditorScreen(
             onActionSelected = {
                 viewModel.addAction(it)
                 showActionPicker = false
+            }
+        )
+    }
+
+    if (showConstraintPicker) {
+        ConstraintPickerDialog(
+            onDismiss = { showConstraintPicker = false },
+            onConstraintSelected = {
+                viewModel.addConstraint(it)
+                showConstraintPicker = false
             }
         )
     }
@@ -298,6 +330,27 @@ private fun ActionItem(
         supportingContent = { 
             val config = action.actionConfig.entries.joinToString { "${it.key}: ${it.value}" }
             Text(config.ifBlank { "No configuration" }) 
+        },
+        trailingContent = {
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+            }
+        }
+    )
+}
+
+@Composable
+private fun ConstraintItem(
+    constraint: ConstraintDTO,
+    onDelete: () -> Unit
+) {
+    ListItem(
+        headlineContent = { 
+            Text(constraint.constraintType.replace("_", " ").lowercase().capitalize())
+        },
+        supportingContent = { 
+            val config = constraint.constraintConfig.entries.joinToString { "${it.key}: ${it.value}" }
+            Text(config.ifBlank { "No configuration" })
         },
         trailingContent = {
             IconButton(onClick = onDelete) {

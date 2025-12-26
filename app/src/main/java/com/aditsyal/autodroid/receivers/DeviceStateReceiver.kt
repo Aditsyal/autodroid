@@ -30,33 +30,49 @@ class DeviceStateReceiver : BroadcastReceiver() {
             try {
                 when (intent.action) {
                     Intent.ACTION_BATTERY_CHANGED -> {
-                        val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-                        val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-                        if (level >= 0 && scale > 0) {
-                            val batteryPct = (level / scale.toFloat() * 100).toInt()
-                            Timber.d("Battery level changed: $batteryPct%")
-                            checkTriggersUseCase(
-                                "SYSTEM_EVENT",
-                                mapOf("event" to "BATTERY_CHANGED", "level" to batteryPct)
-                            )
+                        try {
+                            val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                            val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+                            if (level >= 0 && scale > 0) {
+                                val batteryPct = (level / scale.toFloat() * 100).toInt()
+                                Timber.d("Battery level changed: $batteryPct%")
+                                checkTriggersUseCase(
+                                    "SYSTEM_EVENT",
+                                    mapOf("event" to "BATTERY_CHANGED", "level" to batteryPct)
+                                )
+                            }
+                        } catch (e: Exception) {
+                            Timber.e(e, "Error processing battery changed event")
                         }
                     }
 
                     Intent.ACTION_AIRPLANE_MODE_CHANGED -> {
-                        val isAirplaneModeOn = intent.getBooleanExtra("state", false)
-                        Timber.d("Airplane mode changed: $isAirplaneModeOn")
-                        checkTriggersUseCase(
-                            "SYSTEM_EVENT",
-                            mapOf("event" to "AIRPLANE_MODE", "state" to isAirplaneModeOn)
-                        )
+                        try {
+                            val isAirplaneModeOn = intent.getBooleanExtra("state", false)
+                            Timber.d("Airplane mode changed: $isAirplaneModeOn")
+                            checkTriggersUseCase(
+                                "SYSTEM_EVENT",
+                                mapOf("event" to "AIRPLANE_MODE", "state" to isAirplaneModeOn)
+                            )
+                        } catch (e: Exception) {
+                            Timber.e(e, "Error processing airplane mode changed event")
+                        }
                     }
 
                     Intent.ACTION_DEVICE_STORAGE_LOW -> {
-                        Timber.d("Device storage low")
-                        checkTriggersUseCase(
-                            "SYSTEM_EVENT",
-                            mapOf("event" to "STORAGE_LOW")
-                        )
+                        try {
+                            Timber.d("Device storage low")
+                            checkTriggersUseCase(
+                                "SYSTEM_EVENT",
+                                mapOf("event" to "STORAGE_LOW")
+                            )
+                        } catch (e: Exception) {
+                            Timber.e(e, "Error processing storage low event")
+                        }
+                    }
+                    
+                    else -> {
+                        Timber.d("Unhandled broadcast action: ${intent.action}")
                     }
                 }
             } catch (e: Exception) {

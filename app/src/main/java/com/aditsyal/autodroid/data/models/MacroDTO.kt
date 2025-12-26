@@ -52,3 +52,13 @@ data class ExecutionLogDTO(
     val executionDurationMs: Long = 0
 ) : Parcelable
 
+@Parcelize
+data class VariableDTO(
+    val id: Long = 0,
+    val name: String,
+    val value: String,
+    val scope: String, // "LOCAL" or "GLOBAL"
+    val macroId: Long? = null,
+    val type: String = "STRING" // "STRING", "NUMBER", "BOOLEAN"
+) : Parcelable
+

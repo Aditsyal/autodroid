@@ -20,10 +20,20 @@ class MacroTriggerWorker @AssistedInject constructor(
         Timber.d("MacroTriggerWorker: Checking for time-based triggers")
         return try {
             checkTriggersUseCase("TIME")
+            Timber.d("MacroTriggerWorker: Successfully checked triggers")
             Result.success()
+        } catch (e: SecurityException) {
+            // Permission errors - don't retry, just fail
+            Timber.e(e, "MacroTriggerWorker: Permission error checking triggers")
+            Result.failure()
         } catch (e: Exception) {
             Timber.e(e, "MacroTriggerWorker: Error checking triggers")
-            Result.retry()
+            // Retry for transient errors, but limit retries
+            if (runAttemptCount < 3) {
+                Result.retry()
+            } else {
+                Result.failure()
+            }
         }
     }
 }

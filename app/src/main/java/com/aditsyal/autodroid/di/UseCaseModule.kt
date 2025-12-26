@@ -15,6 +15,10 @@ import com.aditsyal.autodroid.domain.usecase.ToggleMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.UpdateMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.EvaluateConstraintsUseCase
 import com.aditsyal.autodroid.domain.usecase.ExecuteActionUseCase
+import com.aditsyal.autodroid.domain.usecase.GetVariableUseCase
+import com.aditsyal.autodroid.domain.usecase.SetVariableUseCase
+import com.aditsyal.autodroid.domain.usecase.EvaluateVariableUseCase
+import com.aditsyal.autodroid.data.local.dao.VariableDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -72,8 +76,13 @@ object UseCaseModule {
 
     @Provides
     @Singleton
-    fun provideExecuteActionUseCase(@ApplicationContext context: Context): ExecuteActionUseCase =
-        ExecuteActionUseCase(context)
+    fun provideExecuteActionUseCase(
+        @ApplicationContext context: Context,
+        getVariableUseCase: GetVariableUseCase,
+        setVariableUseCase: SetVariableUseCase,
+        evaluateVariableUseCase: EvaluateVariableUseCase
+    ): ExecuteActionUseCase =
+        ExecuteActionUseCase(context, getVariableUseCase, setVariableUseCase, evaluateVariableUseCase)
 
     @Provides
     @Singleton
@@ -101,6 +110,21 @@ object UseCaseModule {
     @Singleton
     fun provideManageBatteryOptimizationUseCase(@ApplicationContext context: Context): ManageBatteryOptimizationUseCase =
         ManageBatteryOptimizationUseCase(context)
+
+    @Provides
+    @Singleton
+    fun provideGetVariableUseCase(variableDao: VariableDao): GetVariableUseCase =
+        GetVariableUseCase(variableDao)
+
+    @Provides
+    @Singleton
+    fun provideSetVariableUseCase(variableDao: VariableDao): SetVariableUseCase =
+        SetVariableUseCase(variableDao)
+
+    @Provides
+    @Singleton
+    fun provideEvaluateVariableUseCase(getVariableUseCase: GetVariableUseCase): EvaluateVariableUseCase =
+        EvaluateVariableUseCase(getVariableUseCase)
 }
 
 

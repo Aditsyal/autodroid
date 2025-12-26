@@ -7,6 +7,7 @@ import com.aditsyal.autodroid.data.local.dao.ConstraintDao
 import com.aditsyal.autodroid.data.local.dao.ExecutionLogDao
 import com.aditsyal.autodroid.data.local.dao.MacroDao
 import com.aditsyal.autodroid.data.local.dao.TriggerDao
+import com.aditsyal.autodroid.data.local.dao.VariableDao
 import com.aditsyal.autodroid.data.local.database.AutomationDatabase
 import dagger.Module
 import dagger.Provides
@@ -55,6 +56,12 @@ object DatabaseModule {
     @Singleton
     fun provideExecutionLogDao(database: AutomationDatabase): ExecutionLogDao {
         return database.executionLogDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideVariableDao(database: AutomationDatabase): VariableDao {
+        return database.variableDao()
     }
 }
 

@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.aditsyal.autodroid.data.models.MacroDTO
 import com.aditsyal.autodroid.data.models.TriggerDTO
 import com.aditsyal.autodroid.data.models.ActionDTO
+import com.aditsyal.autodroid.data.models.ConstraintDTO
 import com.aditsyal.autodroid.domain.usecase.CreateMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.GetMacroByIdUseCase
 import com.aditsyal.autodroid.domain.usecase.UpdateMacroUseCase
@@ -60,6 +61,20 @@ class MacroEditorViewModel @Inject constructor(
     fun removeAction(action: ActionDTO) {
         val updatedMacro = uiState.value.currentMacro?.let {
             it.copy(actions = it.actions - action)
+        }
+        updateMacroState(updatedMacro)
+    }
+
+    fun addConstraint(constraint: ConstraintDTO) {
+        val updatedMacro = (uiState.value.currentMacro ?: createEmptyMacro()).let {
+            it.copy(constraints = it.constraints + constraint)
+        }
+        updateMacroState(updatedMacro)
+    }
+
+    fun removeConstraint(constraint: ConstraintDTO) {
+        val updatedMacro = uiState.value.currentMacro?.let {
+            it.copy(constraints = it.constraints - constraint)
         }
         updateMacroState(updatedMacro)
     }

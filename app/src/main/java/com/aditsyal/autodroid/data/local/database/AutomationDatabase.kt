@@ -9,11 +9,13 @@ import com.aditsyal.autodroid.data.local.dao.ConstraintDao
 import com.aditsyal.autodroid.data.local.dao.ExecutionLogDao
 import com.aditsyal.autodroid.data.local.dao.MacroDao
 import com.aditsyal.autodroid.data.local.dao.TriggerDao
+import com.aditsyal.autodroid.data.local.dao.VariableDao
 import com.aditsyal.autodroid.data.local.entities.ActionEntity
 import com.aditsyal.autodroid.data.local.entities.ConstraintEntity
 import com.aditsyal.autodroid.data.local.entities.ExecutionLogEntity
 import com.aditsyal.autodroid.data.local.entities.MacroEntity
 import com.aditsyal.autodroid.data.local.entities.TriggerEntity
+import com.aditsyal.autodroid.data.local.entities.VariableEntity
 
 @Database(
     entities = [
@@ -21,9 +23,10 @@ import com.aditsyal.autodroid.data.local.entities.TriggerEntity
         TriggerEntity::class,
         ActionEntity::class,
         ConstraintEntity::class,
-        ExecutionLogEntity::class
+        ExecutionLogEntity::class,
+        VariableEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AutomationDatabase : RoomDatabase() {
@@ -32,6 +35,7 @@ abstract class AutomationDatabase : RoomDatabase() {
     abstract fun actionDao(): ActionDao
     abstract fun constraintDao(): ConstraintDao
     abstract fun executionLogDao(): ExecutionLogDao
+    abstract fun variableDao(): VariableDao
 
     companion object {
         private const val DATABASE_NAME = "automation_database.db"

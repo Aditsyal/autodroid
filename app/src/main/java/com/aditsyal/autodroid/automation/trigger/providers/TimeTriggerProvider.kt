@@ -22,14 +22,46 @@ class TimeTriggerProvider @Inject constructor(
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     override suspend fun registerTrigger(trigger: TriggerDTO) {
-        val timeStr = trigger.triggerConfig["time"] as? String ?: return
+        try {
+            val triggerSubType = trigger.triggerConfig["subType"]?.toString() ?: "SPECIFIC_TIME"
+            
+            when (triggerSubType) {
+                "SPECIFIC_TIME" -> registerSpecificTimeTrigger(trigger)
+                "TIME_INTERVAL" -> registerIntervalTrigger(trigger)
+                "DAY_OF_WEEK" -> registerDayOfWeekTrigger(trigger)
+                "DATE_RANGE" -> registerDateRangeTrigger(trigger)
+                else -> {
+                    Timber.w("Unknown time trigger subType: $triggerSubType, defaulting to SPECIFIC_TIME")
+                    registerSpecificTimeTrigger(trigger)
+                }
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to register time trigger ${trigger.id}")
+        }
+    }
+
+    private fun registerSpecificTimeTrigger(trigger: TriggerDTO) {
+        val timeStr = trigger.triggerConfig["time"] as? String
+        if (timeStr == null) {
+            Timber.w("Time trigger ${trigger.id} missing time configuration")
+            return
+        }
+        
         val days = trigger.triggerConfig["days"] as? List<*> ?: emptyList<String>()
         
         val parts = timeStr.split(":")
-        if (parts.size != 2) return
+        if (parts.size != 2) {
+            Timber.w("Invalid time format for trigger ${trigger.id}: $timeStr (expected HH:MM)")
+            return
+        }
         
-        val hour = parts[0].toIntOrNull() ?: return
-        val minute = parts[1].toIntOrNull() ?: return
+        val hour = parts[0].toIntOrNull()
+        val minute = parts[1].toIntOrNull()
+        
+        if (hour == null || minute == null || hour !in 0..23 || minute !in 0..59) {
+            Timber.w("Invalid hour/minute for trigger ${trigger.id}: hour=$hour, minute=$minute (must be 0-23 and 0-59)")
+            return
+        }
 
         val calendar = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
@@ -44,6 +76,131 @@ class TimeTriggerProvider @Inject constructor(
         }
 
         scheduleAlarm(trigger.id, calendar.timeInMillis)
+    }
+
+    private fun registerIntervalTrigger(trigger: TriggerDTO) {
+        val intervalMinutes = trigger.triggerConfig["intervalMinutes"]?.toString()?.toLongOrNull()
+        val intervalHours = trigger.triggerConfig["intervalHours"]?.toString()?.toLongOrNull()
+        
+        val intervalMs = when {
+            intervalMinutes != null -> intervalMinutes * 60 * 1000
+            intervalHours != null -> intervalHours * 60 * 60 * 1000
+            else -> {
+                Timber.w("Time interval trigger ${trigger.id} missing interval configuration")
+                return
+            }
+        }
+        
+        if (intervalMs < 60000) { // Minimum 1 minute
+            Timber.w("Time interval trigger ${trigger.id} has interval less than 1 minute")
+            return
+        }
+
+        // Schedule first execution
+        val firstExecution = System.currentTimeMillis() + intervalMs
+        scheduleAlarm(trigger.id, firstExecution)
+        
+        // Note: For recurring intervals, we'll need to reschedule in TriggerAlarmReceiver
+        Timber.d("Scheduled interval trigger ${trigger.id} with interval ${intervalMs}ms")
+    }
+
+    private fun registerDayOfWeekTrigger(trigger: TriggerDTO) {
+        val timeStr = trigger.triggerConfig["time"] as? String
+        val daysOfWeek = trigger.triggerConfig["daysOfWeek"] as? List<*> ?: emptyList<String>()
+        
+        if (timeStr == null || daysOfWeek.isEmpty()) {
+            Timber.w("Day of week trigger ${trigger.id} missing time or days configuration")
+            return
+        }
+        
+        val parts = timeStr.split(":")
+        if (parts.size != 2) {
+            Timber.w("Invalid time format for trigger ${trigger.id}: $timeStr")
+            return
+        }
+        
+        val hour = parts[0].toIntOrNull() ?: return
+        val minute = parts[1].toIntOrNull() ?: return
+        
+        val dayNumbers = daysOfWeek.mapNotNull { day ->
+            when (day.toString().uppercase()) {
+                "MONDAY", "MON" -> Calendar.MONDAY
+                "TUESDAY", "TUE" -> Calendar.TUESDAY
+                "WEDNESDAY", "WED" -> Calendar.WEDNESDAY
+                "THURSDAY", "THU" -> Calendar.THURSDAY
+                "FRIDAY", "FRI" -> Calendar.FRIDAY
+                "SATURDAY", "SAT" -> Calendar.SATURDAY
+                "SUNDAY", "SUN" -> Calendar.SUNDAY
+                else -> null
+            }
+        }
+        
+        if (dayNumbers.isEmpty()) {
+            Timber.w("Day of week trigger ${trigger.id} has no valid days")
+            return
+        }
+        
+        // Find next occurrence
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, hour)
+        calendar.set(Calendar.MINUTE, minute)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        
+        // Find next matching day
+        var found = false
+        for (i in 0..7) {
+            val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+            if (dayNumbers.contains(dayOfWeek) && calendar.timeInMillis > System.currentTimeMillis()) {
+                found = true
+                break
+            }
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
+        
+        if (found) {
+            scheduleAlarm(trigger.id, calendar.timeInMillis)
+        } else {
+            Timber.w("Could not find next occurrence for day of week trigger ${trigger.id}")
+        }
+    }
+
+    private fun registerDateRangeTrigger(trigger: TriggerDTO) {
+        val startDate = trigger.triggerConfig["startDate"]?.toString()?.toLongOrNull()
+        val endDate = trigger.triggerConfig["endDate"]?.toString()?.toLongOrNull()
+        val timeStr = trigger.triggerConfig["time"] as? String
+        
+        if (startDate == null || endDate == null || timeStr == null) {
+            Timber.w("Date range trigger ${trigger.id} missing configuration")
+            return
+        }
+        
+        val now = System.currentTimeMillis()
+        if (now < startDate || now > endDate) {
+            Timber.d("Date range trigger ${trigger.id} is outside date range")
+            return
+        }
+        
+        val parts = timeStr.split(":")
+        if (parts.size != 2) return
+        
+        val hour = parts[0].toIntOrNull() ?: return
+        val minute = parts[1].toIntOrNull() ?: return
+        
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            
+            if (timeInMillis <= now) {
+                add(Calendar.DAY_OF_YEAR, 1)
+            }
+        }
+        
+        if (calendar.timeInMillis <= endDate) {
+            scheduleAlarm(trigger.id, calendar.timeInMillis)
+        }
     }
 
     private fun scheduleAlarm(triggerId: Long, triggerTime: Long) {
@@ -92,15 +249,20 @@ class TimeTriggerProvider @Inject constructor(
     }
 
     override suspend fun unregisterTrigger(triggerId: Long) {
-        val intent = Intent(context, TriggerAlarmReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            triggerId.toInt(),
-            intent,
-            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
-        )
-        if (pendingIntent != null) {
-            alarmManager.cancel(pendingIntent)
+        try {
+            val intent = Intent(context, TriggerAlarmReceiver::class.java)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                triggerId.toInt(),
+                intent,
+                PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+            )
+            if (pendingIntent != null) {
+                alarmManager.cancel(pendingIntent)
+                Timber.d("Cancelled alarm for trigger $triggerId")
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to unregister time trigger $triggerId")
         }
     }
 

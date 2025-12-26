@@ -1,6 +1,10 @@
 package com.aditsyal.autodroid.di
 
 import com.aditsyal.autodroid.automation.trigger.TriggerProvider
+import com.aditsyal.autodroid.automation.trigger.providers.AppEventTriggerProvider
+import com.aditsyal.autodroid.automation.trigger.providers.CommunicationTriggerProvider
+import com.aditsyal.autodroid.automation.trigger.providers.ConnectivityTriggerProvider
+import com.aditsyal.autodroid.automation.trigger.providers.DeviceStateTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.LocationTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.SensorTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.TimeTriggerProvider
@@ -29,4 +33,24 @@ abstract class TriggerModule {
     @IntoSet
     @Singleton
     abstract fun bindSensorTriggerProvider(provider: SensorTriggerProvider): TriggerProvider
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindDeviceStateTriggerProvider(provider: DeviceStateTriggerProvider): TriggerProvider
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindConnectivityTriggerProvider(provider: ConnectivityTriggerProvider): TriggerProvider
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindAppEventTriggerProvider(provider: AppEventTriggerProvider): TriggerProvider
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindCommunicationTriggerProvider(provider: CommunicationTriggerProvider): TriggerProvider
 }
