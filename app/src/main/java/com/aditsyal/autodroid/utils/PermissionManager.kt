@@ -26,7 +26,8 @@ class PermissionManager @Inject constructor(
         return when (result) {
             is CheckPermissionsUseCase.PermissionResult.Granted -> PermissionResult.Granted
             else -> {
-                // Simplified for MVP, in a real app we'd check shouldShowRequestPermissionRationale here if it was an Activity context
+                // Check if rationale should be shown would typically happen here if an Activity context was available.
+                // For this use case, we default to deny and let the UI handle the request flow.
                 PermissionResult.Denied(permission.manifestPermission)
             }
         }
@@ -37,8 +38,7 @@ class PermissionManager @Inject constructor(
         if (result == PackageManager.PERMISSION_GRANTED) {
             emit(PermissionResult.Granted)
         } else {
-            // In a real app with Activity context, we'd check rationale here.
-            // Since this is a manager, we emit Denied/Rationale based on state.
+            // Rationale handling should be delegated to the UI layer as we lack Activity context here.
             emit(PermissionResult.Denied(permission))
         }
     }

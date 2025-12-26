@@ -18,6 +18,8 @@ import com.aditsyal.autodroid.data.models.ExecutionLogDTO
 import com.aditsyal.autodroid.data.models.MacroDTO
 import com.aditsyal.autodroid.data.models.TriggerDTO
 import com.aditsyal.autodroid.domain.repository.MacroRepository
+import com.aditsyal.autodroid.data.local.database.AutomationDatabase
+import androidx.room.withTransaction
 import com.google.gson.Gson
 import com.aditsyal.autodroid.data.models.ConflictDTO
 import com.google.gson.reflect.TypeToken
@@ -27,6 +29,7 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class MacroRepositoryImpl @Inject constructor(
+    private val database: AutomationDatabase,
     private val macroDao: MacroDao,
     private val triggerDao: TriggerDao,
     private val actionDao: ActionDao,
@@ -47,42 +50,45 @@ class MacroRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createMacro(macro: MacroDTO): Long {
-        val macroId = macroDao.insertMacro(macro.toEntity())
-        
-        // Insert related entities
-        macro.triggers.forEach { trigger ->
-            triggerDao.insertTrigger(trigger.copy(id = 0).toEntity(macroId))
+        return database.withTransaction {
+            val macroId = macroDao.insertMacro(macro.toEntity())
+
+            // Insert related entities
+            macro.triggers.forEach { trigger ->
+                triggerDao.insertTrigger(trigger.copy(id = 0).toEntity(macroId))
+            }
+            macro.actions.forEach { action ->
+                actionDao.insertAction(action.copy(id = 0).toEntity(macroId))
+            }
+            macro.constraints.forEach { constraint ->
+                constraintDao.insertConstraint(constraint.copy(id = 0).toEntity(macroId))
+            }
+            macroId
         }
-        macro.actions.forEach { action ->
-            actionDao.insertAction(action.copy(id = 0).toEntity(macroId))
-        }
-        macro.constraints.forEach { constraint ->
-            constraintDao.insertConstraint(constraint.copy(id = 0).toEntity(macroId))
-        }
-        
-        return macroId
     }
 
     override suspend fun updateMacro(macro: MacroDTO) {
-        val macroId = macro.id
-        macroDao.updateMacro(macro.toEntity())
-        
-        // Sync triggers: Delete and re-insert for simplicity in MVP
-        triggerDao.deleteTriggersByMacroId(macroId)
-        macro.triggers.forEach { trigger ->
-            triggerDao.insertTrigger(trigger.copy(id = 0).toEntity(macroId))
-        }
-        
-        // Sync actions
-        actionDao.deleteActionsByMacroId(macroId)
-        macro.actions.forEach { action ->
-            actionDao.insertAction(action.copy(id = 0).toEntity(macroId))
-        }
-        
-        // Sync constraints
-        constraintDao.deleteConstraintsByMacroId(macroId)
-        macro.constraints.forEach { constraint ->
-            constraintDao.insertConstraint(constraint.copy(id = 0).toEntity(macroId))
+        database.withTransaction {
+            val macroId = macro.id
+            macroDao.updateMacro(macro.toEntity())
+
+            // Sync triggers: Delete and re-insert for simplicity
+            triggerDao.deleteTriggersByMacroId(macroId)
+            macro.triggers.forEach { trigger ->
+                triggerDao.insertTrigger(trigger.copy(id = 0).toEntity(macroId))
+            }
+
+            // Sync actions
+            actionDao.deleteActionsByMacroId(macroId)
+            macro.actions.forEach { action ->
+                actionDao.insertAction(action.copy(id = 0).toEntity(macroId))
+            }
+
+            // Sync constraints
+            constraintDao.deleteConstraintsByMacroId(macroId)
+            macro.constraints.forEach { constraint ->
+                constraintDao.insertConstraint(constraint.copy(id = 0).toEntity(macroId))
+            }
         }
     }
 

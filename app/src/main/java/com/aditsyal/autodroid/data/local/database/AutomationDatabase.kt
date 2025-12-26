@@ -42,7 +42,6 @@ abstract class AutomationDatabase : RoomDatabase() {
                 AutomationDatabase::class.java,
                 DATABASE_NAME
             )
-                .fallbackToDestructiveMigration()
                 .build()
         }
     }
