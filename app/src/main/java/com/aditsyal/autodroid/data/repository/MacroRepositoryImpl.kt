@@ -51,7 +51,14 @@ class MacroRepositoryImpl @Inject constructor(
 
     override suspend fun createMacro(macro: MacroDTO): Long {
         return database.withTransaction {
-            val macroId = macroDao.insertMacro(macro.toEntity())
+            // Ensure macro ID is 0 for new macro
+            val macroEntity = macro.toEntity().copy(id = 0)
+            val macroId = macroDao.insertMacro(macroEntity)
+
+            // Validate macroId is valid before inserting related entities
+            if (macroId <= 0) {
+                throw IllegalStateException("Failed to create macro: invalid macro ID")
+            }
 
             // Insert related entities
             macro.triggers.forEach { trigger ->
@@ -70,6 +77,16 @@ class MacroRepositoryImpl @Inject constructor(
     override suspend fun updateMacro(macro: MacroDTO) {
         database.withTransaction {
             val macroId = macro.id
+            if (macroId <= 0) {
+                throw IllegalArgumentException("Cannot update macro with invalid ID: $macroId")
+            }
+
+            // Verify macro exists before updating
+            val existingMacro = macroDao.getMacroById(macroId)
+            if (existingMacro == null) {
+                throw IllegalStateException("Macro with ID $macroId does not exist")
+            }
+
             macroDao.updateMacro(macro.toEntity())
 
             // Sync triggers: Delete and re-insert for simplicity
@@ -105,7 +122,12 @@ class MacroRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addTrigger(macroId: Long, trigger: TriggerDTO): Long {
-        return triggerDao.insertTrigger(trigger.toEntity(macroId))
+        // Validate macro exists
+        val macro = macroDao.getMacroById(macroId)
+        if (macro == null) {
+            throw IllegalStateException("Cannot add trigger: Macro with ID $macroId does not exist")
+        }
+        return triggerDao.insertTrigger(trigger.copy(id = 0).toEntity(macroId))
     }
 
     override suspend fun updateTrigger(trigger: TriggerDTO) {
@@ -129,7 +151,12 @@ class MacroRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addAction(macroId: Long, action: ActionDTO): Long {
-        return actionDao.insertAction(action.toEntity(macroId))
+        // Validate macro exists
+        val macro = macroDao.getMacroById(macroId)
+        if (macro == null) {
+            throw IllegalStateException("Cannot add action: Macro with ID $macroId does not exist")
+        }
+        return actionDao.insertAction(action.copy(id = 0).toEntity(macroId))
     }
 
     override suspend fun updateAction(action: ActionDTO) {
@@ -145,7 +172,12 @@ class MacroRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addConstraint(macroId: Long, constraint: ConstraintDTO): Long {
-        return constraintDao.insertConstraint(constraint.toEntity(macroId))
+        // Validate macro exists
+        val macro = macroDao.getMacroById(macroId)
+        if (macro == null) {
+            throw IllegalStateException("Cannot add constraint: Macro with ID $macroId does not exist")
+        }
+        return constraintDao.insertConstraint(constraint.copy(id = 0).toEntity(macroId))
     }
 
     override suspend fun updateConstraint(constraint: ConstraintDTO) {
@@ -161,6 +193,11 @@ class MacroRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logExecution(log: ExecutionLogDTO) {
+        // Validate macro exists before logging
+        val macro = macroDao.getMacroById(log.macroId)
+        if (macro == null) {
+            throw IllegalStateException("Cannot log execution: Macro with ID ${log.macroId} does not exist")
+        }
         executionLogDao.insertExecutionLog(log.toEntity())
     }
 

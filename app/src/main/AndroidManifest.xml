@@ -75,14 +75,6 @@
             android:exported="false"
             android:enabled="true" />
 
-        <service
-            android:name=".services.AutomationForegroundService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse|location">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_TYPE"
-                android:value="Automation engine monitoring system events for triggers." />
-        </service>
 
         <service
             android:name=".services.accessibility.AutomationAccessibilityService"

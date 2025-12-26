@@ -18,7 +18,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aditsyal.autodroid.presentation.viewmodels.SettingsViewModel
-import com.aditsyal.autodroid.services.AutomationForegroundService
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,28 +60,16 @@ fun SettingsScreen(
 
             StatusItem(
                 label = "Background Monitoring",
-                status = if (uiState.isServiceRunning) "Running" else "Stopped",
-                statusColor = if (uiState.isServiceRunning) Color(0xFF4CAF50) else Color(0xFFF44336)
+                status = if (uiState.isWorkManagerRunning) "Active" else "Inactive",
+                statusColor = if (uiState.isWorkManagerRunning) Color(0xFF4CAF50) else Color(0xFFFF9800)
             )
 
-            Button(
-                onClick = {
-                    val intent = Intent(context, AutomationForegroundService::class.java)
-                    if (uiState.isServiceRunning) {
-                        context.stopService(intent)
-                    } else {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                            context.startForegroundService(intent)
-                        } else {
-                            context.startService(intent)
-                        }
-                    }
-                    viewModel.refreshStatus()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (uiState.isServiceRunning) "Stop Service" else "Start Service")
-            }
+            Text(
+                text = "Background monitoring runs automatically via WorkManager to check triggers periodically.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
 
             HorizontalDivider()
 

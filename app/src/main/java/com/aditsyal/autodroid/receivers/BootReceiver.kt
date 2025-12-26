@@ -15,14 +15,7 @@ class BootReceiver : BroadcastReceiver() {
         if (intent?.action == Intent.ACTION_BOOT_COMPLETED) {
             Timber.d("Boot completed - scheduling macro workers")
             context?.let { ctx ->
-                // Start the foreground service for real-time monitoring
-                val serviceIntent = Intent(ctx, com.aditsyal.autodroid.services.AutomationForegroundService::class.java)
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    ctx.startForegroundService(serviceIntent)
-                } else {
-                    ctx.startService(serviceIntent)
-                }
-
+                // Schedule periodic WorkManager job for trigger checking
                 val workRequest = PeriodicWorkRequestBuilder<MacroTriggerWorker>(15, TimeUnit.MINUTES)
                     .build()
 
@@ -31,8 +24,8 @@ class BootReceiver : BroadcastReceiver() {
                     ExistingPeriodicWorkPolicy.KEEP,
                     workRequest
                 )
-                
-                Timber.d("BootReceiver: Started service and scheduled MacroTriggerWorker")
+
+                Timber.d("BootReceiver: Scheduled MacroTriggerWorker")
             }
         }
     }

@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.net.wifi.WifiManager
 import android.os.Build
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -43,6 +44,8 @@ class ExecuteActionUseCase @Inject constructor(
             "BLUETOOTH_TOGGLE" -> toggleBluetooth(action.actionConfig)
             "VOLUME_CONTROL" -> controlVolume(action.actionConfig)
             "NOTIFICATION" -> showNotification(action.actionConfig)
+            "SHOW_TOAST" -> showToast(action.actionConfig)
+            "LOG_HISTORY" -> logToHistory(action.actionConfig)
             else -> Timber.w("Unknown action type: ${action.actionType}")
         }
     }
@@ -168,6 +171,28 @@ class ExecuteActionUseCase @Inject constructor(
         }
     }
     
+    private fun showToast(config: Map<String, Any>) {
+        val message = config["message"]?.toString() ?: "Automation executed"
+        val duration = when (config["duration"]?.toString()?.lowercase()) {
+            "long" -> Toast.LENGTH_LONG
+            else -> Toast.LENGTH_SHORT
+        }
+
+        try {
+            Toast.makeText(context, message, duration).show()
+            Timber.i("Toast shown: $message")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to show toast")
+        }
+    }
+
+    private fun logToHistory(config: Map<String, Any>) {
+        val message = config["message"]?.toString() ?: "Manual log entry"
+        // Logging already happens automatically in ExecuteMacroUseCase,
+        // but this action allows for additional custom log entries
+        Timber.i("Custom log entry: $message")
+    }
+
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(

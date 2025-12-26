@@ -23,7 +23,7 @@ import com.aditsyal.autodroid.data.local.entities.TriggerEntity
         ConstraintEntity::class,
         ExecutionLogEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AutomationDatabase : RoomDatabase() {
@@ -42,6 +42,7 @@ abstract class AutomationDatabase : RoomDatabase() {
                 AutomationDatabase::class.java,
                 DATABASE_NAME
             )
+                .fallbackToDestructiveMigration()
                 .build()
         }
     }

@@ -24,9 +24,7 @@ val triggerOptions = listOf(
     TriggerOption("App Opened", "APP_EVENT", mapOf("packageName" to "com.android.settings")),
     TriggerOption("Battery Level", "SYSTEM_EVENT", mapOf("event" to "BATTERY_CHANGED")),
     TriggerOption("Airplane Mode", "SYSTEM_EVENT", mapOf("event" to "AIRPLANE_MODE")),
-    TriggerOption("Device Storage Low", "SYSTEM_EVENT", mapOf("event" to "STORAGE_LOW")),
-    TriggerOption("Screen On", "SYSTEM_EVENT", mapOf("event" to "SCREEN_ON")),
-    TriggerOption("Screen Off", "SYSTEM_EVENT", mapOf("event" to "SCREEN_OFF"))
+    TriggerOption("Device Storage Low", "SYSTEM_EVENT", mapOf("event" to "STORAGE_LOW"))
 )
 
 @Composable
