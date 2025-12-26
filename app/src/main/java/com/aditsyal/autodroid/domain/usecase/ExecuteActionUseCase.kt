@@ -17,6 +17,8 @@ import androidx.core.app.NotificationManagerCompat
 import com.aditsyal.autodroid.R
 import com.aditsyal.autodroid.data.models.ActionDTO
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -171,7 +173,7 @@ class ExecuteActionUseCase @Inject constructor(
         }
     }
     
-    private fun showToast(config: Map<String, Any>) {
+    private suspend fun showToast(config: Map<String, Any>) {
         val message = config["message"]?.toString() ?: "Automation executed"
         val duration = when (config["duration"]?.toString()?.lowercase()) {
             "long" -> Toast.LENGTH_LONG
@@ -179,8 +181,10 @@ class ExecuteActionUseCase @Inject constructor(
         }
 
         try {
-            Toast.makeText(context, message, duration).show()
-            Timber.i("Toast shown: $message")
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, message, duration).show()
+                Timber.i("Toast shown: $message")
+            }
         } catch (e: Exception) {
             Timber.e(e, "Failed to show toast")
         }

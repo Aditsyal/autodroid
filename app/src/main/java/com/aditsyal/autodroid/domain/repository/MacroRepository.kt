@@ -21,6 +21,7 @@ interface MacroRepository {
     suspend fun deleteTrigger(triggerId: Long)
     suspend fun getTriggerById(triggerId: Long): TriggerDTO?
     suspend fun getEnabledTriggersByType(triggerType: String): List<TriggerDTO>
+    suspend fun getAllEnabledTriggers(): List<TriggerDTO>
     
     suspend fun addAction(macroId: Long, action: ActionDTO): Long
     suspend fun updateAction(action: ActionDTO)

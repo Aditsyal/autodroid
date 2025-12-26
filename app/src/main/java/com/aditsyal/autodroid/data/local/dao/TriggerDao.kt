@@ -16,6 +16,9 @@ interface TriggerDao {
     @Query("SELECT * FROM triggers WHERE triggerType = :triggerType AND enabled = 1")
     suspend fun getEnabledTriggersByType(triggerType: String): List<TriggerEntity>
 
+    @Query("SELECT t.* FROM triggers t INNER JOIN macros m ON t.macroId = m.id WHERE t.enabled = 1 AND m.enabled = 1")
+    suspend fun getAllEnabledTriggers(): List<TriggerEntity>
+
     @Query("SELECT * FROM triggers WHERE id = :triggerId")
     suspend fun getTriggerById(triggerId: Long): TriggerEntity?
 

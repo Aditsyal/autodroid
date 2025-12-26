@@ -150,6 +150,10 @@ class MacroRepositoryImpl @Inject constructor(
         return triggerDao.getEnabledTriggersByType(triggerType).map { it.toDTO() }
     }
 
+    override suspend fun getAllEnabledTriggers(): List<TriggerDTO> {
+        return triggerDao.getAllEnabledTriggers().map { it.toDTO() }
+    }
+
     override suspend fun addAction(macroId: Long, action: ActionDTO): Long {
         // Validate macro exists
         val macro = macroDao.getMacroById(macroId)

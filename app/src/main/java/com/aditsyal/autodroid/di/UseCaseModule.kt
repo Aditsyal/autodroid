@@ -1,6 +1,7 @@
 package com.aditsyal.autodroid.di
 
 import android.content.Context
+import com.aditsyal.autodroid.automation.trigger.TriggerManager
 import com.aditsyal.autodroid.domain.repository.MacroRepository
 import com.aditsyal.autodroid.domain.usecase.CheckPermissionsUseCase
 import com.aditsyal.autodroid.domain.usecase.CheckTriggersUseCase
@@ -37,13 +38,19 @@ object UseCaseModule {
 
     @Provides
     @Singleton
-    fun provideCreateMacroUseCase(repository: MacroRepository): CreateMacroUseCase =
-        CreateMacroUseCase(repository)
+    fun provideCreateMacroUseCase(
+        repository: MacroRepository,
+        triggerManager: TriggerManager
+    ): CreateMacroUseCase =
+        CreateMacroUseCase(repository, triggerManager)
 
     @Provides
     @Singleton
-    fun provideUpdateMacroUseCase(repository: MacroRepository): UpdateMacroUseCase =
-        UpdateMacroUseCase(repository)
+    fun provideUpdateMacroUseCase(
+        repository: MacroRepository,
+        triggerManager: TriggerManager
+    ): UpdateMacroUseCase =
+        UpdateMacroUseCase(repository, triggerManager)
 
     @Provides
     @Singleton
@@ -52,8 +59,11 @@ object UseCaseModule {
 
     @Provides
     @Singleton
-    fun provideToggleMacroUseCase(repository: MacroRepository): ToggleMacroUseCase =
-        ToggleMacroUseCase(repository)
+    fun provideToggleMacroUseCase(
+        repository: MacroRepository,
+        triggerManager: TriggerManager
+    ): ToggleMacroUseCase =
+        ToggleMacroUseCase(repository, triggerManager)
 
     @Provides
     @Singleton
