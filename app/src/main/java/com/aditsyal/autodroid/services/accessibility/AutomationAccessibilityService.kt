@@ -2,6 +2,7 @@ package com.aditsyal.autodroid.services.accessibility
 
 import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityEvent
+import com.aditsyal.autodroid.automation.trigger.providers.AppEventTriggerProvider
 import com.aditsyal.autodroid.domain.usecase.CheckTriggersUseCase
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -22,8 +23,12 @@ class AutomationAccessibilityService : AccessibilityService() {
     @Inject
     lateinit var checkTriggersUseCase: CheckTriggersUseCase
 
+    @Inject
+    lateinit var appEventTriggerProvider: AppEventTriggerProvider
+
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val accessibilityEvents = MutableSharedFlow<AccessibilityEvent>(extraBufferCapacity = 64)
+    private var currentAppPackage: String? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -49,14 +54,41 @@ class AutomationAccessibilityService : AccessibilityService() {
 
     private suspend fun processEvent(event: AccessibilityEvent) {
         try {
-            val eventParams = mutableMapOf<String, Any>(
-                "packageName" to (event.packageName?.toString() ?: ""),
-                "eventType" to event.eventType,
-                "className" to (event.className?.toString() ?: "")
-            )
-            
-            checkTriggersUseCase("APP_EVENT", eventParams)
-            
+            val packageName = event.packageName?.toString() ?: return
+
+            when (event.eventType) {
+                AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+                    // Detect app launch/close
+                    if (currentAppPackage != packageName) {
+                        // App changed - previous app was closed, new app was launched
+                        currentAppPackage?.let { closedPackage ->
+                            appEventTriggerProvider.onAppClosed(closedPackage)
+                        }
+                        appEventTriggerProvider.onAppLaunched(packageName)
+                        currentAppPackage = packageName
+                    }
+                }
+                AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED -> {
+                    // Notification received
+                    val notificationText = event.text?.joinToString(" ") ?: ""
+                    val notificationTitle = event.contentDescription?.toString() ?: ""
+                    appEventTriggerProvider.onNotificationReceived(
+                        packageName = packageName,
+                        title = notificationTitle,
+                        text = notificationText
+                    )
+                }
+                else -> {
+                    // For other events, use the general trigger checking
+                    val eventParams = mutableMapOf<String, Any>(
+                        "packageName" to packageName,
+                        "eventType" to event.eventType,
+                        "className" to (event.className?.toString() ?: "")
+                    )
+                    checkTriggersUseCase("APP_EVENT", eventParams)
+                }
+            }
+
         } catch (e: Exception) {
             Timber.e(e, "Error processing accessibility event")
         }

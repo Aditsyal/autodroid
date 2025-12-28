@@ -6,6 +6,7 @@ import com.aditsyal.autodroid.data.local.dao.ActionDao
 import com.aditsyal.autodroid.data.local.dao.ConstraintDao
 import com.aditsyal.autodroid.data.local.dao.ExecutionLogDao
 import com.aditsyal.autodroid.data.local.dao.MacroDao
+import com.aditsyal.autodroid.data.local.dao.TemplateDao
 import com.aditsyal.autodroid.data.local.dao.TriggerDao
 import com.aditsyal.autodroid.data.local.dao.VariableDao
 import com.aditsyal.autodroid.data.local.database.AutomationDatabase
@@ -62,6 +63,12 @@ object DatabaseModule {
     @Singleton
     fun provideVariableDao(database: AutomationDatabase): VariableDao {
         return database.variableDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTemplateDao(database: AutomationDatabase): TemplateDao {
+        return database.templateDao()
     }
 }
 

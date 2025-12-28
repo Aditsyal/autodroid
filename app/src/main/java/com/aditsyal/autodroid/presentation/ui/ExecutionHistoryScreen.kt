@@ -15,19 +15,27 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,6 +55,9 @@ fun ExecutionHistoryScreen(
     viewModel: ExecutionHistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
+    var filterStatus by remember { mutableStateOf<String?>(null) }
+    var showFilterMenu by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -56,28 +67,91 @@ fun ExecutionHistoryScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
+                },
+                actions = {
+                    IconButton(onClick = { showFilterMenu = true }) {
+                        Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                    }
+                    DropdownMenu(
+                        expanded = showFilterMenu,
+                        onDismissRequest = { showFilterMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("All") },
+                            onClick = {
+                                filterStatus = null
+                                showFilterMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Success") },
+                            onClick = {
+                                filterStatus = "SUCCESS"
+                                showFilterMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Failure") },
+                            onClick = {
+                                filterStatus = "FAILURE"
+                                showFilterMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Skipped") },
+                            onClick = {
+                                filterStatus = "SKIPPED"
+                                showFilterMenu = false
+                            }
+                        )
+                    }
                 }
             )
         }
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (val state = uiState) {
-                is ExecutionHistoryUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-                is ExecutionHistoryUiState.Error -> {
-                    Text(
-                        text = state.message,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-                is ExecutionHistoryUiState.Success -> {
-                    ExecutionHistoryList(logs = state.logs)
+            // Search bar
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                placeholder = { Text("Search by macro name...") },
+                leadingIcon = {
+                    Icon(Icons.Default.Search, contentDescription = "Search")
+                },
+                singleLine = true
+            )
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                when (val state = uiState) {
+                    is ExecutionHistoryUiState.Loading -> {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    }
+                    is ExecutionHistoryUiState.Error -> {
+                        Text(
+                            text = state.message,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+                    is ExecutionHistoryUiState.Success -> {
+                        val filteredLogs = state.logs
+                            .filter { log ->
+                                // Filter by status
+                                (filterStatus == null || log.executionStatus == filterStatus) &&
+                                // Filter by search query
+                                (searchQuery.isEmpty() || 
+                                 (log.macroName?.contains(searchQuery, ignoreCase = true) == true) ||
+                                 log.macroId.toString().contains(searchQuery, ignoreCase = true))
+                            }
+                        ExecutionHistoryList(logs = filteredLogs)
+                    }
                 }
             }
         }
@@ -132,9 +206,21 @@ fun ExecutionLogItem(log: ExecutionLogDTO) {
                     text = formatDate(log.executedAt),
                     style = MaterialTheme.typography.bodySmall
                 )
+                Text(
+                    text = "Status: ${log.executionStatus}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+                if (log.executionDurationMs > 0) {
+                    Text(
+                        text = "Duration: ${log.executionDurationMs}ms",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
                 if (!isSuccess && log.errorMessage != null) {
                     Text(
-                        text = log.errorMessage,
+                        text = "Error: ${log.errorMessage}",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )

@@ -1,5 +1,6 @@
 package com.aditsyal.autodroid.automation.trigger.providers
 
+import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
@@ -7,6 +8,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -14,6 +16,7 @@ import android.net.NetworkRequest
 import android.net.wifi.WifiManager
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 import com.aditsyal.autodroid.automation.trigger.TriggerProvider
 import com.aditsyal.autodroid.data.models.TriggerDTO
 import com.aditsyal.autodroid.domain.usecase.CheckTriggersUseCase
@@ -197,14 +200,24 @@ class ConnectivityTriggerProvider @Inject constructor(
                     BluetoothDevice.ACTION_ACL_CONNECTED -> {
                         val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                         device?.let {
-                            Timber.d("Bluetooth device connected: ${it.name}")
+                            val deviceName = if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                                it.name ?: "Unknown Device"
+                            } else {
+                                "Unknown Device (no permission)"
+                            }
+                            Timber.d("Bluetooth device connected: $deviceName")
                             notifyBluetoothDeviceTriggers(it, true)
                         }
                     }
                     BluetoothDevice.ACTION_ACL_DISCONNECTED -> {
                         val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                         device?.let {
-                            Timber.d("Bluetooth device disconnected: ${it.name}")
+                            val deviceName = if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                                it.name ?: "Unknown Device"
+                            } else {
+                                "Unknown Device (no permission)"
+                            }
+                            Timber.d("Bluetooth device disconnected: $deviceName")
                             notifyBluetoothDeviceTriggers(it, false)
                         }
                     }
@@ -255,13 +268,19 @@ class ConnectivityTriggerProvider @Inject constructor(
 
     private fun notifyBluetoothDeviceTriggers(device: BluetoothDevice, connected: Boolean) {
         val event = if (connected) "BLUETOOTH_DEVICE_CONNECTED" else "BLUETOOTH_DEVICE_DISCONNECTED"
+        val deviceName = if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+            device.name ?: "Unknown Device"
+        } else {
+            "Unknown Device (no permission)"
+        }
+
         activeTriggers.values
             .filter { it.triggerConfig["event"] == event }
             .forEach { trigger ->
                 val requiredAddress = trigger.triggerConfig["deviceAddress"]?.toString()
                 if (requiredAddress == null || device.address == requiredAddress) {
                     notifyTrigger(trigger, mapOf(
-                        "deviceName" to (device.name ?: ""),
+                        "deviceName" to deviceName,
                         "deviceAddress" to device.address
                     ))
                 }

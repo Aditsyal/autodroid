@@ -18,6 +18,10 @@ import com.aditsyal.autodroid.domain.usecase.ExecuteActionUseCase
 import com.aditsyal.autodroid.domain.usecase.GetVariableUseCase
 import com.aditsyal.autodroid.domain.usecase.SetVariableUseCase
 import com.aditsyal.autodroid.domain.usecase.EvaluateVariableUseCase
+import com.aditsyal.autodroid.domain.usecase.EvaluateLogicUseCase
+import com.aditsyal.autodroid.domain.usecase.CreateMacroFromTemplateUseCase
+import com.aditsyal.autodroid.domain.usecase.InitializeDefaultTemplatesUseCase
+import com.aditsyal.autodroid.data.local.dao.TemplateDao
 import com.aditsyal.autodroid.data.local.dao.VariableDao
 import dagger.Module
 import dagger.Provides
@@ -86,12 +90,18 @@ object UseCaseModule {
 
     @Provides
     @Singleton
+    fun provideEvaluateLogicUseCase(getVariableUseCase: GetVariableUseCase): EvaluateLogicUseCase =
+        EvaluateLogicUseCase(getVariableUseCase)
+
+    @Provides
+    @Singleton
     fun provideExecuteMacroUseCase(
         repository: MacroRepository,
         evaluateConstraintsUseCase: EvaluateConstraintsUseCase,
-        executeActionUseCase: ExecuteActionUseCase
+        executeActionUseCase: ExecuteActionUseCase,
+        evaluateLogicUseCase: EvaluateLogicUseCase
     ): ExecuteMacroUseCase =
-        ExecuteMacroUseCase(repository, evaluateConstraintsUseCase, executeActionUseCase)
+        ExecuteMacroUseCase(repository, evaluateConstraintsUseCase, executeActionUseCase, evaluateLogicUseCase)
 
     @Provides
     @Singleton
@@ -125,6 +135,19 @@ object UseCaseModule {
     @Singleton
     fun provideEvaluateVariableUseCase(getVariableUseCase: GetVariableUseCase): EvaluateVariableUseCase =
         EvaluateVariableUseCase(getVariableUseCase)
+
+    @Provides
+    @Singleton
+    fun provideCreateMacroFromTemplateUseCase(
+        templateDao: TemplateDao,
+        createMacroUseCase: CreateMacroUseCase
+    ): CreateMacroFromTemplateUseCase =
+        CreateMacroFromTemplateUseCase(templateDao, createMacroUseCase)
+
+    @Provides
+    @Singleton
+    fun provideInitializeDefaultTemplatesUseCase(templateDao: TemplateDao): InitializeDefaultTemplatesUseCase =
+        InitializeDefaultTemplatesUseCase(templateDao)
 }
 
 

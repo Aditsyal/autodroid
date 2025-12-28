@@ -1,11 +1,16 @@
 package com.aditsyal.autodroid.domain.usecase
 
+import android.content.Context
+import android.content.Intent
 import com.aditsyal.autodroid.automation.trigger.TriggerManager
 import com.aditsyal.autodroid.domain.repository.MacroRepository
+import com.aditsyal.autodroid.services.foreground.AutomationForegroundService
+import dagger.hilt.android.qualifiers.ApplicationContext
 import timber.log.Timber
 import javax.inject.Inject
 
 class InitializeTriggersUseCase @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val repository: MacroRepository,
     private val triggerManager: TriggerManager
 ) {
@@ -24,9 +29,24 @@ class InitializeTriggersUseCase @Inject constructor(
                 }
             }
             
+            // Start foreground service if we have triggers to ensure background execution
+            if (triggers.isNotEmpty()) {
+                startForegroundService()
+            }
+
             Timber.i("Trigger initialization completed: ${triggers.size} triggers registered")
         } catch (e: Exception) {
             Timber.e(e, "Error initializing triggers")
+        }
+    }
+
+    private fun startForegroundService() {
+        try {
+            val intent = Intent(context, AutomationForegroundService::class.java)
+            context.startForegroundService(intent)
+            Timber.d("Started AutomationForegroundService for background trigger monitoring")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to start AutomationForegroundService")
         }
     }
 }

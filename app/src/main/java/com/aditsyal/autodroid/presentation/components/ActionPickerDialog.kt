@@ -57,7 +57,12 @@ val actionOptions = listOf(
     ActionOption("Delay", "DELAY", mapOf("delaySeconds" to 5)),
     ActionOption("HTTP Request", "HTTP_REQUEST", mapOf("url" to "https://api.example.com", "method" to "GET")),
     ActionOption("Set Variable", "SET_VARIABLE", mapOf("variableName" to "myVar", "value" to "Hello", "scope" to "LOCAL")),
-    ActionOption("Log to History", "LOG_HISTORY", mapOf("message" to "Custom log entry"))
+    ActionOption("Log to History", "LOG_HISTORY", mapOf("message" to "Custom log entry")),
+    
+    // Logic control
+    ActionOption("If Condition", "IF_CONDITION", mapOf("condition" to mapOf("leftOperand" to "{var}", "operator" to "==", "rightOperand" to "value"))),
+    ActionOption("While Loop", "WHILE_LOOP", mapOf("condition" to mapOf("leftOperand" to "{counter}", "operator" to "<", "rightOperand" to "10"))),
+    ActionOption("For Loop", "FOR_LOOP", mapOf("iterations" to 5, "loopVariable" to "i"))
 )
 
 @Composable

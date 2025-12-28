@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.aditsyal.autodroid.domain.usecase.InitializeTriggersUseCase
+import com.aditsyal.autodroid.domain.usecase.InitializeDefaultTemplatesUseCase
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +21,9 @@ class AutodroidApplication : Application(), Configuration.Provider {
 
     @Inject
     lateinit var initializeTriggersUseCase: InitializeTriggersUseCase
+
+    @Inject
+    lateinit var initializeDefaultTemplatesUseCase: InitializeDefaultTemplatesUseCase
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -39,6 +43,16 @@ class AutodroidApplication : Application(), Configuration.Provider {
                 initializeTriggersUseCase()
             } catch (e: Exception) {
                 Timber.e(e, "Failed to initialize triggers on app start")
+            }
+        }
+
+        // Initialize default templates
+        applicationScope.launch {
+            try {
+                Timber.d("Initializing default templates")
+                initializeDefaultTemplatesUseCase()
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to initialize default templates")
             }
         }
     }

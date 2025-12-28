@@ -5,6 +5,7 @@ import com.aditsyal.autodroid.data.models.ActionDTO
 import com.aditsyal.autodroid.data.models.MacroDTO
 import com.aditsyal.autodroid.data.models.TriggerDTO
 import com.aditsyal.autodroid.domain.usecase.CreateMacroUseCase
+import com.aditsyal.autodroid.domain.usecase.CreateMacroFromTemplateUseCase
 import com.aditsyal.autodroid.domain.usecase.GetMacroByIdUseCase
 import com.aditsyal.autodroid.domain.usecase.UpdateMacroUseCase
 import io.mockk.mockk
@@ -23,6 +24,7 @@ class MacroEditorViewModelTest {
     private val getMacroByIdUseCase = mockk<GetMacroByIdUseCase>()
     private val createMacroUseCase = mockk<CreateMacroUseCase>()
     private val updateMacroUseCase = mockk<UpdateMacroUseCase>()
+    private val createMacroFromTemplateUseCase = mockk<CreateMacroFromTemplateUseCase>()
     private val savedStateHandle = SavedStateHandle()
 
     @Before
@@ -32,7 +34,8 @@ class MacroEditorViewModelTest {
             savedStateHandle,
             getMacroByIdUseCase,
             createMacroUseCase,
-            updateMacroUseCase
+            updateMacroUseCase,
+            createMacroFromTemplateUseCase
         )
     }
 

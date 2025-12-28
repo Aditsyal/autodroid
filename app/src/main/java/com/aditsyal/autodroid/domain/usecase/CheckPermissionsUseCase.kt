@@ -80,7 +80,22 @@ class CheckPermissionsUseCase @Inject constructor(
             0
         }
 
-        return if (accessibilityEnabled == 1) {
+        if (accessibilityEnabled != 1) {
+            return PermissionResult.Denied
+        }
+
+        // Check if our specific service is enabled
+        val enabledServices = try {
+            Settings.Secure.getString(
+                context.contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            )
+        } catch (e: Exception) {
+            null
+        }
+
+        val serviceName = "${context.packageName}/.services.accessibility.AutomationAccessibilityService"
+        return if (enabledServices?.contains(serviceName) == true) {
             PermissionResult.Granted
         } else {
             PermissionResult.Denied

@@ -30,6 +30,9 @@ class ExecuteMacroUseCaseTest {
     @MockK
     lateinit var executeActionUseCase: ExecuteActionUseCase
 
+    @MockK
+    lateinit var evaluateLogicUseCase: EvaluateLogicUseCase
+
     private lateinit var useCase: ExecuteMacroUseCase
 
     @Before
@@ -38,7 +41,8 @@ class ExecuteMacroUseCaseTest {
         useCase = ExecuteMacroUseCase(
             repository,
             evaluateConstraintsUseCase,
-            executeActionUseCase
+            executeActionUseCase,
+            evaluateLogicUseCase
         )
     }
 

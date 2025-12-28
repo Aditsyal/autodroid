@@ -58,6 +58,7 @@ import androidx.compose.material3.ListItem
 @OptIn(ExperimentalMaterial3Api::class)
 fun MacroEditorScreen(
     macroId: Long?,
+    templateId: Long? = null,
     onBack: () -> Unit,
     onSaved: () -> Unit,
     viewModel: MacroEditorViewModel = hiltViewModel()
@@ -73,8 +74,14 @@ fun MacroEditorScreen(
     var showActionPicker by remember { mutableStateOf(false) }
     var showConstraintPicker by remember { mutableStateOf(false) }
 
-    LaunchedEffect(macroId) {
-        macroId?.let { viewModel.loadMacro(it) }
+    LaunchedEffect(macroId, templateId) {
+        when {
+            templateId != null -> viewModel.loadFromTemplate(templateId)
+            macroId != null && macroId != 0L -> viewModel.loadMacro(macroId)
+            else -> {
+                // New macro, do nothing - viewModel already has empty state
+            }
+        }
     }
 
     LaunchedEffect(uiState.currentMacro) {

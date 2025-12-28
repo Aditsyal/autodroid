@@ -6,6 +6,7 @@ import com.aditsyal.autodroid.data.models.TriggerDTO
 import com.aditsyal.autodroid.data.models.ActionDTO
 import com.aditsyal.autodroid.data.models.ConstraintDTO
 import com.aditsyal.autodroid.domain.usecase.CreateMacroUseCase
+import com.aditsyal.autodroid.domain.usecase.CreateMacroFromTemplateUseCase
 import com.aditsyal.autodroid.domain.usecase.GetMacroByIdUseCase
 import com.aditsyal.autodroid.domain.usecase.UpdateMacroUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +24,8 @@ class MacroEditorViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getMacroByIdUseCase: GetMacroByIdUseCase,
     private val createMacroUseCase: CreateMacroUseCase,
-    private val updateMacroUseCase: UpdateMacroUseCase
+    private val updateMacroUseCase: UpdateMacroUseCase,
+    private val createMacroFromTemplateUseCase: CreateMacroFromTemplateUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MacroEditorUiState(
@@ -109,6 +111,29 @@ class MacroEditorViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             error = throwable.message ?: "Unable to load macro"
+                        )
+                    }
+                }
+        }
+    }
+
+    fun loadFromTemplate(templateId: Long) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            runCatching { createMacroFromTemplateUseCase(templateId) }
+                .onSuccess { macroId ->
+                    if (macroId != null) {
+                        // Load the newly created macro
+                        loadMacro(macroId)
+                    } else {
+                        _uiState.update { it.copy(isLoading = false, error = "Failed to create macro from template") }
+                    }
+                }
+                .onFailure { throwable ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = throwable.message ?: "Unable to load template"
                         )
                     }
                 }

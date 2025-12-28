@@ -13,8 +13,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.io.File
-import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -109,31 +107,6 @@ class CommunicationTriggerProvider @Inject constructor(
                         val state = intent.getStringExtra(TelephonyManager.EXTRA_STATE)
                         val phoneNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
                         
-                        // #region agent log
-                        try {
-                            val logData = JSONObject().apply {
-                                put("sessionId", "debug-session")
-                                put("runId", "run1")
-                                put("hypothesisId", "A")
-                                put("location", "CommunicationTriggerProvider.kt:107")
-                                put("message", "Phone state changed - entry")
-                                put("timestamp", System.currentTimeMillis())
-                                val dataObj = JSONObject().apply {
-                                    put("state", state ?: "null")
-                                    put("stateType", state?.javaClass?.simpleName ?: "null")
-                                    put("lastCallState", lastCallState)
-                                    put("lastCallStateType", lastCallState.javaClass.simpleName)
-                                    put("EXTRA_STATE_RINGING", TelephonyManager.EXTRA_STATE_RINGING)
-                                    put("EXTRA_STATE_RINGING_TYPE", TelephonyManager.EXTRA_STATE_RINGING.javaClass.simpleName)
-                                    put("CALL_STATE_RINGING", TelephonyManager.CALL_STATE_RINGING)
-                                    put("CALL_STATE_RINGING_TYPE", TelephonyManager.CALL_STATE_RINGING.javaClass.simpleName)
-                                }
-                                put("data", dataObj)
-                            }
-                            File("/Users/sense/Documents/Projects/Autoroid/.cursor/debug.log").appendText("${logData.toString()}\n")
-                        } catch (e: Exception) { }
-                        // #endregion
-                        
                         when (state) {
                             TelephonyManager.EXTRA_STATE_RINGING -> {
                                 lastCallNumber = phoneNumber
@@ -145,32 +118,6 @@ class CommunicationTriggerProvider @Inject constructor(
                                 Timber.d("Call answered")
                             }
                             TelephonyManager.EXTRA_STATE_IDLE -> {
-                                // #region agent log
-                                try {
-                                    val logData = JSONObject().apply {
-                                        put("sessionId", "debug-session")
-                                        put("runId", "run1")
-                                        put("hypothesisId", "B")
-                                        put("location", "CommunicationTriggerProvider.kt:120")
-                                        put("message", "EXTRA_STATE_IDLE - before comparison")
-                                        put("timestamp", System.currentTimeMillis())
-                                        val dataObj = JSONObject().apply {
-                                            put("lastCallState", lastCallState)
-                                            put("lastCallStateType", lastCallState.javaClass.simpleName)
-                                            put("lastCallStateToString", lastCallState.toString())
-                                            put("EXTRA_STATE_RINGING", TelephonyManager.EXTRA_STATE_RINGING)
-                                            put("EXTRA_STATE_RINGING_TYPE", TelephonyManager.EXTRA_STATE_RINGING.javaClass.simpleName)
-                                            put("CALL_STATE_RINGING", TelephonyManager.CALL_STATE_RINGING)
-                                            put("CALL_STATE_RINGING_TYPE", TelephonyManager.CALL_STATE_RINGING.javaClass.simpleName)
-                                            put("comparison1", lastCallState == TelephonyManager.CALL_STATE_RINGING)
-                                            put("comparison2", lastCallState.toString() == TelephonyManager.EXTRA_STATE_RINGING)
-                                        }
-                                        put("data", dataObj)
-                                    }
-                                    File("/Users/sense/Documents/Projects/Autoroid/.cursor/debug.log").appendText("${logData.toString()}\n")
-                                } catch (e: Exception) { }
-                                // #endregion
-                                
                                 if (lastCallState == TelephonyManager.CALL_STATE_RINGING) {
                                     // Missed call
                                     Timber.d("Missed call from: $lastCallNumber")
@@ -188,26 +135,6 @@ class CommunicationTriggerProvider @Inject constructor(
                             TelephonyManager.EXTRA_STATE_OFFHOOK -> TelephonyManager.CALL_STATE_OFFHOOK
                             else -> TelephonyManager.CALL_STATE_IDLE
                         }
-                        
-                        // #region agent log
-                        try {
-                            val logData = JSONObject().apply {
-                                put("sessionId", "debug-session")
-                                put("runId", "run1")
-                                put("hypothesisId", "C")
-                                put("location", "CommunicationTriggerProvider.kt:137")
-                                put("message", "lastCallState updated - after assignment")
-                                put("timestamp", System.currentTimeMillis())
-                                val dataObj = JSONObject().apply {
-                                    put("newLastCallState", lastCallState)
-                                    put("newLastCallStateType", lastCallState.javaClass.simpleName)
-                                    put("state", state ?: "null")
-                                }
-                                put("data", dataObj)
-                            }
-                            File("/Users/sense/Documents/Projects/Autoroid/.cursor/debug.log").appendText("${logData.toString()}\n")
-                        } catch (e: Exception) { }
-                        // #endregion
                     }
                     android.provider.Telephony.Sms.Intents.SMS_RECEIVED_ACTION -> {
                         val messages = android.provider.Telephony.Sms.Intents.getMessagesFromIntent(intent)

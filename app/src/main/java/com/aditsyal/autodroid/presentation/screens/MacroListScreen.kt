@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.LibraryBooks
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -49,6 +50,7 @@ fun MacroListScreen(
     onShowHistory: () -> Unit,
     onShowConflicts: () -> Unit,
     onShowSettings: () -> Unit,
+    onShowTemplates: () -> Unit,
     viewModel: MacroListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -74,6 +76,7 @@ fun MacroListScreen(
         onShowHistory = onShowHistory,
         onShowConflicts = onShowConflicts,
         onShowSettings = onShowSettings,
+        onShowTemplates = onShowTemplates,
         onToggleMacro = viewModel::toggleMacro,
         onExecuteMacro = viewModel::executeMacro,
         onDeleteMacro = viewModel::deleteMacro
@@ -90,6 +93,7 @@ fun MacroListScreenContent(
     onShowHistory: () -> Unit,
     onShowConflicts: () -> Unit,
     onShowSettings: () -> Unit,
+    onShowTemplates: () -> Unit,
     onToggleMacro: (Long, Boolean) -> Unit,
     onExecuteMacro: (Long) -> Unit,
     onDeleteMacro: (Long) -> Unit
@@ -113,6 +117,9 @@ fun MacroListScreenContent(
                     }
                     IconButton(onClick = onShowConflicts) {
                         Icon(Icons.Default.Warning, contentDescription = "Show conflicts")
+                    }
+                    IconButton(onClick = onShowTemplates) {
+                        Icon(Icons.Default.LibraryBooks, contentDescription = "Browse templates")
                     }
                     IconButton(onClick = onAddMacro) {
                         Icon(Icons.Default.Add, contentDescription = "Add macro")

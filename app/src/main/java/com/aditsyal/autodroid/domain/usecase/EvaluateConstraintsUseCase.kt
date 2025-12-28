@@ -1,11 +1,13 @@
 package com.aditsyal.autodroid.domain.usecase
 
+import android.Manifest
 import android.app.ActivityManager
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
@@ -266,6 +268,10 @@ class EvaluateConstraintsUseCase @Inject constructor(
         
         if (requiredDevice != null) {
             // Check if specific device is connected
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                Timber.w("BLUETOOTH_CONNECT permission not granted, cannot check bonded devices")
+                return false
+            }
             val bondedDevices = adapter.bondedDevices
             return bondedDevices.any { it.address == requiredDevice }
         }

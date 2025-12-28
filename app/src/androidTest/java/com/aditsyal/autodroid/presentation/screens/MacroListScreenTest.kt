@@ -24,6 +24,10 @@ class MacroListScreenTest {
                 snackbarHostState = SnackbarHostState(),
                 onAddMacro = {},
                 onEditMacro = {},
+                onShowHistory = {},
+                onShowConflicts = {},
+                onShowSettings = {},
+                onShowTemplates = {},
                 onToggleMacro = { _, _ -> },
                 onExecuteMacro = {},
                 onDeleteMacro = {}
@@ -43,6 +47,10 @@ class MacroListScreenTest {
                 snackbarHostState = SnackbarHostState(),
                 onAddMacro = {},
                 onEditMacro = {},
+                onShowHistory = {},
+                onShowConflicts = {},
+                onShowSettings = {},
+                onShowTemplates = {},
                 onToggleMacro = { _, _ -> },
                 onExecuteMacro = {},
                 onDeleteMacro = {}
@@ -66,6 +74,10 @@ class MacroListScreenTest {
                 snackbarHostState = SnackbarHostState(),
                 onAddMacro = {},
                 onEditMacro = {},
+                onShowHistory = {},
+                onShowConflicts = {},
+                onShowSettings = {},
+                onShowTemplates = {},
                 onToggleMacro = { _, _ -> },
                 onExecuteMacro = {},
                 onDeleteMacro = {}
@@ -86,6 +98,10 @@ class MacroListScreenTest {
                 snackbarHostState = SnackbarHostState(),
                 onAddMacro = { addClicked = true },
                 onEditMacro = {},
+                onShowHistory = {},
+                onShowConflicts = {},
+                onShowSettings = {},
+                onShowTemplates = {},
                 onToggleMacro = { _, _ -> },
                 onExecuteMacro = {},
                 onDeleteMacro = {}

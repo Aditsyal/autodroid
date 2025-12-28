@@ -104,6 +104,12 @@ class ExecuteActionUseCase @Inject constructor(
                 "HTTP_REQUEST" -> sendHttpRequest(processedConfig)
                 "SET_VARIABLE" -> setVariable(processedConfig, macroId)
                 
+                // Logic control (handled in ExecuteMacroUseCase, but included here for completeness)
+                "IF_CONDITION", "WHILE_LOOP", "FOR_LOOP", "BREAK", "CONTINUE", "END_IF", "END_WHILE", "END_FOR" -> {
+                    // These are handled by ExecuteMacroUseCase, no action needed here
+                    Timber.d("Logic control action: ${action.actionType} - handled by macro executor")
+                }
+                
                 else -> {
                     val errorMsg = "Unknown action type: ${action.actionType}"
                     Timber.w(errorMsg)
@@ -329,6 +335,8 @@ class ExecuteActionUseCase @Inject constructor(
             // Broadcast the change
             val intent = Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED).apply {
                 putExtra("state", enable)
+                // Make explicit to avoid implicit broadcast security issues
+                setComponent(android.content.ComponentName(context, "com.aditsyal.autodroid.receivers.DeviceStateReceiver"))
             }
             context.sendBroadcast(intent)
             Timber.i("Airplane mode set to: $enable")
