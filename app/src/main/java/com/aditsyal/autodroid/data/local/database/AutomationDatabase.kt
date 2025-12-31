@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.aditsyal.autodroid.data.local.dao.ActionDao
 import com.aditsyal.autodroid.data.local.dao.ConstraintDao
 import com.aditsyal.autodroid.data.local.dao.ExecutionLogDao
@@ -46,13 +48,38 @@ abstract class AutomationDatabase : RoomDatabase() {
     companion object {
         private const val DATABASE_NAME = "automation_database.db"
 
+        // Migrations
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add migration logic here if schema changed from 1 to 2
+            }
+        }
+
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add migration logic here if schema changed from 2 to 3
+            }
+        }
+
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add migration logic here if schema changed from 3 to 4
+            }
+        }
+
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add migration logic here if schema changed from 4 to 5
+            }
+        }
+
         fun getDatabase(context: Context): AutomationDatabase {
             return Room.databaseBuilder(
                 context.applicationContext,
                 AutomationDatabase::class.java,
                 DATABASE_NAME
             )
-                .fallbackToDestructiveMigration()
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
         }
     }

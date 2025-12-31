@@ -84,9 +84,32 @@ object UseCaseModule {
         @ApplicationContext context: Context,
         getVariableUseCase: GetVariableUseCase,
         setVariableUseCase: SetVariableUseCase,
-        evaluateVariableUseCase: EvaluateVariableUseCase
+        evaluateVariableUseCase: EvaluateVariableUseCase,
+        wifiToggleExecutor: com.aditsyal.autodroid.domain.usecase.executors.WifiToggleExecutor,
+        bluetoothToggleExecutor: com.aditsyal.autodroid.domain.usecase.executors.BluetoothToggleExecutor,
+        volumeControlExecutor: com.aditsyal.autodroid.domain.usecase.executors.VolumeControlExecutor,
+        notificationExecutor: com.aditsyal.autodroid.domain.usecase.executors.NotificationExecutor,
+        sendSmsExecutor: com.aditsyal.autodroid.domain.usecase.executors.SendSmsExecutor,
+        launchAppExecutor: com.aditsyal.autodroid.domain.usecase.executors.LaunchAppExecutor,
+        openUrlExecutor: com.aditsyal.autodroid.domain.usecase.executors.OpenUrlExecutor,
+        setBrightnessExecutor: com.aditsyal.autodroid.domain.usecase.executors.SetBrightnessExecutor,
+        delayExecutor: com.aditsyal.autodroid.domain.usecase.executors.DelayExecutor
     ): ExecuteActionUseCase =
-        ExecuteActionUseCase(context, getVariableUseCase, setVariableUseCase, evaluateVariableUseCase)
+        ExecuteActionUseCase(
+            context,
+            getVariableUseCase,
+            setVariableUseCase,
+            evaluateVariableUseCase,
+            wifiToggleExecutor,
+            bluetoothToggleExecutor,
+            volumeControlExecutor,
+            notificationExecutor,
+            sendSmsExecutor,
+            launchAppExecutor,
+            openUrlExecutor,
+            setBrightnessExecutor,
+            delayExecutor
+        )
 
     @Provides
     @Singleton

@@ -2,6 +2,7 @@ package com.aditsyal.autodroid.domain.usecase
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import com.aditsyal.autodroid.automation.trigger.TriggerManager
 import com.aditsyal.autodroid.domain.repository.MacroRepository
 import com.aditsyal.autodroid.services.foreground.AutomationForegroundService
@@ -43,8 +44,12 @@ class InitializeTriggersUseCase @Inject constructor(
     private fun startForegroundService() {
         try {
             val intent = Intent(context, AutomationForegroundService::class.java)
-            context.startForegroundService(intent)
-            Timber.d("Started AutomationForegroundService for background trigger monitoring")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+                Timber.d("Started AutomationForegroundService for background trigger monitoring")
+            } else {
+                Timber.w("Foreground service requires API 26+")
+            }
         } catch (e: Exception) {
             Timber.e(e, "Failed to start AutomationForegroundService")
         }

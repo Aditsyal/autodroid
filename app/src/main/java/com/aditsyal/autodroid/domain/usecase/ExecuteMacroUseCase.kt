@@ -152,20 +152,20 @@ class ExecuteMacroUseCase @Inject constructor(
                         
                         for (i in 0 until iterations) {
                             // Set loop variable if specified
-                            if (loopVariable != null) {
-                                executeActionUseCase(
-                                    com.aditsyal.autodroid.data.models.ActionDTO(
-                                        actionType = "SET_VARIABLE",
-                                        actionConfig = mapOf(
-                                            "variableName" to loopVariable,
-                                            "value" to i.toString(),
-                                            "scope" to "LOCAL"
-                                        ),
-                                        executionOrder = 0
-                                    ),
-                                    macroId
-                                )
-                            }
+                             if (loopVariable != null) {
+                                 executeActionUseCase(
+                                     com.aditsyal.autodroid.data.models.ActionDTO(
+                                         actionType = "SET_VARIABLE",
+                                         actionConfig = mapOf(
+                                             "variableName" to loopVariable,
+                                             "value" to i.toString(),
+                                             "scope" to "LOCAL"
+                                         ),
+                                         executionOrder = 0
+                                     ),
+                                     macroId
+                                 ).getOrThrow()
+                             }
                             
                             // Execute loop body
                             var bodyIndex = loopStartIndex + 1
@@ -196,13 +196,13 @@ class ExecuteMacroUseCase @Inject constructor(
                             actionIndex++
                         }
                     }
-                    else -> {
-                        executeActionUseCase(action, macroId)
-                        if (action.delayAfter > 0) {
-                            delay(action.delayAfter)
-                        }
-                        actionIndex++
-                    }
+                     else -> {
+                         executeActionUseCase(action, macroId).getOrThrow()
+                         if (action.delayAfter > 0) {
+                             delay(action.delayAfter)
+                         }
+                         actionIndex++
+                     }
                 }
             } catch (e: Exception) {
                 Timber.e(e, "Error executing action ${action.actionType} at index $actionIndex")
@@ -213,7 +213,7 @@ class ExecuteMacroUseCase @Inject constructor(
     
     private suspend fun executeActionIfNotLogic(action: com.aditsyal.autodroid.data.models.ActionDTO, macroId: Long) {
         if (action.actionType !in listOf("IF_CONDITION", "WHILE_LOOP", "FOR_LOOP", "BREAK", "CONTINUE", "END_IF", "END_WHILE", "END_FOR")) {
-            executeActionUseCase(action, macroId)
+            executeActionUseCase(action, macroId).getOrThrow()
             if (action.delayAfter > 0) {
                 delay(action.delayAfter)
             }

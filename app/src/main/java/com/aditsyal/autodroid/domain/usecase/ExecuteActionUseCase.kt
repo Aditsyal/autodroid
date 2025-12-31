@@ -27,6 +27,7 @@ import androidx.core.app.NotificationManagerCompat
 import com.aditsyal.autodroid.R
 import com.aditsyal.autodroid.data.models.ActionDTO
 import com.aditsyal.autodroid.data.models.VariableDTO
+import com.aditsyal.autodroid.domain.usecase.executors.*
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -42,7 +43,16 @@ class ExecuteActionUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
     private val getVariableUseCase: GetVariableUseCase,
     private val setVariableUseCase: SetVariableUseCase,
-    private val evaluateVariableUseCase: EvaluateVariableUseCase
+    private val evaluateVariableUseCase: EvaluateVariableUseCase,
+    private val wifiToggleExecutor: WifiToggleExecutor,
+    private val bluetoothToggleExecutor: BluetoothToggleExecutor,
+    private val volumeControlExecutor: VolumeControlExecutor,
+    private val notificationExecutor: NotificationExecutor,
+    private val sendSmsExecutor: SendSmsExecutor,
+    private val launchAppExecutor: LaunchAppExecutor,
+    private val openUrlExecutor: OpenUrlExecutor,
+    private val setBrightnessExecutor: SetBrightnessExecutor,
+    private val delayExecutor: DelayExecutor
 ) {
     
     companion object {
@@ -54,19 +64,26 @@ class ExecuteActionUseCase @Inject constructor(
         createNotificationChannel()
     }
 
-    suspend operator fun invoke(action: ActionDTO, macroId: Long? = null) {
+    suspend operator fun invoke(action: ActionDTO, macroId: Long? = null): Result<Unit> {
         Timber.d("Executing action: ${action.actionType} with config: ${action.actionConfig}")
-        
-        // Replace variable placeholders in action config
-        val processedConfig = replaceVariablePlaceholders(action.actionConfig, macroId)
-        
-        try {
+
+        return runCatching {
+            // Replace variable placeholders in action config
+            val processedConfig = replaceVariablePlaceholders(action.actionConfig, macroId)
+
             when (action.actionType) {
-                // Existing actions
-                "WIFI_TOGGLE" -> toggleWifi(processedConfig)
-                "BLUETOOTH_TOGGLE" -> toggleBluetooth(processedConfig)
-                "VOLUME_CONTROL" -> controlVolume(processedConfig)
-                "NOTIFICATION" -> showNotification(processedConfig)
+                // Refactored actions using executors
+                "WIFI_TOGGLE" -> wifiToggleExecutor.execute(processedConfig).getOrThrow()
+                "BLUETOOTH_TOGGLE" -> bluetoothToggleExecutor.execute(processedConfig).getOrThrow()
+                "VOLUME_CONTROL" -> volumeControlExecutor.execute(processedConfig).getOrThrow()
+                "NOTIFICATION" -> notificationExecutor.execute(processedConfig).getOrThrow()
+                "SEND_SMS" -> sendSmsExecutor.execute(processedConfig).getOrThrow()
+                "LAUNCH_APP" -> launchAppExecutor.execute(processedConfig).getOrThrow()
+                "OPEN_URL" -> openUrlExecutor.execute(processedConfig).getOrThrow()
+                "SET_BRIGHTNESS" -> setBrightnessExecutor.execute(processedConfig).getOrThrow()
+                "DELAY" -> delayExecutor.execute(processedConfig).getOrThrow()
+
+                // Existing actions (to be refactored later)
                 "SHOW_TOAST" -> showToast(processedConfig)
                 "LOG_HISTORY" -> logToHistory(processedConfig)
                 
@@ -116,15 +133,6 @@ class ExecuteActionUseCase @Inject constructor(
                     throw IllegalArgumentException(errorMsg)
                 }
             }
-        } catch (e: SecurityException) {
-            // Permission-related errors - don't throw, just log
-            Timber.e(e, "Permission denied for action: ${action.actionType}")
-        } catch (e: UnsupportedOperationException) {
-            // Operation not supported (e.g., WiFi toggle on Android Q+)
-            Timber.w(e, "Action not supported: ${action.actionType}")
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to execute action: ${action.actionType}")
-            throw e // Re-throw to be handled by caller
         }
     }
 

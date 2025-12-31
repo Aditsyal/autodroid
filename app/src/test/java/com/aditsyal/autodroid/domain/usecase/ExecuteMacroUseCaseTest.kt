@@ -66,7 +66,7 @@ class ExecuteMacroUseCaseTest {
         val macro = MacroDTO(id = 1, name = "Test Macro")
         coEvery { repository.getMacroById(1) } returns macro
         every { evaluateConstraintsUseCase(any()) } returns true
-        coEvery { executeActionUseCase(any()) } just Runs
+        coEvery { executeActionUseCase(any()) } returns Result.success(Unit)
         coEvery { repository.updateExecutionInfo(any(), any()) } just Runs
         val logSlot = slot<ExecutionLogDTO>()
         coEvery { repository.logExecution(capture(logSlot)) } just Runs
