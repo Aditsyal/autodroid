@@ -1,6 +1,7 @@
 package com.aditsyal.autodroid.domain.usecase
 
 import com.aditsyal.autodroid.data.local.dao.VariableDao
+import com.aditsyal.autodroid.utils.CacheManager
 import com.aditsyal.autodroid.data.local.entities.VariableEntity
 import com.aditsyal.autodroid.data.models.VariableDTO
 import timber.log.Timber
@@ -11,7 +12,7 @@ import javax.inject.Inject
  */
 class SetVariableUseCase @Inject constructor(
     private val variableDao: VariableDao
-) {
+ ) {
     suspend operator fun invoke(variable: VariableDTO) {
         try {
             val existing = variableDao.getVariable(variable.name, variable.scope, variable.macroId)
@@ -39,10 +40,13 @@ class SetVariableUseCase @Inject constructor(
                 )
                 Timber.d("Created variable: ${variable.name} = ${variable.value}")
             }
+            // Invalidate caches after mutation
+            CacheManager.invalidateVariableCache(variable.name, variable.macroId)
         } catch (e: Exception) {
             Timber.e(e, "Failed to set variable: ${variable.name}")
             throw e
         }
     }
-}
+ }
+
 

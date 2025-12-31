@@ -54,7 +54,9 @@ class ExecuteActionUseCase @Inject constructor(
     private val setBrightnessExecutor: SetBrightnessExecutor,
     private val delayExecutor: DelayExecutor,
     private val toastExecutor: com.aditsyal.autodroid.domain.usecase.executors.ToastExecutor,
-    private val vibrateExecutor: com.aditsyal.autodroid.domain.usecase.executors.VibrateExecutor
+    private val vibrateExecutor: com.aditsyal.autodroid.domain.usecase.executors.VibrateExecutor,
+    private val playSoundExecutor: com.aditsyal.autodroid.domain.usecase.executors.PlaySoundExecutor,
+    private val stopSoundExecutor: com.aditsyal.autodroid.domain.usecase.executors.StopSoundExecutor
 ) {
     
     companion object {
@@ -110,8 +112,8 @@ class ExecuteActionUseCase @Inject constructor(
                 "CLOSE_APP" -> closeApp(processedConfig)
                 
                 // Media
-                "PLAY_SOUND" -> playSound(processedConfig)
-                "STOP_SOUND" -> stopSound()
+                "PLAY_SOUND" -> playSoundExecutor.execute(processedConfig).getOrThrow()
+                "STOP_SOUND" -> stopSoundExecutor.execute(processedConfig).getOrThrow()
                 "CHANGE_WALLPAPER" -> changeWallpaper(processedConfig)
                 
                 // Automation
@@ -547,46 +549,6 @@ class ExecuteActionUseCase @Inject constructor(
     }
 
     // Media actions
-    private var mediaPlayer: MediaPlayer? = null
-
-    private fun playSound(config: Map<String, Any>) {
-        val soundType = config["soundType"]?.toString() ?: "DEFAULT"
-        
-        try {
-            stopSound() // Stop any existing sound
-            
-            mediaPlayer = when (soundType.uppercase()) {
-                "DEFAULT", "NOTIFICATION" -> MediaPlayer.create(context, Settings.System.DEFAULT_NOTIFICATION_URI)
-                "RINGTONE" -> MediaPlayer.create(context, Settings.System.DEFAULT_RINGTONE_URI)
-                "ALARM" -> MediaPlayer.create(context, Settings.System.DEFAULT_ALARM_ALERT_URI)
-                else -> {
-                    val uri = config["uri"]?.toString()?.let { Uri.parse(it) }
-                    if (uri != null) {
-                        MediaPlayer.create(context, uri)
-                    } else {
-                        MediaPlayer.create(context, Settings.System.DEFAULT_NOTIFICATION_URI)
-                    }
-                }
-            }
-            
-            mediaPlayer?.start()
-            Timber.i("Sound played: $soundType")
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to play sound")
-            throw e
-        }
-    }
-
-    private fun stopSound() {
-        try {
-            mediaPlayer?.stop()
-            mediaPlayer?.release()
-            mediaPlayer = null
-            Timber.i("Sound stopped")
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to stop sound")
-        }
-    }
 
     private fun changeWallpaper(config: Map<String, Any>) {
         val imageUri = config["imageUri"]?.toString()

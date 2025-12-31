@@ -30,6 +30,32 @@ class ExecutionHistoryViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = ExecutionHistoryUiState.Loading
         )
+
+    // Paged/filtered execution logs for performance
+    fun getPagedExecutionLogs(
+        limit: Int = 50,
+        offset: Int = 0,
+        statusFilter: String? = null,
+        macroIdFilter: Long? = null
+    ): StateFlow<ExecutionHistoryUiState> = repository.getAllExecutionLogs()
+        .map { logs ->
+            var filtered = logs
+            if (statusFilter != null) {
+                filtered = filtered.filter { it.executionStatus == statusFilter }
+            }
+            if (macroIdFilter != null) {
+                filtered = filtered.filter { it.macroId == macroIdFilter }
+            }
+            ExecutionHistoryUiState.Success(filtered.drop(offset).take(limit))
+        }
+        .catch { throwable ->
+            ExecutionHistoryUiState.Error(throwable.message ?: "Unknown error")
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = ExecutionHistoryUiState.Loading
+        )
 }
 
 sealed class ExecutionHistoryUiState {
