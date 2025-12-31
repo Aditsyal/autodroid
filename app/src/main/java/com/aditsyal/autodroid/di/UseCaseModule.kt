@@ -93,7 +93,9 @@ object UseCaseModule {
         launchAppExecutor: com.aditsyal.autodroid.domain.usecase.executors.LaunchAppExecutor,
         openUrlExecutor: com.aditsyal.autodroid.domain.usecase.executors.OpenUrlExecutor,
         setBrightnessExecutor: com.aditsyal.autodroid.domain.usecase.executors.SetBrightnessExecutor,
-        delayExecutor: com.aditsyal.autodroid.domain.usecase.executors.DelayExecutor
+        delayExecutor: com.aditsyal.autodroid.domain.usecase.executors.DelayExecutor,
+        toastExecutor: com.aditsyal.autodroid.domain.usecase.executors.ToastExecutor,
+        vibrateExecutor: com.aditsyal.autodroid.domain.usecase.executors.VibrateExecutor
     ): ExecuteActionUseCase =
         ExecuteActionUseCase(
             context,
@@ -108,7 +110,9 @@ object UseCaseModule {
             launchAppExecutor,
             openUrlExecutor,
             setBrightnessExecutor,
-            delayExecutor
+            delayExecutor,
+            toastExecutor,
+            vibrateExecutor
         )
 
     @Provides

@@ -52,7 +52,9 @@ class ExecuteActionUseCase @Inject constructor(
     private val launchAppExecutor: LaunchAppExecutor,
     private val openUrlExecutor: OpenUrlExecutor,
     private val setBrightnessExecutor: SetBrightnessExecutor,
-    private val delayExecutor: DelayExecutor
+    private val delayExecutor: DelayExecutor,
+    private val toastExecutor: com.aditsyal.autodroid.domain.usecase.executors.ToastExecutor,
+    private val vibrateExecutor: com.aditsyal.autodroid.domain.usecase.executors.VibrateExecutor
 ) {
     
     companion object {
@@ -82,34 +84,30 @@ class ExecuteActionUseCase @Inject constructor(
                 "OPEN_URL" -> openUrlExecutor.execute(processedConfig).getOrThrow()
                 "SET_BRIGHTNESS" -> setBrightnessExecutor.execute(processedConfig).getOrThrow()
                 "DELAY" -> delayExecutor.execute(processedConfig).getOrThrow()
+                "SHOW_TOAST" -> toastExecutor.execute(processedConfig).getOrThrow()
+                "VIBRATE" -> vibrateExecutor.execute(processedConfig).getOrThrow()
 
                 // Existing actions (to be refactored later)
-                "SHOW_TOAST" -> showToast(processedConfig)
                 "LOG_HISTORY" -> logToHistory(processedConfig)
-                
+
                 // System settings
-                "SET_BRIGHTNESS" -> setBrightness(processedConfig)
                 "TOGGLE_AIRPLANE_MODE" -> toggleAirplaneMode(processedConfig)
                 "TOGGLE_GPS" -> toggleGPS(processedConfig)
                 "SET_SCREEN_TIMEOUT" -> setScreenTimeout(processedConfig)
-                
+
                 // Device control
                 "LOCK_SCREEN" -> lockScreen()
                 "SLEEP_DEVICE" -> sleepDevice()
-                "VIBRATE" -> vibrate(processedConfig)
                 "ENABLE_DO_NOT_DISTURB" -> setDoNotDisturb(processedConfig, true)
                 "DISABLE_DO_NOT_DISTURB" -> setDoNotDisturb(processedConfig, false)
-                
+
                 // Communication
-                "SEND_SMS" -> sendSMS(processedConfig)
                 "SEND_EMAIL" -> sendEmail(processedConfig)
                 "MAKE_CALL" -> makeCall(processedConfig)
                 "SPEAK_TEXT" -> speakText(processedConfig)
-                
+
                 // App control
-                "LAUNCH_APP" -> launchApp(processedConfig)
                 "CLOSE_APP" -> closeApp(processedConfig)
-                "OPEN_URL" -> openUrl(processedConfig)
                 
                 // Media
                 "PLAY_SOUND" -> playSound(processedConfig)
@@ -436,44 +434,6 @@ class ExecuteActionUseCase @Inject constructor(
         }
     }
 
-    private fun vibrate(config: Map<String, Any>) {
-        val duration = config["duration"]?.toString()?.toLongOrNull() ?: 500L
-        val pattern = config["pattern"] as? LongArray
-        
-        try {
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
-                vibratorManager?.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-            }
-            
-            if (vibrator == null) {
-                throw IllegalStateException("Vibrator not available")
-            }
-            
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                if (pattern != null) {
-                    vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
-                } else {
-                    vibrator.vibrate(VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE))
-                }
-            } else {
-                @Suppress("DEPRECATION")
-                if (pattern != null) {
-                    vibrator.vibrate(pattern, -1)
-                } else {
-                    vibrator.vibrate(duration)
-                }
-            }
-            Timber.i("Vibration triggered for ${duration}ms")
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to vibrate")
-            throw e
-        }
-    }
-
     private fun setDoNotDisturb(config: Map<String, Any>, enable: Boolean) {
         try {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
@@ -494,33 +454,6 @@ class ExecuteActionUseCase @Inject constructor(
     }
 
     // Communication actions
-    private fun sendSMS(config: Map<String, Any>) {
-        val phoneNumber = config["phoneNumber"]?.toString()
-        val message = config["message"]?.toString() ?: ""
-        
-        if (phoneNumber == null) {
-            throw IllegalArgumentException("Phone number is required for SMS")
-        }
-        
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-            throw SecurityException("SEND_SMS permission required")
-        }
-        
-        try {
-            val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                context.getSystemService(android.telephony.SmsManager::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                android.telephony.SmsManager.getDefault()
-            }
-            smsManager?.sendTextMessage(phoneNumber, null, message, null, null)
-            Timber.i("SMS sent to $phoneNumber")
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to send SMS")
-            throw e
-        }
-    }
-
     private fun sendEmail(config: Map<String, Any>) {
         val to = config["to"]?.toString() ?: ""
         val subject = config["subject"]?.toString() ?: ""
@@ -596,60 +529,19 @@ class ExecuteActionUseCase @Inject constructor(
     }
 
     // App control actions
-    private fun launchApp(config: Map<String, Any>) {
-        val packageName = config["packageName"]?.toString()
-        
-        if (packageName == null) {
-            throw IllegalArgumentException("Package name is required")
-        }
-        
-        try {
-            val intent = context.packageManager.getLaunchIntentForPackage(packageName)
-            if (intent != null) {
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(intent)
-                Timber.i("App launched: $packageName")
-            } else {
-                throw IllegalStateException("App not found: $packageName")
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to launch app: $packageName")
-            throw e
-        }
-    }
-
     private fun closeApp(config: Map<String, Any>) {
         val packageName = config["packageName"]?.toString()
-        
+
         if (packageName == null) {
             throw IllegalArgumentException("Package name is required")
         }
-        
+
         try {
             val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
             activityManager?.killBackgroundProcesses(packageName)
             Timber.i("App closed: $packageName")
         } catch (e: Exception) {
             Timber.e(e, "Failed to close app: $packageName")
-            throw e
-        }
-    }
-
-    private fun openUrl(config: Map<String, Any>) {
-        val url = config["url"]?.toString()
-        
-        if (url == null) {
-            throw IllegalArgumentException("URL is required")
-        }
-        
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(intent)
-            Timber.i("URL opened: $url")
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to open URL: $url")
             throw e
         }
     }
