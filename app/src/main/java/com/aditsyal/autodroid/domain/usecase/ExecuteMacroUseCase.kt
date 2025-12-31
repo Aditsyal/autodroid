@@ -153,7 +153,7 @@ class ExecuteMacroUseCase @Inject constructor(
                         for (i in 0 until iterations) {
                             // Set loop variable if specified
                              if (loopVariable != null) {
-                                 executeActionUseCase(
+                                 val result = executeActionUseCase(
                                      com.aditsyal.autodroid.data.models.ActionDTO(
                                          actionType = "SET_VARIABLE",
                                          actionConfig = mapOf(
@@ -164,7 +164,10 @@ class ExecuteMacroUseCase @Inject constructor(
                                          executionOrder = 0
                                      ),
                                      macroId
-                                 ).getOrThrow()
+                                 )
+                                 if (result.isFailure) {
+                                     Timber.w("Failed to set loop variable: ${result.exceptionOrNull()?.message}")
+                                 }
                              }
                             
                             // Execute loop body
@@ -197,11 +200,17 @@ class ExecuteMacroUseCase @Inject constructor(
                         }
                     }
                      else -> {
-                         executeActionUseCase(action, macroId).getOrThrow()
-                         if (action.delayAfter > 0) {
-                             delay(action.delayAfter)
+                         val result = executeActionUseCase(action, macroId)
+                         if (result.isSuccess) {
+                             if (action.delayAfter > 0) {
+                                 delay(action.delayAfter)
+                             }
+                             actionIndex++
+                         } else {
+                             Timber.w("Action ${action.actionType} failed: ${result.exceptionOrNull()?.message}")
+                             // Skip failed action and continue with next
+                             actionIndex++
                          }
-                         actionIndex++
                      }
                 }
             } catch (e: Exception) {
@@ -213,9 +222,13 @@ class ExecuteMacroUseCase @Inject constructor(
     
     private suspend fun executeActionIfNotLogic(action: com.aditsyal.autodroid.data.models.ActionDTO, macroId: Long) {
         if (action.actionType !in listOf("IF_CONDITION", "WHILE_LOOP", "FOR_LOOP", "BREAK", "CONTINUE", "END_IF", "END_WHILE", "END_FOR")) {
-            executeActionUseCase(action, macroId).getOrThrow()
-            if (action.delayAfter > 0) {
-                delay(action.delayAfter)
+            val result = executeActionUseCase(action, macroId)
+            if (result.isSuccess) {
+                if (action.delayAfter > 0) {
+                    delay(action.delayAfter)
+                }
+            } else {
+                Timber.w("Action ${action.actionType} failed: ${result.exceptionOrNull()?.message}")
             }
         }
     }
