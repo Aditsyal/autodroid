@@ -50,7 +50,7 @@ object CacheManager {
         }
     }
 
-    suspend fun clearAll() {
-        mutex.withLock { cache.clear() }
+    fun clearAll() {
+        cache.clear()
     }
 }
