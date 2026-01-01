@@ -6,8 +6,10 @@ import com.aditsyal.autodroid.automation.trigger.providers.CommunicationTriggerP
 import com.aditsyal.autodroid.automation.trigger.providers.ConnectivityTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.DeviceStateTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.LocationTriggerProvider
+import com.aditsyal.autodroid.automation.trigger.providers.MusicTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.SensorTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.TimeTriggerProvider
+import com.aditsyal.autodroid.automation.trigger.providers.UsbTriggerProvider
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -53,4 +55,16 @@ abstract class TriggerModule {
     @IntoSet
     @Singleton
     abstract fun bindCommunicationTriggerProvider(provider: CommunicationTriggerProvider): TriggerProvider
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindMusicTriggerProvider(provider: MusicTriggerProvider): TriggerProvider
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindUsbTriggerProvider(provider: UsbTriggerProvider): TriggerProvider
 }
+
+

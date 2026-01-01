@@ -52,6 +52,8 @@ class ExecuteActionUseCase @Inject constructor(
     private val launchAppExecutor: LaunchAppExecutor,
     private val openUrlExecutor: OpenUrlExecutor,
     private val setBrightnessExecutor: SetBrightnessExecutor,
+    private val toggleAirplaneModeExecutor: com.aditsyal.autodroid.domain.usecase.executors.ToggleAirplaneModeExecutor,
+    private val tetheringExecutor: com.aditsyal.autodroid.domain.usecase.executors.TetheringExecutor,
     private val delayExecutor: DelayExecutor,
     private val toastExecutor: com.aditsyal.autodroid.domain.usecase.executors.ToastExecutor,
     private val vibrateExecutor: com.aditsyal.autodroid.domain.usecase.executors.VibrateExecutor,
@@ -85,6 +87,8 @@ class ExecuteActionUseCase @Inject constructor(
                 "LAUNCH_APP" -> launchAppExecutor.execute(processedConfig).getOrThrow()
                 "OPEN_URL" -> openUrlExecutor.execute(processedConfig).getOrThrow()
                 "SET_BRIGHTNESS" -> setBrightnessExecutor.execute(processedConfig).getOrThrow()
+                "TOGGLE_AIRPLANE_MODE" -> toggleAirplaneModeExecutor.execute(processedConfig).getOrThrow()
+                "TETHERING" -> tetheringExecutor.execute(processedConfig).getOrThrow()
                 "DELAY" -> delayExecutor.execute(processedConfig).getOrThrow()
                 "SHOW_TOAST" -> toastExecutor.execute(processedConfig).getOrThrow()
                 "VIBRATE" -> vibrateExecutor.execute(processedConfig).getOrThrow()
@@ -93,7 +97,6 @@ class ExecuteActionUseCase @Inject constructor(
                 "LOG_HISTORY" -> logToHistory(processedConfig)
 
                 // System settings
-                "TOGGLE_AIRPLANE_MODE" -> toggleAirplaneMode(processedConfig)
                 "TOGGLE_GPS" -> toggleGPS(processedConfig)
                 "SET_SCREEN_TIMEOUT" -> setScreenTimeout(processedConfig)
 

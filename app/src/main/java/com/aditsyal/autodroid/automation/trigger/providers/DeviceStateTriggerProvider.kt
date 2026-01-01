@@ -77,6 +77,8 @@ class DeviceStateTriggerProvider @Inject constructor(
                     addAction(Intent.ACTION_BATTERY_CHANGED)
                     addAction(Intent.ACTION_POWER_CONNECTED)
                     addAction(Intent.ACTION_POWER_DISCONNECTED)
+                    addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED)
+                    addAction(Intent.ACTION_HEADSET_PLUG)
                 }
                 context.registerReceiver(this, filter)
                 isRegistered = true
@@ -130,10 +132,38 @@ class DeviceStateTriggerProvider @Inject constructor(
                     Intent.ACTION_BATTERY_CHANGED -> {
                         val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
                         val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+                        val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+                        
                         if (level >= 0 && scale > 0) {
                             val batteryPct = (level / scale.toFloat() * 100).toInt()
                             checkBatteryLevelTriggers(batteryPct)
                         }
+                        
+                        if (status == BatteryManager.BATTERY_STATUS_FULL) {
+                            Timber.d("Battery fully charged")
+                            notifyTriggers("FULLY_CHARGED")
+                        }
+                    }
+                    Intent.ACTION_AIRPLANE_MODE_CHANGED -> {
+                        val isEnabled = isAirplaneModeOn()
+                        Timber.d("Airplane mode changed: $isEnabled")
+                        val event = if (isEnabled) "AIRPLANE_MODE_ON" else "AIRPLANE_MODE_OFF"
+                        activeTriggers.values
+                            .filter { it.triggerConfig["event"] == event }
+                            .forEach { trigger ->
+                                notifyTrigger(trigger, mapOf("enabled" to isEnabled))
+                            }
+                    }
+                    Intent.ACTION_HEADSET_PLUG -> {
+                        val state = intent.getIntExtra("state", -1)
+                        val hasMicrophone = intent.getIntExtra("microphone", -1) == 1
+                        val event = if (state == 1) "HEADPHONES_CONNECTED" else "HEADPHONES_DISCONNECTED"
+                        Timber.d("Headphones $event, hasMicrophone: $hasMicrophone")
+                        activeTriggers.values
+                            .filter { it.triggerConfig["event"] == event }
+                            .forEach { trigger ->
+                                notifyTrigger(trigger, mapOf("hasMicrophone" to hasMicrophone))
+                            }
                     }
                 }
             } catch (e: Exception) {
@@ -181,6 +211,19 @@ class DeviceStateTriggerProvider @Inject constructor(
             } catch (e: Exception) {
                 Timber.e(e, "Failed to check trigger ${trigger.id}")
             }
+        }
+    }
+
+    private fun isAirplaneModeOn(): Boolean {
+        return try {
+            android.provider.Settings.Global.getInt(
+                context.contentResolver,
+                android.provider.Settings.Global.AIRPLANE_MODE_ON,
+                0
+            ) != 0
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to check airplane mode")
+            false
         }
     }
 }
