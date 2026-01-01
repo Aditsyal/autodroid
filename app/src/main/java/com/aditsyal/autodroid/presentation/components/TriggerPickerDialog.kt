@@ -13,63 +13,78 @@ import com.aditsyal.autodroid.data.models.TriggerDTO
 data class TriggerOption(
     val label: String,
     val type: String,
-    val config: Map<String, Any> = emptyMap()
+    val config: Map<String, Any> = emptyMap(),
+    val parameters: List<ParameterSchema> = emptyList()
 )
 
 val triggerOptions = listOf(
     // Time-based triggers
-    TriggerOption("Specific Time", "TIME", mapOf("subType" to "SPECIFIC_TIME", "time" to "12:00", "days" to listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"))),
-    TriggerOption("Time Interval", "TIME", mapOf("subType" to "TIME_INTERVAL", "intervalMinutes" to 30)),
-    TriggerOption("Day of Week", "TIME", mapOf("subType" to "DAY_OF_WEEK", "time" to "09:00", "daysOfWeek" to listOf("Monday", "Friday"))),
+    TriggerOption(
+        "Specific Time", "TIME", mapOf("subType" to "SPECIFIC_TIME"),
+        listOf(
+            ParameterSchema("time", "Time", ParameterType.TIME, "12:00"),
+            ParameterSchema("days", "Days", ParameterType.DROPDOWN(listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")), listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"))
+        )
+    ),
+    TriggerOption("Time Interval", "TIME", mapOf("subType" to "TIME_INTERVAL"),
+        listOf(ParameterSchema("intervalMinutes", "Interval (Minutes)", ParameterType.NUMBER, 30))
+    ),
     
     // Location triggers
-    TriggerOption("Location (Geofence Enter)", "LOCATION", mapOf("latitude" to 0.0, "longitude" to 0.0, "radius" to 100.0, "transitionType" to "ENTER")),
-    TriggerOption("Location (Geofence Exit)", "LOCATION", mapOf("latitude" to 0.0, "longitude" to 0.0, "radius" to 100.0, "transitionType" to "EXIT")),
+    TriggerOption("Location (Geofence Enter)", "LOCATION", mapOf("transitionType" to "ENTER"),
+        listOf(
+            ParameterSchema("latitude", "Latitude", ParameterType.NUMBER, 0.0),
+            ParameterSchema("longitude", "Longitude", ParameterType.NUMBER, 0.0),
+            ParameterSchema("radius", "Radius (meters)", ParameterType.NUMBER, 100.0)
+        )
+    ),
     
     // Device state triggers
     TriggerOption("Screen On", "DEVICE_STATE", mapOf("event" to "SCREEN_ON")),
     TriggerOption("Screen Off", "DEVICE_STATE", mapOf("event" to "SCREEN_OFF")),
     TriggerOption("Device Unlocked", "DEVICE_STATE", mapOf("event" to "DEVICE_UNLOCKED")),
-    TriggerOption("Charging Connected", "DEVICE_STATE", mapOf("event" to "CHARGING_CONNECTED")),
-    TriggerOption("Charging Disconnected", "DEVICE_STATE", mapOf("event" to "CHARGING_DISCONNECTED")),
-    TriggerOption("Battery Level Threshold", "DEVICE_STATE", mapOf("event" to "BATTERY_LEVEL", "threshold" to 20, "operator" to "below")),
+    TriggerOption("Battery Level Threshold", "DEVICE_STATE", mapOf("event" to "BATTERY_LEVEL"),
+        listOf(
+            ParameterSchema("threshold", "Battery Level (%)", ParameterType.NUMBER, 20),
+            ParameterSchema("operator", "Operator", ParameterType.DROPDOWN(listOf("above", "below", "equals")), "below")
+        )
+    ),
     
     // Connectivity triggers
-    TriggerOption("WiFi Connected", "CONNECTIVITY", mapOf("event" to "WIFI_CONNECTED")),
-    TriggerOption("WiFi Disconnected", "CONNECTIVITY", mapOf("event" to "WIFI_DISCONNECTED")),
-    TriggerOption("WiFi SSID Connected", "CONNECTIVITY", mapOf("event" to "WIFI_CONNECTED", "ssid" to "MyNetwork")),
-    TriggerOption("Bluetooth Connected", "CONNECTIVITY", mapOf("event" to "BLUETOOTH_CONNECTED")),
-    TriggerOption("Bluetooth Disconnected", "CONNECTIVITY", mapOf("event" to "BLUETOOTH_DISCONNECTED")),
-    TriggerOption("Mobile Data Enabled", "CONNECTIVITY", mapOf("event" to "MOBILE_DATA_ENABLED")),
+    TriggerOption("WiFi Connected", "CONNECTIVITY", mapOf("event" to "WIFI_CONNECTED"),
+        listOf(ParameterSchema("ssid", "SSID (Optional)", ParameterType.TEXT, ""))
+    ),
+    TriggerOption("Bluetooth Connected", "CONNECTIVITY", mapOf("event" to "BLUETOOTH_CONNECTED"),
+        listOf(ParameterSchema("deviceAddress", "Device Address (Optional)", ParameterType.TEXT, ""))
+    ),
     
     // App event triggers
-    TriggerOption("App Launched", "APP_EVENT", mapOf("event" to "APP_LAUNCHED", "packageName" to "com.android.settings")),
-    TriggerOption("App Closed", "APP_EVENT", mapOf("event" to "APP_CLOSED", "packageName" to "com.android.settings")),
-    TriggerOption("App Installed", "APP_EVENT", mapOf("event" to "APP_INSTALLED")),
-    TriggerOption("App Uninstalled", "APP_EVENT", mapOf("event" to "APP_UNINSTALLED")),
-    TriggerOption("Notification Received", "APP_EVENT", mapOf("event" to "NOTIFICATION_RECEIVED")),
+    TriggerOption("App Launched", "APP_EVENT", mapOf("event" to "APP_LAUNCHED"),
+        listOf(ParameterSchema("packageName", "Package Name", ParameterType.TEXT, "com.android.settings"))
+    ),
+    TriggerOption("Notification Received", "APP_EVENT", mapOf("event" to "NOTIFICATION_RECEIVED"),
+        listOf(ParameterSchema("packageName", "Package Name (Optional)", ParameterType.TEXT, ""))
+    ),
     
     // Communication triggers
-    TriggerOption("Call Received", "COMMUNICATION", mapOf("event" to "CALL_RECEIVED")),
-    TriggerOption("Call Ended", "COMMUNICATION", mapOf("event" to "CALL_ENDED")),
-    TriggerOption("Missed Call", "COMMUNICATION", mapOf("event" to "MISSED_CALL")),
-    TriggerOption("SMS Received", "COMMUNICATION", mapOf("event" to "SMS_RECEIVED")),
+    TriggerOption("SMS Received", "COMMUNICATION", mapOf("event" to "SMS_RECEIVED"),
+        listOf(ParameterSchema("phoneNumber", "Sender Phone Number (Optional)", ParameterType.TEXT, ""))
+    ),
     
     // Sensor triggers
     TriggerOption("Shake Phone", "SENSOR_EVENT", mapOf("sensor" to "SHAKE")),
-    TriggerOption("Proximity Sensor", "SENSOR_EVENT", mapOf("sensor" to "PROXIMITY")),
-    TriggerOption("Light Level", "SENSOR_EVENT", mapOf("sensor" to "LIGHT_LEVEL", "threshold" to 100, "operator" to "above")),
-    TriggerOption("Orientation Change", "SENSOR_EVENT", mapOf("sensor" to "ORIENTATION_CHANGE")),
-    
-    // System event triggers (legacy)
-    TriggerOption("Airplane Mode", "SYSTEM_EVENT", mapOf("event" to "AIRPLANE_MODE")),
-    TriggerOption("Device Storage Low", "SYSTEM_EVENT", mapOf("event" to "STORAGE_LOW"))
+    TriggerOption("Light Level", "SENSOR_EVENT", mapOf("sensor" to "LIGHT_LEVEL"),
+        listOf(
+            ParameterSchema("threshold", "Threshold (lux)", ParameterType.NUMBER, 100),
+            ParameterSchema("operator", "Operator", ParameterType.DROPDOWN(listOf("above", "below")), "above")
+        )
+    )
 )
 
 @Composable
 fun TriggerPickerDialog(
     onDismiss: () -> Unit,
-    onTriggerSelected: (TriggerDTO) -> Unit
+    onTriggerSelected: (TriggerOption) -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -80,12 +95,7 @@ fun TriggerPickerDialog(
                     ListItem(
                         headlineContent = { Text(option.label) },
                         modifier = Modifier.clickable {
-                            onTriggerSelected(
-                                TriggerDTO(
-                                    triggerType = option.type,
-                                    triggerConfig = option.config
-                                )
-                            )
+                            onTriggerSelected(option)
                         }
                     )
                 }

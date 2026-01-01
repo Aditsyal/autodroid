@@ -13,47 +13,43 @@ import com.aditsyal.autodroid.data.models.ConstraintDTO
 data class ConstraintOption(
     val label: String,
     val type: String,
-    val config: Map<String, Any> = emptyMap()
+    val config: Map<String, Any> = emptyMap(),
+    val parameters: List<ParameterSchema> = emptyList()
 )
 
 val constraintOptions = listOf(
     // Time constraints
-    ConstraintOption("Time Range", "TIME_RANGE", mapOf("startTime" to "08:00", "endTime" to "17:00")),
-    ConstraintOption("Day of Week", "DAY_OF_WEEK", mapOf("days" to listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"))),
-    ConstraintOption("Exclude Weekends", "EXCLUDE_WEEKENDS", mapOf("exclude" to true)),
-    ConstraintOption("Specific Date", "SPECIFIC_DATE", mapOf("date" to System.currentTimeMillis())),
+    ConstraintOption("Time Range", "TIME_RANGE", emptyMap(),
+        listOf(
+            ParameterSchema("startTime", "Start Time", ParameterType.TIME, "08:00"),
+            ParameterSchema("endTime", "End Time", ParameterType.TIME, "17:00")
+        )
+    ),
+    ConstraintOption("Day of Week", "DAY_OF_WEEK", emptyMap(),
+        listOf(ParameterSchema("days", "Allowed Days", ParameterType.DROPDOWN(listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")), listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")))
+    ),
     
     // Device state constraints
-    ConstraintOption("Battery Level", "BATTERY_LEVEL", mapOf("value" to 20, "operator" to "greater_than")),
-    ConstraintOption("Battery Level Range", "BATTERY_LEVEL_RANGE", mapOf("minLevel" to 20, "maxLevel" to 80)),
-    ConstraintOption("Charging Status", "CHARGING_STATUS", mapOf("isCharging" to true)),
-    ConstraintOption("Screen State", "SCREEN_STATE", mapOf("isOn" to true)),
-    ConstraintOption("Device Locked", "DEVICE_LOCKED", mapOf("isLocked" to false)),
+    ConstraintOption("Battery Level", "BATTERY_LEVEL", emptyMap(),
+        listOf(
+            ParameterSchema("value", "Battery Level (%)", ParameterType.NUMBER, 20),
+            ParameterSchema("operator", "Operator", ParameterType.DROPDOWN(listOf("greater_than", "less_than", "equals")), "greater_than")
+        )
+    ),
+    ConstraintOption("Charging Status", "CHARGING_STATUS", emptyMap(),
+        listOf(ParameterSchema("isCharging", "Is Charging", ParameterType.TOGGLE, true))
+    ),
     
     // Connectivity constraints
-    ConstraintOption("WiFi Connected", "WIFI_CONNECTED", emptyMap()),
-    ConstraintOption("WiFi Connected (Specific SSID)", "WIFI_CONNECTED", mapOf("ssid" to "MyNetwork")),
-    ConstraintOption("WiFi Disconnected", "WIFI_DISCONNECTED", emptyMap()),
-    ConstraintOption("Mobile Data Active", "MOBILE_DATA_ACTIVE", emptyMap()),
-    ConstraintOption("Bluetooth Connected", "BLUETOOTH_CONNECTED", emptyMap()),
-    
-    // Location constraints
-    ConstraintOption("Inside Geofence", "INSIDE_GEOFENCE", mapOf("geofenceId" to 0L)),
-    ConstraintOption("Outside Geofence", "OUTSIDE_GEOFENCE", mapOf("geofenceId" to 0L)),
-    
-    // Context constraints
-    ConstraintOption("App Running", "APP_RUNNING", mapOf("packageName" to "com.android.settings")),
-    ConstraintOption("Headphones Connected", "HEADPHONES_CONNECTED", emptyMap()),
-    ConstraintOption("Do Not Disturb Enabled", "DO_NOT_DISTURB_ENABLED", emptyMap()),
-    
-    // Legacy constraints
-    ConstraintOption("Airplane Mode", "AIRPLANE_MODE", mapOf("enabled" to false))
+    ConstraintOption("WiFi Connected", "WIFI_CONNECTED", emptyMap(),
+        listOf(ParameterSchema("ssid", "SSID (Optional)", ParameterType.TEXT, ""))
+    )
 )
 
 @Composable
 fun ConstraintPickerDialog(
     onDismiss: () -> Unit,
-    onConstraintSelected: (ConstraintDTO) -> Unit
+    onConstraintSelected: (ConstraintOption) -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -64,12 +60,7 @@ fun ConstraintPickerDialog(
                     ListItem(
                         headlineContent = { Text(option.label) },
                         modifier = Modifier.clickable {
-                            onConstraintSelected(
-                                ConstraintDTO(
-                                    constraintType = option.type,
-                                    constraintConfig = option.config
-                                )
-                            )
+                            onConstraintSelected(option)
                         }
                     )
                 }

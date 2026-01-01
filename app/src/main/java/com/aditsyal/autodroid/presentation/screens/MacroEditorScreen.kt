@@ -42,9 +42,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aditsyal.autodroid.data.models.MacroDTO
+import com.aditsyal.autodroid.presentation.components.TriggerPickerDialog
 import com.aditsyal.autodroid.presentation.components.ActionPickerDialog
 import com.aditsyal.autodroid.presentation.components.ConstraintPickerDialog
-import com.aditsyal.autodroid.presentation.components.TriggerPickerDialog
+import com.aditsyal.autodroid.presentation.components.ConfigurationEditorDialog
+import com.aditsyal.autodroid.presentation.components.TriggerOption
+import com.aditsyal.autodroid.presentation.components.ActionOption
+import com.aditsyal.autodroid.presentation.components.ConstraintOption
 import com.aditsyal.autodroid.presentation.viewmodels.MacroEditorViewModel
 import com.aditsyal.autodroid.data.models.TriggerDTO
 import com.aditsyal.autodroid.data.models.ActionDTO
@@ -73,6 +77,10 @@ fun MacroEditorScreen(
     var showTriggerPicker by remember { mutableStateOf(false) }
     var showActionPicker by remember { mutableStateOf(false) }
     var showConstraintPicker by remember { mutableStateOf(false) }
+
+    var pendingTriggerOption by remember { mutableStateOf<TriggerOption?>(null) }
+    var pendingActionOption by remember { mutableStateOf<ActionOption?>(null) }
+    var pendingConstraintOption by remember { mutableStateOf<ConstraintOption?>(null) }
 
     LaunchedEffect(macroId, templateId) {
         when {
@@ -260,9 +268,27 @@ fun MacroEditorScreen(
     if (showTriggerPicker) {
         TriggerPickerDialog(
             onDismiss = { showTriggerPicker = false },
-            onTriggerSelected = {
-                viewModel.addTrigger(it)
+            onTriggerSelected = { option: TriggerOption ->
+                if (option.parameters.isEmpty()) {
+                    viewModel.addTrigger(TriggerDTO(triggerType = option.type, triggerConfig = option.config))
+                } else {
+                    pendingTriggerOption = option
+                }
                 showTriggerPicker = false
+            }
+        )
+    }
+
+    if (pendingTriggerOption != null) {
+        val option = pendingTriggerOption!!
+        ConfigurationEditorDialog(
+            title = "Configure ${option.label}",
+            parameters = option.parameters,
+            initialValues = option.config,
+            onDismiss = { pendingTriggerOption = null },
+            onSave = { config ->
+                viewModel.addTrigger(TriggerDTO(triggerType = option.type, triggerConfig = option.config + config))
+                pendingTriggerOption = null
             }
         )
     }
@@ -270,9 +296,27 @@ fun MacroEditorScreen(
     if (showActionPicker) {
         ActionPickerDialog(
             onDismiss = { showActionPicker = false },
-            onActionSelected = {
-                viewModel.addAction(it)
+            onActionSelected = { option: ActionOption ->
+                if (option.parameters.isEmpty()) {
+                    viewModel.addAction(ActionDTO(actionType = option.type, actionConfig = option.config, executionOrder = 0))
+                } else {
+                    pendingActionOption = option
+                }
                 showActionPicker = false
+            }
+        )
+    }
+
+    if (pendingActionOption != null) {
+        val option = pendingActionOption!!
+        ConfigurationEditorDialog(
+            title = "Configure ${option.label}",
+            parameters = option.parameters,
+            initialValues = option.config,
+            onDismiss = { pendingActionOption = null },
+            onSave = { config ->
+                viewModel.addAction(ActionDTO(actionType = option.type, actionConfig = option.config + config, executionOrder = 0))
+                pendingActionOption = null
             }
         )
     }
@@ -280,9 +324,27 @@ fun MacroEditorScreen(
     if (showConstraintPicker) {
         ConstraintPickerDialog(
             onDismiss = { showConstraintPicker = false },
-            onConstraintSelected = {
-                viewModel.addConstraint(it)
+            onConstraintSelected = { option: ConstraintOption ->
+                if (option.parameters.isEmpty()) {
+                    viewModel.addConstraint(ConstraintDTO(constraintType = option.type, constraintConfig = option.config))
+                } else {
+                    pendingConstraintOption = option
+                }
                 showConstraintPicker = false
+            }
+        )
+    }
+
+    if (pendingConstraintOption != null) {
+        val option = pendingConstraintOption!!
+        ConfigurationEditorDialog(
+            title = "Configure ${option.label}",
+            parameters = option.parameters,
+            initialValues = option.config,
+            onDismiss = { pendingConstraintOption = null },
+            onSave = { config ->
+                viewModel.addConstraint(ConstraintDTO(constraintType = option.type, constraintConfig = option.config + config))
+                pendingConstraintOption = null
             }
         )
     }
