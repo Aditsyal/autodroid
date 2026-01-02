@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface VariableDao {
+    @Query("SELECT * FROM variables")
+    fun getAllVariables(): Flow<List<VariableEntity>>
+
     @Query("SELECT * FROM variables WHERE macroId = :macroId")
     fun getVariablesByMacroId(macroId: Long): Flow<List<VariableEntity>>
 

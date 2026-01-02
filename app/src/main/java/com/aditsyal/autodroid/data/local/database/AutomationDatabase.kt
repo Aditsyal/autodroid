@@ -33,7 +33,7 @@ import com.aditsyal.autodroid.data.local.entities.VariableEntity
         LogicBlockEntity::class,
         TemplateEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class AutomationDatabase : RoomDatabase() {
@@ -80,6 +80,7 @@ abstract class AutomationDatabase : RoomDatabase() {
                 DATABASE_NAME
             )
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .fallbackToDestructiveMigration()
                 .build()
         }
     }
