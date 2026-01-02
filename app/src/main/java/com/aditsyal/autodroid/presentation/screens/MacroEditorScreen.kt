@@ -73,6 +73,7 @@ fun MacroEditorScreen(
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var enabled by remember { mutableStateOf(true) }
+    var initializedMacroId by remember { mutableStateOf<Long?>(null) }
 
     var showTriggerPicker by remember { mutableStateOf(false) }
     var showActionPicker by remember { mutableStateOf(false) }
@@ -94,9 +95,12 @@ fun MacroEditorScreen(
 
     LaunchedEffect(uiState.currentMacro) {
         uiState.currentMacro?.let { macro ->
-            name = macro.name
-            description = macro.description
-            enabled = macro.enabled
+            if (macro.id != initializedMacroId) {
+                name = macro.name
+                description = macro.description
+                enabled = macro.enabled
+                initializedMacroId = macro.id
+            }
         }
     }
 

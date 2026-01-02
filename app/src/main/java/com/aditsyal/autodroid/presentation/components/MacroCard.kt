@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -32,6 +33,7 @@ fun MacroCard(
     macro: MacroDTO,
     onToggle: (id: Long, enabled: Boolean) -> Unit,
     onExecute: (id: Long) -> Unit,
+    onView: (id: Long) -> Unit,
     onEdit: (id: Long) -> Unit,
     onDelete: (id: Long) -> Unit,
     modifier: Modifier = Modifier
@@ -89,6 +91,12 @@ fun MacroCard(
                         imageVector = Icons.Default.PlayArrow,
                         contentDescription = "Execute macro",
                         tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                IconButton(onClick = { onView(macro.id) }) {
+                    Icon(
+                        imageVector = Icons.Default.Visibility,
+                        contentDescription = "View macro"
                     )
                 }
                 IconButton(onClick = { onEdit(macro.id) }) {

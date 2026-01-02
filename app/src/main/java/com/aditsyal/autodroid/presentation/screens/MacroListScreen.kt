@@ -46,6 +46,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MacroListScreen(
     onAddMacro: () -> Unit,
+    onViewMacro: (Long) -> Unit,
     onEditMacro: (Long) -> Unit,
     onShowHistory: () -> Unit,
     onShowConflicts: () -> Unit,
@@ -72,6 +73,7 @@ fun MacroListScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onAddMacro = onAddMacro,
+        onViewMacro = onViewMacro,
         onEditMacro = onEditMacro,
         onShowHistory = onShowHistory,
         onShowConflicts = onShowConflicts,
@@ -89,6 +91,7 @@ fun MacroListScreenContent(
     uiState: MacroListUiState,
     snackbarHostState: SnackbarHostState,
     onAddMacro: () -> Unit,
+    onViewMacro: (Long) -> Unit,
     onEditMacro: (Long) -> Unit,
     onShowHistory: () -> Unit,
     onShowConflicts: () -> Unit,
@@ -165,6 +168,7 @@ fun MacroListScreenContent(
                                 macro = macro,
                                 onToggle = onToggleMacro,
                                 onExecute = onExecuteMacro,
+                                onView = onViewMacro,
                                 onEdit = onEditMacro,
                                 onDelete = onDeleteMacro
                             )
