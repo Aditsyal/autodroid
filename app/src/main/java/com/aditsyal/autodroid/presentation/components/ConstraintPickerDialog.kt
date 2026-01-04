@@ -7,8 +7,47 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.aditsyal.autodroid.data.models.ConstraintDTO
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ConstraintPickerDialog(
+    onDismiss: () -> Unit,
+    onConstraintSelected: (ConstraintOption) -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.large
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp)
+        ) {
+            Text(
+                text = "Select Constraint",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(16.dp)
+            )
+            LazyColumn {
+                items(constraintOptions) { option ->
+                    ListItem(
+                        headlineContent = { Text(option.label) },
+                        supportingContent = { Text(option.type.replace("_", " ").lowercase().capitalize()) },
+                        modifier = Modifier.clickable {
+                            onConstraintSelected(option)
+                        },
+                        colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
+                    )
+                }
+            }
+        }
+    }
+}
 
 data class ConstraintOption(
     val label: String,
@@ -46,31 +85,4 @@ val constraintOptions = listOf(
     )
 )
 
-@Composable
-fun ConstraintPickerDialog(
-    onDismiss: () -> Unit,
-    onConstraintSelected: (ConstraintOption) -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Select Constraint") },
-        text = {
-            LazyColumn {
-                items(constraintOptions) { option ->
-                    ListItem(
-                        headlineContent = { Text(option.label) },
-                        modifier = Modifier.clickable {
-                            onConstraintSelected(option)
-                        }
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
+private fun String.capitalize() = this.replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }

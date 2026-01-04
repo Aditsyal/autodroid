@@ -1,34 +1,19 @@
 package com.aditsyal.autodroid.presentation.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -37,8 +22,8 @@ import com.aditsyal.autodroid.data.models.ConstraintDTO
 import com.aditsyal.autodroid.data.models.TriggerDTO
 import com.aditsyal.autodroid.presentation.viewmodels.MacroEditorViewModel
 
-@Composable
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun MacroDetailScreen(
     macroId: Long,
     onBack: () -> Unit,
@@ -46,18 +31,20 @@ fun MacroDetailScreen(
     viewModel: MacroEditorViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     LaunchedEffect(macroId) {
         viewModel.loadMacro(macroId)
     }
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = { Text("Macro Details") },
+            LargeTopAppBar(
+                title = { Text("Macro Details", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -65,9 +52,7 @@ fun MacroDetailScreen(
                         Icon(Icons.Default.Edit, contentDescription = "Edit")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+                scrollBehavior = scrollBehavior
             )
         }
     ) { padding ->
@@ -77,40 +62,47 @@ fun MacroDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Text(
-                    text = macro.name,
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
-                )
-
-                Text(
-                    text = macro.description.ifBlank { "No description provided" },
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Status",
-                        style = MaterialTheme.typography.titleMedium
+                        text = macro.name,
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+
+                    Surface(
+                        color = if (macro.enabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
+                        shape = MaterialTheme.shapes.extraSmall
+                    ) {
+                        Text(
+                            text = if (macro.enabled) "Active" else "Disabled",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (macro.enabled) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Text(
-                        text = if (macro.enabled) "Enabled" else "Disabled",
-                        color = if (macro.enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        text = macro.description.ifBlank { "No description provided" },
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
-                HorizontalDivider()
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
-                DetailSection(title = "Triggers") {
+                DetailSection(
+                    title = "Triggers",
+                    description = "When this macro starts"
+                ) {
                     macro.triggers.forEach { trigger ->
                         DetailTriggerItem(trigger)
                     }
@@ -119,7 +111,10 @@ fun MacroDetailScreen(
                     }
                 }
 
-                DetailSection(title = "Actions") {
+                DetailSection(
+                    title = "Actions",
+                    description = "What this macro does"
+                ) {
                     macro.actions.forEach { action ->
                         DetailActionItem(action)
                     }
@@ -128,7 +123,10 @@ fun MacroDetailScreen(
                     }
                 }
 
-                DetailSection(title = "Constraints") {
+                DetailSection(
+                    title = "Constraints",
+                    description = "Conditions for execution"
+                ) {
                     macro.constraints.forEach { constraint ->
                         DetailConstraintItem(constraint)
                     }
@@ -136,9 +134,13 @@ fun MacroDetailScreen(
                         EmptyDetailText("No constraints configured")
                     }
                 }
+                
+                Spacer(modifier = Modifier.height(32.dp))
             }
         } else if (uiState.isLoading) {
-            // Loading state could be handled here
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
         }
     }
 }
@@ -146,15 +148,25 @@ fun MacroDetailScreen(
 @Composable
 private fun DetailSection(
     title: String,
-    content: @Composable () -> Unit
+    description: String,
+    content: @Composable ColumnScope.() -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-        )
-        content()
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
         Spacer(modifier = Modifier.height(8.dp))
+        content()
     }
 }
 
@@ -163,7 +175,8 @@ private fun EmptyDetailText(text: String) {
     Text(
         text = text,
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     )
 }
 
@@ -172,20 +185,24 @@ private fun DetailTriggerItem(trigger: TriggerDTO) {
     ListItem(
         headlineContent = {
             val label = trigger.triggerConfig["event"]?.toString() ?: trigger.triggerType
-            Text(label.replace("_", " ").lowercase().capitalize())
+            Text(label.replace("_", " ").lowercase().capitalize(), fontWeight = FontWeight.Medium)
         },
-        supportingContent = { Text(trigger.triggerType) }
+        supportingContent = { Text(trigger.triggerType, style = MaterialTheme.typography.bodySmall) },
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
     )
 }
 
 @Composable
 private fun DetailActionItem(action: ActionDTO) {
     ListItem(
-        headlineContent = { Text(action.actionType.replace("_", " ").lowercase().capitalize()) },
+        headlineContent = { 
+            Text(action.actionType.replace("_", " ").lowercase().capitalize(), fontWeight = FontWeight.Medium) 
+        },
         supportingContent = {
             val config = action.actionConfig.entries.joinToString { "${it.key}: ${it.value}" }
-            Text(config.ifBlank { "No configuration" })
-        }
+            Text(config.ifBlank { "No configuration" }, style = MaterialTheme.typography.bodySmall)
+        },
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
     )
 }
 
@@ -193,11 +210,12 @@ private fun DetailActionItem(action: ActionDTO) {
 private fun DetailConstraintItem(constraint: ConstraintDTO) {
     ListItem(
         headlineContent = {
-            Text(constraint.constraintType.replace("_", " ").lowercase().capitalize())
+            Text(constraint.constraintType.replace("_", " ").lowercase().capitalize(), fontWeight = FontWeight.Medium)
         },
         supportingContent = {
             val config = constraint.constraintConfig.entries.joinToString { "${it.key}: ${it.value}" }
-            Text(config.ifBlank { "No configuration" })
-        }
+            Text(config.ifBlank { "No configuration" }, style = MaterialTheme.typography.bodySmall)
+        },
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
     )
 }

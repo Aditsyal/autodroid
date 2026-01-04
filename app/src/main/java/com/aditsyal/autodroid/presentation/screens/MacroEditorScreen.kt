@@ -1,65 +1,31 @@
 package com.aditsyal.autodroid.presentation.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.aditsyal.autodroid.data.models.MacroDTO
-import com.aditsyal.autodroid.presentation.components.TriggerPickerDialog
-import com.aditsyal.autodroid.presentation.components.ActionPickerDialog
-import com.aditsyal.autodroid.presentation.components.ConstraintPickerDialog
-import com.aditsyal.autodroid.presentation.components.ConfigurationEditorDialog
-import com.aditsyal.autodroid.presentation.components.TriggerOption
-import com.aditsyal.autodroid.presentation.components.ActionOption
-import com.aditsyal.autodroid.presentation.components.ConstraintOption
-import com.aditsyal.autodroid.presentation.viewmodels.MacroEditorViewModel
-import com.aditsyal.autodroid.data.models.TriggerDTO
 import com.aditsyal.autodroid.data.models.ActionDTO
 import com.aditsyal.autodroid.data.models.ConstraintDTO
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ListItem
+import com.aditsyal.autodroid.data.models.MacroDTO
+import com.aditsyal.autodroid.data.models.TriggerDTO
+import com.aditsyal.autodroid.presentation.components.*
+import com.aditsyal.autodroid.presentation.viewmodels.MacroEditorViewModel
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun MacroEditorScreen(
     macroId: Long?,
     templateId: Long? = null,
@@ -88,7 +54,7 @@ fun MacroEditorScreen(
             templateId != null -> viewModel.loadFromTemplate(templateId)
             macroId != null && macroId != 0L -> viewModel.loadMacro(macroId)
             else -> {
-                // New macro, do nothing - viewModel already has empty state
+                // New macro
             }
         }
     }
@@ -115,164 +81,43 @@ fun MacroEditorScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        if (macroId == null || macroId == 0L) "Create Macro" else "Edit Macro",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            saveMacro(
-                                macroId = macroId,
-                                name = name,
-                                description = description,
-                                enabled = enabled,
-                                uiState = uiState,
-                                viewModel = viewModel
-                            )
-                        },
-                        enabled = !uiState.isSaving
-                    ) {
-                        Icon(Icons.Default.Save, contentDescription = "Save")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+    MacroEditorScreenContent(
+        macroId = macroId,
+        name = name,
+        onNameChange = { name = it },
+        description = description,
+        onDescriptionChange = { description = it },
+        enabled = enabled,
+        onEnabledChange = { enabled = it },
+        uiState = uiState,
+        onBack = onBack,
+        onSave = {
+            val existing = uiState.currentMacro
+            val macro = MacroDTO(
+                id = existing?.id ?: macroId ?: 0L,
+                name = name,
+                description = description,
+                enabled = enabled,
+                createdAt = existing?.createdAt ?: System.currentTimeMillis(),
+                lastExecuted = existing?.lastExecuted,
+                triggers = existing?.triggers ?: emptyList(),
+                actions = existing?.actions ?: emptyList(),
+                constraints = existing?.constraints ?: emptyList()
             )
+            viewModel.saveMacro(macro)
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = "Details",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-            )
-
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Name") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-            )
-
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(140.dp),
-                label = { Text("Description") },
-                maxLines = 5
-            )
-
-            RowSwitch(
-                label = "Enabled",
-                checked = enabled,
-                onCheckedChange = { enabled = it }
-            )
-
-            HorizontalDivider()
-
-            SectionHeader(
-                title = "Triggers",
-                onAddClick = { showTriggerPicker = true }
-            )
-
-            uiState.currentMacro?.triggers?.forEach { trigger ->
-                TriggerItem(trigger = trigger, onDelete = { viewModel.removeTrigger(trigger) })
-            }
-
-            if (uiState.currentMacro?.triggers?.isEmpty() == true) {
-                Text(
-                    "No triggers added",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            SectionHeader(
-                title = "Actions",
-                onAddClick = { showActionPicker = true }
-            )
-
-            uiState.currentMacro?.actions?.forEach { action ->
-                ActionItem(action = action, onDelete = { viewModel.removeAction(action) })
-            }
-
-            if (uiState.currentMacro?.actions?.isEmpty() == true) {
-                Text(
-                    "No actions added",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            SectionHeader(
-                title = "Constraints",
-                onAddClick = { showConstraintPicker = true }
-            )
-
-            uiState.currentMacro?.constraints?.forEach { constraint ->
-                ConstraintItem(constraint = constraint, onDelete = { viewModel.removeConstraint(constraint) })
-            }
-
-            if (uiState.currentMacro?.constraints?.isEmpty() == true) {
-                Text(
-                    "No constraints added",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                onClick = {
-                    saveMacro(
-                        macroId = macroId,
-                        name = name,
-                        description = description,
-                        enabled = enabled,
-                        uiState = uiState,
-                        viewModel = viewModel
-                    )
-                },
-                enabled = !uiState.isSaving,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (uiState.isSaving) "Saving..." else "Save")
-            }
-        }
-    }
+        onAddTrigger = { showTriggerPicker = true },
+        onAddAction = { showActionPicker = true },
+        onAddConstraint = { showConstraintPicker = true },
+        onRemoveTrigger = viewModel::removeTrigger,
+        onRemoveAction = viewModel::removeAction,
+        onRemoveConstraint = viewModel::removeConstraint
+    )
 
     if (showTriggerPicker) {
         TriggerPickerDialog(
             onDismiss = { showTriggerPicker = false },
-            onTriggerSelected = { option: TriggerOption ->
+            onTriggerSelected = { option ->
                 if (option.parameters.isEmpty()) {
                     viewModel.addTrigger(TriggerDTO(triggerType = option.type, triggerConfig = option.config))
                 } else {
@@ -300,7 +145,7 @@ fun MacroEditorScreen(
     if (showActionPicker) {
         ActionPickerDialog(
             onDismiss = { showActionPicker = false },
-            onActionSelected = { option: ActionOption ->
+            onActionSelected = { option ->
                 if (option.parameters.isEmpty()) {
                     viewModel.addAction(ActionDTO(actionType = option.type, actionConfig = option.config, executionOrder = 0))
                 } else {
@@ -328,7 +173,7 @@ fun MacroEditorScreen(
     if (showConstraintPicker) {
         ConstraintPickerDialog(
             onDismiss = { showConstraintPicker = false },
-            onConstraintSelected = { option: ConstraintOption ->
+            onConstraintSelected = { option ->
                 if (option.parameters.isEmpty()) {
                     viewModel.addConstraint(ConstraintDTO(constraintType = option.type, constraintConfig = option.config))
                 } else {
@@ -354,24 +199,216 @@ fun MacroEditorScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SectionHeader(
-    title: String,
-    onAddClick: () -> Unit
+fun MacroEditorScreenContent(
+    macroId: Long?,
+    name: String,
+    onNameChange: (String) -> Unit,
+    description: String,
+    onDescriptionChange: (String) -> Unit,
+    enabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit,
+    uiState: com.aditsyal.autodroid.presentation.viewmodels.MacroEditorUiState,
+    onBack: () -> Unit,
+    onSave: () -> Unit,
+    onAddTrigger: () -> Unit,
+    onAddAction: () -> Unit,
+    onAddConstraint: () -> Unit,
+    onRemoveTrigger: (TriggerDTO) -> Unit,
+    onRemoveAction: (ActionDTO) -> Unit,
+    onRemoveConstraint: (ConstraintDTO) -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-        )
-        IconButton(onClick = onAddClick) {
-            Icon(Icons.Default.Add, contentDescription = "Add $title")
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                title = {
+                    Text(
+                        if (macroId == null || macroId == 0L) "Create Macro" else "Edit Macro",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    Button(
+                        onClick = onSave,
+                        enabled = !uiState.isSaving,
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        if (uiState.isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Default.Save,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text("Save")
+                        }
+                    }
+                },
+                scrollBehavior = scrollBehavior
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Configuration",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = onNameChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Name") },
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                    placeholder = { Text("e.g., Silent Mode at Night") },
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.medium,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                )
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = onDescriptionChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    label = { Text("Description") },
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                    placeholder = { Text("What does this macro do?") },
+                    shape = MaterialTheme.shapes.medium,
+                    maxLines = 4
+                )
+
+                RowSwitch(
+                    label = "Enabled",
+                    checked = enabled,
+                    onCheckedChange = onEnabledChange
+                )
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+            EditorSection(
+                title = "Triggers",
+                description = "Define when this macro should start",
+                onAddClick = onAddTrigger
+            ) {
+                uiState.currentMacro?.triggers?.forEach { trigger ->
+                    TriggerItem(trigger = trigger, onDelete = { onRemoveTrigger(trigger) })
+                }
+                if (uiState.currentMacro?.triggers?.isEmpty() == true) {
+                    EmptySectionText("No triggers added yet")
+                }
+            }
+
+            EditorSection(
+                title = "Actions",
+                description = "What should happen when triggered",
+                onAddClick = onAddAction
+            ) {
+                uiState.currentMacro?.actions?.forEach { action ->
+                    ActionItem(action = action, onDelete = { onRemoveAction(action) })
+                }
+                if (uiState.currentMacro?.actions?.isEmpty() == true) {
+                    EmptySectionText("No actions added yet")
+                }
+            }
+
+            EditorSection(
+                title = "Constraints",
+                description = "Conditions that must be met",
+                onAddClick = onAddConstraint
+            ) {
+                uiState.currentMacro?.constraints?.forEach { constraint ->
+                    ConstraintItem(constraint = constraint, onDelete = { onRemoveConstraint(constraint) })
+                }
+                if (uiState.currentMacro?.constraints?.isEmpty() == true) {
+                    EmptySectionText("Optional: No constraints added")
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(48.dp))
         }
     }
+}
+
+@Composable
+private fun EditorSection(
+    title: String,
+    description: String,
+    onAddClick: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            FilledTonalButton(
+                onClick = onAddClick,
+                modifier = Modifier.padding(start = 8.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Add")
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        content()
+    }
+}
+
+@Composable
+private fun EmptySectionText(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    )
 }
 
 @Composable
@@ -382,14 +419,24 @@ private fun TriggerItem(
     ListItem(
         headlineContent = { 
             val label = trigger.triggerConfig["event"]?.toString() ?: trigger.triggerType
-            Text(label.replace("_", " ").lowercase().capitalize()) 
+            Text(
+                label.replace("_", " ").lowercase().capitalize(),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            ) 
         },
-        supportingContent = { Text(trigger.triggerType) },
+        supportingContent = { 
+            Text(
+                trigger.triggerType,
+                style = MaterialTheme.typography.bodyMedium
+            ) 
+        },
         trailingContent = {
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
             }
-        }
+        },
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
     )
 }
 
@@ -399,16 +446,26 @@ private fun ActionItem(
     onDelete: () -> Unit
 ) {
     ListItem(
-        headlineContent = { Text(action.actionType.replace("_", " ").lowercase().capitalize()) },
+        headlineContent = { 
+            Text(
+                action.actionType.replace("_", " ").lowercase().capitalize(),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            ) 
+        },
         supportingContent = { 
             val config = action.actionConfig.entries.joinToString { "${it.key}: ${it.value}" }
-            Text(config.ifBlank { "No configuration" }) 
+            Text(
+                config.ifBlank { "No configuration" },
+                style = MaterialTheme.typography.bodyMedium
+            ) 
         },
         trailingContent = {
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
             }
-        }
+        },
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
     )
 }
 
@@ -419,44 +476,29 @@ private fun ConstraintItem(
 ) {
     ListItem(
         headlineContent = { 
-            Text(constraint.constraintType.replace("_", " ").lowercase().capitalize())
+            Text(
+                constraint.constraintType.replace("_", " ").lowercase().capitalize(),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
         },
         supportingContent = { 
             val config = constraint.constraintConfig.entries.joinToString { "${it.key}: ${it.value}" }
-            Text(config.ifBlank { "No configuration" })
+            Text(
+                config.ifBlank { "No configuration" },
+                style = MaterialTheme.typography.bodyMedium
+            )
         },
         trailingContent = {
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
             }
-        }
+        },
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
     )
 }
 
 fun String.capitalize() = this.replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }
-
-private fun saveMacro(
-    macroId: Long?,
-    name: String,
-    description: String,
-    enabled: Boolean,
-    uiState: com.aditsyal.autodroid.presentation.viewmodels.MacroEditorUiState,
-    viewModel: MacroEditorViewModel
-) {
-    val existing = uiState.currentMacro
-    val macro = MacroDTO(
-        id = existing?.id ?: macroId ?: 0L,
-        name = name,
-        description = description,
-        enabled = enabled,
-        createdAt = existing?.createdAt ?: System.currentTimeMillis(),
-        lastExecuted = existing?.lastExecuted,
-        triggers = existing?.triggers ?: emptyList(),
-        actions = existing?.actions ?: emptyList(),
-        constraints = existing?.constraints ?: emptyList()
-    )
-    viewModel.saveMacro(macro)
-}
 
 @Composable
 private fun RowSwitch(
@@ -464,28 +506,26 @@ private fun RowSwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    androidx.compose.foundation.layout.Row(
+    Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = label, style = MaterialTheme.typography.titleMedium)
             Text(
-                text = if (checked) "This macro is active" else "This macro is disabled",
+                text = label,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = if (checked) "Macro will run when triggered" else "Macro is currently paused",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                checkedTrackColor = MaterialTheme.colorScheme.primary
-            )
+            onCheckedChange = onCheckedChange
         )
     }
 }
-
-

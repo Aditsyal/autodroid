@@ -6,13 +6,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,21 +28,24 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = { Text("Settings") },
+            LargeTopAppBar(
+                title = { Text("Settings", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.refreshStatus() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }
-                }
+                },
+                scrollBehavior = scrollBehavior
             )
         }
     ) { padding ->
@@ -49,47 +53,35 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "Service Status",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-            )
+            SettingsSectionHeader("Service Status")
 
-            StatusItem(
+            StatusListItem(
                 label = "Background Monitoring",
-                status = if (uiState.isWorkManagerRunning) "Active" else "Inactive",
-                statusColor = if (uiState.isWorkManagerRunning) Color(0xFF4CAF50) else Color(0xFFFF9800)
+                description = "Periodic trigger checking via WorkManager",
+                isActive = uiState.isWorkManagerRunning
             )
 
-            Text(
-                text = "Background monitoring runs automatically via WorkManager to check triggers periodically.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
-            HorizontalDivider()
+            SettingsSectionHeader("Permissions")
 
-            Text(
-                text = "Permissions",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-            )
-
-            PermissionItem(
+            PermissionListItem(
                 label = "Accessibility Service",
-                enabled = uiState.isAccessibilityEnabled,
+                description = "Required for UI automation and app event detection",
+                isGranted = uiState.isAccessibilityEnabled,
                 onClick = {
                     val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
                     context.startActivity(intent)
                 }
             )
 
-            PermissionItem(
+            PermissionListItem(
                 label = "Battery Optimization",
-                enabled = uiState.isBatteryOptimizationDisabled,
+                description = "Should be disabled for reliable background operation",
+                isGranted = uiState.isBatteryOptimizationDisabled,
                 onClick = {
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                         val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
@@ -98,9 +90,10 @@ fun SettingsScreen(
                 }
             )
 
-            PermissionItem(
+            PermissionListItem(
                 label = "Notifications",
-                enabled = uiState.isNotificationPermissionGranted,
+                description = "Required for status and foreground service visibility",
+                isGranted = uiState.isNotificationPermissionGranted,
                 onClick = {
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
                         val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
@@ -110,60 +103,70 @@ fun SettingsScreen(
                     }
                 }
             )
+            
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
 @Composable
-private fun StatusItem(
-    label: String,
-    status: String,
-    statusColor: Color
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = label, style = MaterialTheme.typography.titleMedium)
-        Text(
-            text = status,
-            color = statusColor,
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
-        )
-    }
+private fun SettingsSectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    )
 }
 
 @Composable
-private fun PermissionItem(
+private fun StatusListItem(
     label: String,
-    enabled: Boolean,
-    onClick: () -> Unit
+    description: String,
+    isActive: Boolean
 ) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(text = label, style = MaterialTheme.typography.titleMedium)
+    ListItem(
+        headlineContent = { Text(label) },
+        supportingContent = { Text(description) },
+        trailingContent = {
+            Surface(
+                color = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer,
+                shape = MaterialTheme.shapes.extraSmall
+            ) {
                 Text(
-                    text = if (enabled) "Granted" else "Required",
-                    color = if (enabled) Color(0xFF4CAF50) else Color(0xFFF44336),
-                    style = MaterialTheme.typography.bodySmall
+                    text = if (isActive) "Active" else "Inactive",
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
                 )
             }
-            TextButton(onClick = onClick) {
-                Text(if (enabled) "Modify" else "Enable")
-            }
         }
-    }
+    )
+}
+
+@Composable
+private fun PermissionListItem(
+    label: String,
+    description: String,
+    isGranted: Boolean,
+    onClick: () -> Unit
+) {
+    ListItem(
+        headlineContent = { Text(label) },
+        supportingContent = { Text(description) },
+        leadingContent = {
+            Icon(
+                imageVector = if (isGranted) Icons.Default.CheckCircle else Icons.Default.Error,
+                contentDescription = null,
+                tint = if (isGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            )
+        },
+        trailingContent = {
+            TextButton(onClick = onClick) {
+                Text(if (isGranted) "Modify" else "Enable")
+            }
+        },
+        modifier = Modifier.padding(vertical = 4.dp)
+    )
 }
