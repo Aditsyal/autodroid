@@ -28,6 +28,7 @@ class MacroListScreenTest {
                 onShowConflicts = {},
                 onShowSettings = {},
                 onShowTemplates = {},
+                onViewMacro = {},
                 onToggleMacro = { _, _ -> },
                 onExecuteMacro = {},
                 onDeleteMacro = {}
@@ -51,6 +52,7 @@ class MacroListScreenTest {
                 onShowConflicts = {},
                 onShowSettings = {},
                 onShowTemplates = {},
+                onViewMacro = {},
                 onToggleMacro = { _, _ -> },
                 onExecuteMacro = {},
                 onDeleteMacro = {}
@@ -78,6 +80,7 @@ class MacroListScreenTest {
                 onShowConflicts = {},
                 onShowSettings = {},
                 onShowTemplates = {},
+                onViewMacro = {},
                 onToggleMacro = { _, _ -> },
                 onExecuteMacro = {},
                 onDeleteMacro = {}
@@ -102,6 +105,7 @@ class MacroListScreenTest {
                 onShowConflicts = {},
                 onShowSettings = {},
                 onShowTemplates = {},
+                onViewMacro = {},
                 onToggleMacro = { _, _ -> },
                 onExecuteMacro = {},
                 onDeleteMacro = {}
