@@ -84,7 +84,10 @@ fun MacroEditorScreen(
     MacroEditorScreenContent(
         macroId = macroId,
         name = name,
-        onNameChange = { name = it },
+        onNameChange = { 
+            name = it
+            viewModel.updateName(it)
+        },
         description = description,
         onDescriptionChange = { description = it },
         enabled = enabled,
@@ -244,9 +247,13 @@ fun MacroEditorScreenContent(
                     }
                 },
                 actions = {
+                    val isFormValid = uiState.validationErrors.nameError == null &&
+                            uiState.validationErrors.triggersError == null &&
+                            uiState.validationErrors.actionsError == null
+
                     Button(
                         onClick = onSave,
-                        enabled = !uiState.isSaving,
+                        enabled = !uiState.isSaving && isFormValid,
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
                         if (uiState.isSaving) {
@@ -297,7 +304,11 @@ fun MacroEditorScreenContent(
                     placeholder = { Text("e.g., Silent Mode at Night") },
                     singleLine = true,
                     shape = MaterialTheme.shapes.medium,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    isError = uiState.validationErrors.nameError != null,
+                    supportingText = uiState.validationErrors.nameError?.let {
+                        { Text(it) }
+                    }
                 )
 
                 OutlinedTextField(
@@ -325,7 +336,8 @@ fun MacroEditorScreenContent(
             EditorSection(
                 title = "Triggers",
                 description = "Define when this macro should start",
-                onAddClick = onAddTrigger
+                onAddClick = onAddTrigger,
+                errorText = uiState.validationErrors.triggersError
             ) {
                 uiState.currentMacro?.triggers?.forEach { trigger ->
                     TriggerItem(trigger = trigger, onDelete = { onRemoveTrigger(trigger) })
@@ -338,7 +350,8 @@ fun MacroEditorScreenContent(
             EditorSection(
                 title = "Actions",
                 description = "What should happen when triggered",
-                onAddClick = onAddAction
+                onAddClick = onAddAction,
+                errorText = uiState.validationErrors.actionsError
             ) {
                 uiState.currentMacro?.actions?.forEach { action ->
                     ActionItem(action = action, onDelete = { onRemoveAction(action) })
@@ -371,6 +384,7 @@ private fun EditorSection(
     title: String,
     description: String,
     onAddClick: () -> Unit,
+    errorText: String? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -385,12 +399,12 @@ private fun EditorSection(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary
+                    color = if (errorText != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (errorText != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             FilledTonalButton(
@@ -402,6 +416,16 @@ private fun EditorSection(
                 Text("Add")
             }
         }
+        
+        if (errorText != null) {
+            Text(
+                text = errorText,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+        }
+        
         Spacer(Modifier.height(12.dp))
         content()
     }

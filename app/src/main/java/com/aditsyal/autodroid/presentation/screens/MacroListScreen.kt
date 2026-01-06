@@ -14,6 +14,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.aditsyal.autodroid.presentation.components.DeleteConfirmationDialog
 import com.aditsyal.autodroid.presentation.components.MacroCard
 import com.aditsyal.autodroid.presentation.viewmodels.MacroListUiState
 import com.aditsyal.autodroid.presentation.viewmodels.MacroListViewModel
@@ -78,6 +79,7 @@ fun MacroListScreenContent(
     onDeleteMacro: (Long) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    var pendingDeleteMacroId by remember { mutableStateOf<Long?>(null) }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -145,6 +147,20 @@ fun MacroListScreenContent(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
+        pendingDeleteMacroId?.let { id ->
+            val macro = uiState.macros.find { it.id == id }
+            if (macro != null) {
+                DeleteConfirmationDialog(
+                    macroName = macro.name,
+                    onConfirm = {
+                        onDeleteMacro(id)
+                        pendingDeleteMacroId = null
+                    },
+                    onDismiss = { pendingDeleteMacroId = null }
+                )
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -177,7 +193,7 @@ fun MacroListScreenContent(
                                 onExecute = onExecuteMacro,
                                 onView = onViewMacro,
                                 onEdit = onEditMacro,
-                                onDelete = onDeleteMacro
+                                onDelete = { pendingDeleteMacroId = macro.id }
                             )
                         }
                     }

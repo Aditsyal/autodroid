@@ -36,6 +36,7 @@ class MacroEditorViewModel @Inject constructor(
     private fun updateMacroState(macro: MacroDTO?) {
         savedStateHandle["current_macro"] = macro
         _uiState.update { it.copy(currentMacro = macro) }
+        macro?.let { runValidation(it) }
     }
 
     fun addTrigger(trigger: TriggerDTO) {
@@ -141,8 +142,14 @@ class MacroEditorViewModel @Inject constructor(
     }
 
     fun saveMacro(macro: MacroDTO) {
+        val validationErrors = validateMacro(macro)
+        if (validationErrors.nameError != null || validationErrors.triggersError != null || validationErrors.actionsError != null) {
+            _uiState.update { it.copy(validationErrors = validationErrors, isSaving = false) }
+            return
+        }
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isSaving = true, error = null, saved = false) }
+            _uiState.update { it.copy(isSaving = true, error = null, saved = false, validationErrors = MacroValidationErrors()) }
             runCatching {
                 if (macro.id == 0L) {
                     val newId = createMacroUseCase(macro)
@@ -173,17 +180,56 @@ class MacroEditorViewModel @Inject constructor(
         }
     }
 
+    fun validateMacro(macro: MacroDTO): MacroValidationErrors {
+        val nameError = when {
+            macro.name.isBlank() -> "Name is required"
+            macro.name.trim().length > 100 -> "Name must be between 1 and 100 characters"
+            else -> null
+        }
+
+        val triggersError = if (macro.triggers.isEmpty()) {
+            "At least one trigger is required"
+        } else null
+
+        val actionsError = if (macro.actions.isEmpty()) {
+            "At least one action is required"
+        } else null
+
+        return MacroValidationErrors(
+            nameError = nameError,
+            triggersError = triggersError,
+            actionsError = actionsError
+        )
+    }
+
+    fun runValidation(macro: MacroDTO) {
+        val errors = validateMacro(macro)
+        _uiState.update { it.copy(validationErrors = errors) }
+    }
+
+    fun updateName(name: String) {
+        val updatedMacro = (uiState.value.currentMacro ?: createEmptyMacro()).copy(name = name)
+        updateMacroState(updatedMacro)
+    }
+
     fun clearTransientState() {
         _uiState.update { it.copy(saved = false, error = null) }
     }
 }
+
+data class MacroValidationErrors(
+    val nameError: String? = null,
+    val triggersError: String? = null,
+    val actionsError: String? = null
+)
 
 data class MacroEditorUiState(
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val currentMacro: MacroDTO? = null,
     val saved: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val validationErrors: MacroValidationErrors = MacroValidationErrors()
 )
 
 
