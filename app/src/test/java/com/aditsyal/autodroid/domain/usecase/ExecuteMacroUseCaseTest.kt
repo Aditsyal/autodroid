@@ -65,7 +65,7 @@ class ExecuteMacroUseCaseTest {
     fun `invoke returns Success and logs when execution succeeds`() = runTest {
         val macro = MacroDTO(id = 1, name = "Test Macro")
         coEvery { repository.getMacroById(1) } returns macro
-        every { evaluateConstraintsUseCase(any()) } returns true
+        coEvery { evaluateConstraintsUseCase(any()) } returns true
         coEvery { executeActionUseCase(any()) } returns Result.success(Unit)
         coEvery { repository.updateExecutionInfo(any(), any()) } just Runs
         val logSlot = slot<ExecutionLogDTO>()
@@ -86,7 +86,7 @@ class ExecuteMacroUseCaseTest {
     fun `invoke returns Failure and logs when execution throws exception`() = runTest {
         val macro = MacroDTO(id = 1, name = "Test Macro")
         coEvery { repository.getMacroById(1) } returns macro
-        every { evaluateConstraintsUseCase(any()) } returns true
+        coEvery { evaluateConstraintsUseCase(any()) } returns true
         
         val exceptionMessage = "Simulated failure"
         coEvery { repository.updateExecutionInfo(any(), any()) } throws RuntimeException(exceptionMessage)
@@ -108,7 +108,7 @@ class ExecuteMacroUseCaseTest {
     fun `invoke returns Skipped when constraints are not satisfied`() = runTest {
         val macro = MacroDTO(id = 1, name = "Test Macro")
         coEvery { repository.getMacroById(1) } returns macro
-        every { evaluateConstraintsUseCase(any()) } returns false
+        coEvery { evaluateConstraintsUseCase(any()) } returns false
 
         val result = useCase(1, false)
 

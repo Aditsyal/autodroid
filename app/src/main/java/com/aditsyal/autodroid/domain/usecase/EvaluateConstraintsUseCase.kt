@@ -17,21 +17,26 @@ import android.provider.Settings
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.aditsyal.autodroid.data.models.ConstraintDTO
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.tasks.Task
+import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import java.util.Calendar
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class EvaluateConstraintsUseCase @Inject constructor(
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) {
-    operator fun invoke(constraints: List<ConstraintDTO>): Boolean {
+    suspend operator fun invoke(constraints: List<ConstraintDTO>): Boolean {
         if (constraints.isEmpty()) return true
         
         Timber.d("Evaluating ${constraints.size} constraints")
         return constraints.all { isConstraintSatisfied(it) }
     }
 
-    private fun isConstraintSatisfied(constraint: ConstraintDTO): Boolean {
+    private suspend fun isConstraintSatisfied(constraint: ConstraintDTO): Boolean {
         return try {
             when (constraint.constraintType) {
                 // Time constraints
@@ -280,20 +285,66 @@ class EvaluateConstraintsUseCase @Inject constructor(
     }
 
     // Location constraints
-    private fun checkInsideGeofence(config: Map<String, Any>): Boolean {
-        // This would require location tracking - simplified version
-        // In a real implementation, you'd check against active geofences
-        Timber.w("INSIDE_GEOFENCE constraint not fully implemented - requires location tracking")
-        return true
+    private suspend fun checkInsideGeofence(config: Map<String, Any>): Boolean {
+        val lat = config["latitude"]?.toString()?.toDoubleOrNull() ?: return true
+        val lng = config["longitude"]?.toString()?.toDoubleOrNull() ?: return true
+        val radius = config["radius"]?.toString()?.toFloatOrNull() ?: 100f
+        
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Timber.w("INSIDE_GEOFENCE: Missing location permission")
+            return true
+        }
+        
+        return try {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+            val location = fusedLocationClient.lastLocation.await()
+            if (location != null) {
+                val results = FloatArray(1)
+                android.location.Location.distanceBetween(location.latitude, location.longitude, lat, lng, results)
+                val distance = results[0]
+                val inside = distance <= radius
+                Timber.d("Geofence check (INSIDE): distance=$distance, radius=$radius, inside=$inside")
+                inside
+            } else {
+                Timber.w("INSIDE_GEOFENCE: Last known location is null")
+                true 
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error checking INSIDE_GEOFENCE")
+            true
+        }
     }
 
-    private fun checkOutsideGeofence(config: Map<String, Any>): Boolean {
-        // This would require location tracking - simplified version
-        Timber.w("OUTSIDE_GEOFENCE constraint not fully implemented - requires location tracking")
-        return true
+    private suspend fun checkOutsideGeofence(config: Map<String, Any>): Boolean {
+        val lat = config["latitude"]?.toString()?.toDoubleOrNull() ?: return true
+        val lng = config["longitude"]?.toString()?.toDoubleOrNull() ?: return true
+        val radius = config["radius"]?.toString()?.toFloatOrNull() ?: 100f
+        
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Timber.w("OUTSIDE_GEOFENCE: Missing location permission")
+            return true
+        }
+        
+        return try {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+            val location = fusedLocationClient.lastLocation.await()
+            if (location != null) {
+                val results = FloatArray(1)
+                android.location.Location.distanceBetween(location.latitude, location.longitude, lat, lng, results)
+                val distance = results[0]
+                val outside = distance > radius
+                Timber.d("Geofence check (OUTSIDE): distance=$distance, radius=$radius, outside=$outside")
+                outside
+            } else {
+                Timber.w("OUTSIDE_GEOFENCE: Last known location is null")
+                true
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error checking OUTSIDE_GEOFENCE")
+            true
+        }
     }
 
-    // Context constraints
     private fun checkAppRunning(config: Map<String, Any>): Boolean {
         val packageName = config["packageName"]?.toString() ?: return true
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return true
@@ -329,5 +380,11 @@ class EvaluateConstraintsUseCase @Inject constructor(
             "not_equals" -> actual != expected
             else -> actual == expected
         }
+    }
+
+    private suspend fun <T> Task<T>.await(): T? = suspendCancellableCoroutine { continuation ->
+        addOnSuccessListener { continuation.resume(it) }
+        addOnFailureListener { continuation.resumeWithException(it) }
+        addOnCanceledListener { continuation.cancel() }
     }
 }

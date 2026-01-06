@@ -50,19 +50,25 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         }
 
         val transitionType = event.geofenceTransition
+        val transitionName = when (transitionType) {
+            com.google.android.gms.location.Geofence.GEOFENCE_TRANSITION_ENTER -> "ENTER"
+            com.google.android.gms.location.Geofence.GEOFENCE_TRANSITION_EXIT -> "EXIT"
+            com.google.android.gms.location.Geofence.GEOFENCE_TRANSITION_DWELL -> "DWELL"
+            else -> "UNKNOWN"
+        }
         val triggers = event.triggeringGeofences ?: return
 
         val scope = CoroutineScope(Dispatchers.IO)
         scope.launch {
             triggers.forEach { geofence ->
                 val triggerId = geofence.requestId.toLongOrNull() ?: return@forEach
-                Timber.d("Geofence transition $transitionType detected for trigger $triggerId")
+                Timber.d("Geofence transition $transitionName detected for trigger $triggerId")
                 
                 checkTriggersUseCase(
                     "LOCATION", 
                     mapOf(
                         "fired_trigger_id" to triggerId,
-                        "transition" to transitionType
+                        "transitionType" to transitionName
                     )
                 )
             }

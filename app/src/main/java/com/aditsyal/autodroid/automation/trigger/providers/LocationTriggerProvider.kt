@@ -36,6 +36,21 @@ class LocationTriggerProvider @Inject constructor(
 
     @SuppressLint("MissingPermission")
     override suspend fun registerTrigger(trigger: TriggerDTO) {
+        // Check for required permissions
+        val hasFineLocation = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        
+        if (!hasFineLocation) {
+            Timber.e("LocationTriggerProvider: Cannot register geofence for trigger ${trigger.id} - Missing ACCESS_FINE_LOCATION")
+            return
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            val hasBackgroundLocation = androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (!hasBackgroundLocation) {
+                Timber.w("LocationTriggerProvider: Registering geofence for trigger ${trigger.id} without ACCESS_BACKGROUND_LOCATION. It may not fire when the app is in the background.")
+            }
+        }
+
         val lat = trigger.triggerConfig["latitude"]?.toString()?.toDoubleOrNull() ?: return
         val lng = trigger.triggerConfig["longitude"]?.toString()?.toDoubleOrNull() ?: return
         val radius = trigger.triggerConfig["radius"]?.toString()?.toFloatOrNull() ?: 100f
