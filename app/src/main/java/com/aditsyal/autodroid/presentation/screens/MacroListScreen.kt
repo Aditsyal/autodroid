@@ -87,23 +87,50 @@ fun MacroListScreenContent(
                     Column {
                         Text(
                             "Autodroid",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.headlineMedium
                         )
                     }
                 },
                 actions = {
-                    IconButton(onClick = onShowHistory) {
-                        Icon(Icons.Default.History, contentDescription = "View history")
+                    IconButton(
+                        onClick = onShowHistory,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.History,
+                            contentDescription = "View history",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
-                    IconButton(onClick = onShowConflicts) {
-                        Icon(Icons.Default.Warning, contentDescription = "Show conflicts")
+                    IconButton(
+                        onClick = onShowConflicts,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = "Show conflicts",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
-                    IconButton(onClick = onShowTemplates) {
-                        Icon(Icons.AutoMirrored.Filled.LibraryBooks, contentDescription = "Browse templates")
+                    IconButton(
+                        onClick = onShowTemplates,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.LibraryBooks,
+                            contentDescription = "Browse templates",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
-                    IconButton(onClick = onShowSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                    IconButton(
+                        onClick = onShowSettings,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -112,7 +139,7 @@ fun MacroListScreenContent(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onAddMacro,
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                icon = { Icon(Icons.Default.Add, contentDescription = "Create new macro") },
                 text = { Text("Create Macro") }
             )
         },
@@ -141,7 +168,7 @@ fun MacroListScreenContent(
                             end = 16.dp,
                             bottom = 88.dp // Extra padding to avoid FAB overlap
                         ),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(uiState.macros) { macro ->
                             MacroCard(
@@ -181,8 +208,7 @@ private fun EmptyState(onAddMacro: () -> Unit) {
     ) {
         Text(
             text = "No macros yet",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge
         )
         Text(
             text = "Create your first automation to get started.",

@@ -32,10 +32,17 @@ fun ConflictDetectionScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("Conflicts", fontWeight = FontWeight.Bold) },
+                title = { Text("Conflicts") },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -71,7 +78,7 @@ private fun ConflictListItem(conflict: ConflictDTO) {
         leadingContent = {
             Icon(
                 imageVector = Icons.Default.Warning,
-                contentDescription = null,
+                contentDescription = "Conflict warning",
                 tint = MaterialTheme.colorScheme.error
             )
         },
@@ -89,7 +96,7 @@ private fun EmptyConflictsState() {
         ) {
             Icon(
                 imageVector = Icons.Default.Warning,
-                contentDescription = null,
+                contentDescription = "No conflicts found",
                 modifier = Modifier.size(48.dp),
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
             )

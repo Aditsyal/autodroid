@@ -42,16 +42,30 @@ fun ExecutionHistoryScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("History", fontWeight = FontWeight.Bold) },
+                title = { Text("History") },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 },
                 actions = {
                     Box {
-                        IconButton(onClick = { showFilterMenu = true }) {
-                            Icon(Icons.Default.FilterList, contentDescription = "Filter")
+                        IconButton(
+                            onClick = { showFilterMenu = true },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.FilterList,
+                                contentDescription = "Filter",
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
                         DropdownMenu(
                             expanded = showFilterMenu,
@@ -105,7 +119,7 @@ fun ExecutionHistoryScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 placeholder = { Text("Search macros...") },
                 leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null)
+                    Icon(Icons.Default.Search, contentDescription = "Search execution history")
                 },
                 singleLine = true,
                 shape = MaterialTheme.shapes.small
@@ -183,9 +197,13 @@ private fun ExecutionLogListItem(log: ExecutionLogDTO) {
                     isSkipped -> Icons.Default.SkipNext
                     else -> Icons.Default.Error
                 },
-                contentDescription = null,
+                contentDescription = when {
+                    isSuccess -> "Execution successful"
+                    isSkipped -> "Execution skipped"
+                    else -> "Execution failed"
+                },
                 tint = when {
-                    isSuccess -> Color(0xFF4CAF50)
+                    isSuccess -> com.aditsyal.autodroid.presentation.theme.Success
                     isSkipped -> MaterialTheme.colorScheme.secondary
                     else -> MaterialTheme.colorScheme.error
                 }

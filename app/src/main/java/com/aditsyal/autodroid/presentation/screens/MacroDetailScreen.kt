@@ -41,15 +41,29 @@ fun MacroDetailScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("Macro Details", fontWeight = FontWeight.Bold) },
+                title = { Text("Macro Details") },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onEdit(macroId) }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                    IconButton(
+                        onClick = { onEdit(macroId) },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "Edit",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 },
                 scrollBehavior = scrollBehavior

@@ -232,8 +232,15 @@ fun MacroEditorScreenContent(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 },
                 actions = {
@@ -251,7 +258,7 @@ fun MacroEditorScreenContent(
                         } else {
                             Icon(
                                 Icons.Default.Save,
-                                contentDescription = null,
+                                contentDescription = "Save macro",
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(Modifier.width(8.dp))
@@ -378,8 +385,7 @@ private fun EditorSection(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = description,
@@ -391,7 +397,7 @@ private fun EditorSection(
                 onClick = onAddClick,
                 modifier = Modifier.padding(start = 8.dp)
             ) {
-                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.Default.Add, contentDescription = "Add item", modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(4.dp))
                 Text("Add")
             }
@@ -432,8 +438,16 @@ private fun TriggerItem(
             ) 
         },
         trailingContent = {
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         },
         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
@@ -461,8 +475,16 @@ private fun ActionItem(
             ) 
         },
         trailingContent = {
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         },
         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
@@ -490,8 +512,16 @@ private fun ConstraintItem(
             )
         },
         trailingContent = {
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         },
         colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)

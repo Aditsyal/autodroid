@@ -34,15 +34,29 @@ fun SettingsScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold) },
+                title = { Text("Settings") },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.refreshStatus() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                    IconButton(
+                        onClick = { viewModel.refreshStatus() },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 },
                 scrollBehavior = scrollBehavior
@@ -158,7 +172,7 @@ private fun PermissionListItem(
         leadingContent = {
             Icon(
                 imageVector = if (isGranted) Icons.Default.CheckCircle else Icons.Default.Error,
-                contentDescription = null,
+                contentDescription = if (isGranted) "Permission granted" else "Permission denied",
                 tint = if (isGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
             )
         },
