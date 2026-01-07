@@ -34,7 +34,10 @@ fun ActionPickerDialog(
                 modifier = Modifier.padding(16.dp)
             )
             LazyColumn {
-                items(actionOptions) { option ->
+                items(
+                    items = actionOptions,
+                    key = { it.label }
+                ) { option ->
                     ListItem(
                         headlineContent = { Text(option.label) },
                         supportingContent = { Text(option.type.replace("_", " ").lowercase().capitalize()) },

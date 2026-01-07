@@ -22,24 +22,10 @@ class BootReceiver : BroadcastReceiver() {
         if (intent?.action == Intent.ACTION_BOOT_COMPLETED) {
             Timber.d("Boot completed - scheduling macro workers and initializing triggers")
             context?.let { ctx ->
-                // Schedule periodic WorkManager job for trigger checking with constraints
-                val workRequest = PeriodicWorkRequestBuilder<MacroTriggerWorker>(15, TimeUnit.MINUTES)
-                    .setConstraints(
-                        androidx.work.Constraints.Builder()
-                            .setRequiredNetworkType(androidx.work.NetworkType.NOT_REQUIRED)
-                            .setRequiresBatteryNotLow(false)
-                            .setRequiresCharging(false)
-                            .build()
-                    )
-                    .build()
+                // Use optimized scheduler from the worker
+                MacroTriggerWorker.schedulePeriodicCheck(ctx)
 
-                WorkManager.getInstance(ctx).enqueueUniquePeriodicWork(
-                    "MacroTriggerWork",
-                    ExistingPeriodicWorkPolicy.KEEP,
-                    workRequest
-                )
-
-                Timber.d("BootReceiver: Scheduled MacroTriggerWorker with constraints")
+                Timber.d("BootReceiver: Scheduled MacroTriggerWorker with optimized configuration")
 
                 // Initialize triggers after boot using Hilt EntryPoint
                 val appContext = ctx.applicationContext as? AutodroidApplication

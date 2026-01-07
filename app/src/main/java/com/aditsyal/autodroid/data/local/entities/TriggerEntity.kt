@@ -16,8 +16,9 @@ import androidx.room.PrimaryKey
         )
     ],
     indices = [
-        Index(value = ["macroId"]),
-        Index(value = ["enabled", "triggerType"])
+        Index(value = ["macroId"], name = "index_triggers_macro_id"),
+        Index(value = ["triggerType", "enabled"], name = "index_triggers_type_enabled"),
+        Index(value = ["enabled"], name = "index_triggers_enabled")
     ]
 )
 data class TriggerEntity(

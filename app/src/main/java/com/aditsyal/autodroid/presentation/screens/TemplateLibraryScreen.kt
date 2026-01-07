@@ -67,7 +67,10 @@ fun TemplateLibraryScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(state.templates) { template ->
+                        items(
+                            items = state.templates,
+                            key = { it.id }
+                        ) { template ->
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()

@@ -231,6 +231,14 @@ class MacroRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getMacrosPaginated(limit: Int, offset: Int): List<MacroDTO> {
+        return macroDao.getMacrosPaginated(limit, offset).map { it.toDTO() }
+    }
+
+    override suspend fun getMacroCount(): Int {
+        return macroDao.getMacroCount()
+    }
+
     // Mapper extensions
     private fun MacroWithDetails.toDTO() = macro.toDTO(
         triggers = triggers.map { it.toDTO() },

@@ -34,7 +34,10 @@ fun TriggerPickerDialog(
                 modifier = Modifier.padding(16.dp)
             )
             LazyColumn {
-                items(triggerOptions) { option ->
+                items(
+                    items = triggerOptions,
+                    key = { it.label }
+                ) { option ->
                     ListItem(
                         headlineContent = { Text(option.label) },
                         supportingContent = { Text(option.type.lowercase().capitalize()) },

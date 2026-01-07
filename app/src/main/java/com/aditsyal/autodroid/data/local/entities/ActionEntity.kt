@@ -15,7 +15,10 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["macroId"])]
+    indices = [
+        Index(value = ["macroId"], name = "index_actions_macro_id"),
+        Index(value = ["macroId", "executionOrder"], name = "index_actions_macro_order")
+    ]
 )
 data class ActionEntity(
     @PrimaryKey(autoGenerate = true)

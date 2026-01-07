@@ -1,8 +1,10 @@
 package com.aditsyal.autodroid.presentation.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
@@ -18,6 +20,7 @@ import com.aditsyal.autodroid.presentation.components.DeleteConfirmationDialog
 import com.aditsyal.autodroid.presentation.components.MacroCard
 import com.aditsyal.autodroid.presentation.viewmodels.MacroListUiState
 import com.aditsyal.autodroid.presentation.viewmodels.MacroListViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
@@ -49,6 +52,7 @@ fun MacroListScreen(
     MacroListScreenContent(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
+        scope = scope,
         onAddMacro = onAddMacro,
         onViewMacro = onViewMacro,
         onEditMacro = onEditMacro,
@@ -67,6 +71,7 @@ fun MacroListScreen(
 fun MacroListScreenContent(
     uiState: MacroListUiState,
     snackbarHostState: SnackbarHostState,
+    scope: CoroutineScope,
     onAddMacro: () -> Unit,
     onViewMacro: (Long) -> Unit,
     onEditMacro: (Long) -> Unit,
@@ -79,7 +84,14 @@ fun MacroListScreenContent(
     onDeleteMacro: (Long) -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val listState = rememberLazyListState()
     var pendingDeleteMacroId by remember { mutableStateOf<Long?>(null) }
+
+    val showScrollToTop by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0
+        }
+    }
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -177,6 +189,7 @@ fun MacroListScreenContent(
 
                 else -> {
                     LazyColumn(
+                        state = listState,
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(
                             start = 16.dp,
@@ -186,7 +199,10 @@ fun MacroListScreenContent(
                         ),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(uiState.macros) { macro ->
+                        items(
+                            items = uiState.macros,
+                            key = { it.id }
+                        ) { macro ->
                             MacroCard(
                                 macro = macro,
                                 onToggle = onToggleMacro,
@@ -197,6 +213,27 @@ fun MacroListScreenContent(
                             )
                         }
                     }
+                }
+            }
+
+            // Optimized Scroll to Top Button
+            AnimatedVisibility(
+                visible = showScrollToTop,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+                    .padding(bottom = 72.dp) // Above FAB
+            ) {
+                SmallFloatingActionButton(
+                    onClick = {
+                        scope.launch {
+                            listState.animateScrollToItem(0)
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                ) {
+                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Scroll to top")
                 }
             }
         }

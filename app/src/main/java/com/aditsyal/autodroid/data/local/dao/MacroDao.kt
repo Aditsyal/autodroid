@@ -46,5 +46,12 @@ interface MacroDao {
 
     @Query("UPDATE macros SET enabled = :enabled WHERE id = :macroId")
     suspend fun toggleMacro(macroId: Long, enabled: Boolean)
+
+    @Transaction
+    @Query("SELECT * FROM macros ORDER BY createdAt DESC LIMIT :limit OFFSET :offset")
+    suspend fun getMacrosPaginated(limit: Int, offset: Int): List<MacroWithDetails>
+
+    @Query("SELECT COUNT(*) FROM macros")
+    suspend fun getMacroCount(): Int
 }
 

@@ -35,5 +35,8 @@ interface MacroRepository {
     fun getExecutionLogs(macroId: Long): Flow<List<ExecutionLogDTO>>
     fun getAllExecutionLogs(): Flow<List<ExecutionLogDTO>>
     fun getMacroConflicts(): Flow<List<com.aditsyal.autodroid.data.models.ConflictDTO>>
+    
+    suspend fun getMacrosPaginated(limit: Int, offset: Int): List<MacroDTO>
+    suspend fun getMacroCount(): Int
 }
 

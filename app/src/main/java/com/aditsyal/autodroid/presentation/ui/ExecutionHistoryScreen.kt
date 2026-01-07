@@ -33,8 +33,8 @@ fun ExecutionHistoryScreen(
     viewModel: ExecutionHistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var searchQuery by remember { mutableStateOf("") }
-    var filterStatus by remember { mutableStateOf<String?>(null) }
+    val searchQuery by viewModel.searchQuery.collectAsState()
+    val filterStatus by viewModel.statusFilter.collectAsState()
     var showFilterMenu by remember { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -74,28 +74,28 @@ fun ExecutionHistoryScreen(
                             DropdownMenuItem(
                                 text = { Text("All") },
                                 onClick = {
-                                    filterStatus = null
+                                    viewModel.setStatusFilter(null)
                                     showFilterMenu = false
                                 }
                             )
                             DropdownMenuItem(
                                 text = { Text("Success") },
                                 onClick = {
-                                    filterStatus = "SUCCESS"
+                                    viewModel.setStatusFilter("SUCCESS")
                                     showFilterMenu = false
                                 }
                             )
                             DropdownMenuItem(
                                 text = { Text("Failure") },
                                 onClick = {
-                                    filterStatus = "FAILURE"
+                                    viewModel.setStatusFilter("FAILURE")
                                     showFilterMenu = false
                                 }
                             )
                             DropdownMenuItem(
                                 text = { Text("Skipped") },
                                 onClick = {
-                                    filterStatus = "SKIPPED"
+                                    viewModel.setStatusFilter("SKIPPED")
                                     showFilterMenu = false
                                 }
                             )
@@ -113,7 +113,7 @@ fun ExecutionHistoryScreen(
         ) {
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = { searchQuery = it },
+                onValueChange = { viewModel.setSearchQuery(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -138,22 +138,17 @@ fun ExecutionHistoryScreen(
                         )
                     }
                     is ExecutionHistoryUiState.Success -> {
-                        val filteredLogs = state.logs
-                            .filter { log ->
-                                (filterStatus == null || log.executionStatus == filterStatus) &&
-                                (searchQuery.isEmpty() || 
-                                 (log.macroName?.contains(searchQuery, ignoreCase = true) == true) ||
-                                 log.macroId.toString().contains(searchQuery, ignoreCase = true))
-                            }
-                        
-                        if (filteredLogs.isEmpty()) {
+                        if (state.logs.isEmpty()) {
                             EmptyHistoryState()
                         } else {
                             LazyColumn(
                                 contentPadding = PaddingValues(bottom = 32.dp),
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                items(filteredLogs) { log ->
+                                items(
+                                    items = state.logs,
+                                    key = { it.id }
+                                ) { log ->
                                     ExecutionLogListItem(log)
                                 }
                             }

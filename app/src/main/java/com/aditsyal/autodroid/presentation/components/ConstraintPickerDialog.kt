@@ -34,7 +34,10 @@ fun ConstraintPickerDialog(
                 modifier = Modifier.padding(16.dp)
             )
             LazyColumn {
-                items(constraintOptions) { option ->
+                items(
+                    items = constraintOptions,
+                    key = { it.label }
+                ) { option ->
                     ListItem(
                         headlineContent = { Text(option.label) },
                         supportingContent = { Text(option.type.replace("_", " ").lowercase().capitalize()) },

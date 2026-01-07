@@ -15,7 +15,11 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["macroId"])]
+    indices = [
+        Index(value = ["macroId"], name = "index_execution_logs_macro_id"),
+        Index(value = ["executedAt"], name = "index_execution_logs_executed_at"),
+        Index(value = ["macroId", "executedAt"], name = "index_execution_logs_macro_executed")
+    ]
 )
 data class ExecutionLogEntity(
     @PrimaryKey(autoGenerate = true)

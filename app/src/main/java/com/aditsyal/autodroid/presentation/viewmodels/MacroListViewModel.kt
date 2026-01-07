@@ -57,11 +57,35 @@ class MacroListViewModel @Inject constructor(
     }
 
     fun toggleMacro(macroId: Long, enabled: Boolean) {
-        runAction(
-            successMessage = "Macro ${if (enabled) "enabled" else "disabled"}",
-            errorMessage = "Unable to toggle macro"
-        ) {
-            toggleMacroUseCase(macroId, enabled)
+        viewModelScope.launch {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    macros = currentState.macros.map { macro ->
+                        if (macro.id == macroId) macro.copy(enabled = enabled)
+                        else macro
+                    },
+                    isActionInFlight = true,
+                    error = null,
+                    lastActionMessage = null
+                )
+            }
+            runCatching { toggleMacroUseCase(macroId, enabled) }
+                .onSuccess {
+                    _uiState.update { 
+                        it.copy(
+                            isActionInFlight = false,
+                            lastActionMessage = "Macro ${if (enabled) "enabled" else "disabled"}"
+                        ) 
+                    }
+                }
+                .onFailure { throwable ->
+                    _uiState.update { 
+                        it.copy(
+                            isActionInFlight = false,
+                            error = throwable.message ?: "Unable to toggle macro"
+                        ) 
+                    }
+                }
         }
     }
 

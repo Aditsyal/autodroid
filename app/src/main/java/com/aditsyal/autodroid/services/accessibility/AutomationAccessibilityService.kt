@@ -53,6 +53,11 @@ class AutomationAccessibilityService : AccessibilityService() {
     }
 
     private suspend fun processEvent(event: AccessibilityEvent) {
+        // Filter out irrelevant events early to reduce processing
+        if (!isRelevantEvent(event)) {
+            return
+        }
+
         try {
             val packageName = event.packageName?.toString() ?: return
 
@@ -92,6 +97,15 @@ class AutomationAccessibilityService : AccessibilityService() {
         } catch (e: Exception) {
             Timber.e(e, "Error processing accessibility event")
         }
+    }
+
+    private fun isRelevantEvent(event: AccessibilityEvent): Boolean {
+        return event.eventType in listOf(
+            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
+            AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED,
+            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED,
+            AccessibilityEvent.TYPE_VIEW_CLICKED
+        )
     }
 
     override fun onInterrupt() {

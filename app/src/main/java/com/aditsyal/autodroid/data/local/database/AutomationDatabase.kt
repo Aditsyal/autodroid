@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.aditsyal.autodroid.BuildConfig
 import com.aditsyal.autodroid.data.local.dao.ActionDao
 import com.aditsyal.autodroid.data.local.dao.ConstraintDao
 import com.aditsyal.autodroid.data.local.dao.ExecutionLogDao
@@ -21,6 +22,8 @@ import com.aditsyal.autodroid.data.local.entities.MacroEntity
 import com.aditsyal.autodroid.data.local.entities.TemplateEntity
 import com.aditsyal.autodroid.data.local.entities.TriggerEntity
 import com.aditsyal.autodroid.data.local.entities.VariableEntity
+import timber.log.Timber
+import java.util.concurrent.Executors
 
 @Database(
     entities = [
@@ -33,7 +36,7 @@ import com.aditsyal.autodroid.data.local.entities.VariableEntity
         LogicBlockEntity::class,
         TemplateEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class AutomationDatabase : RoomDatabase() {
@@ -73,14 +76,42 @@ abstract class AutomationDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add migration logic here if schema changed from 5 to 6
+            }
+        }
+
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_triggers_enabled ON triggers(enabled)"
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_triggers_macro_id ON triggers(macroId)"
+                )
+                database.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_triggers_type_enabled ON triggers(triggerType, enabled)"
+                )
+            }
+        }
+
         fun getDatabase(context: Context): AutomationDatabase {
             return Room.databaseBuilder(
                 context.applicationContext,
                 AutomationDatabase::class.java,
                 DATABASE_NAME
             )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
-                .fallbackToDestructiveMigration()
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
+                .setQueryExecutor(Executors.newFixedThreadPool(4))
+                .setTransactionExecutor(Executors.newSingleThreadExecutor())
+                .setQueryCallback({ sqlQuery, bindArgs ->
+                    if (BuildConfig.DEBUG) {
+                        Timber.d("Room Query: $sqlQuery, Args: $bindArgs")
+                    }
+                }, Executors.newSingleThreadExecutor())
+                .fallbackToDestructiveMigrationOnDowngrade()
                 .build()
         }
     }

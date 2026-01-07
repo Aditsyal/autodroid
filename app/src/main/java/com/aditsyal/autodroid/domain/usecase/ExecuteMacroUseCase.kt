@@ -2,7 +2,9 @@ package com.aditsyal.autodroid.domain.usecase
 
 import com.aditsyal.autodroid.data.models.ExecutionLogDTO
 import com.aditsyal.autodroid.domain.repository.MacroRepository
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -13,43 +15,50 @@ class ExecuteMacroUseCase @Inject constructor(
     private val evaluateLogicUseCase: EvaluateLogicUseCase
 ) {
     suspend operator fun invoke(macroId: Long, isDryRun: Boolean = false): ExecutionResult {
-        val macro = repository.getMacroById(macroId) ?: return ExecutionResult.NotFound
-        val startTime = System.currentTimeMillis()
+        return try {
+            withTimeout(60_000L) { // 60 second timeout for the entire macro execution
+                val macro = repository.getMacroById(macroId) ?: return@withTimeout ExecutionResult.NotFound
+                val startTime = System.currentTimeMillis()
 
-        return runCatching {
-            // 1. Evaluate constraints
-            if (!evaluateConstraintsUseCase(macro.constraints)) {
-                Timber.d("Macro $macroId skipped: Constraints not satisfied")
-                return ExecutionResult.Skipped("Constraints not satisfied")
-            }
+                runCatching {
+                    // 1. Evaluate constraints
+                    if (!evaluateConstraintsUseCase(macro.constraints)) {
+                        Timber.d("Macro $macroId skipped: Constraints not satisfied")
+                        return@runCatching ExecutionResult.Skipped("Constraints not satisfied")
+                    }
 
-            // 2. Execute actions sequentially with logic control
-            if (!isDryRun) {
-                repository.updateExecutionInfo(macro.id, startTime)
-                
-                executeActionsWithLogic(macro.actions.sortedBy { it.executionOrder }, macro.id)
+                    // 2. Execute actions sequentially with logic control
+                    if (!isDryRun) {
+                        repository.updateExecutionInfo(macro.id, startTime)
+                        
+                        executeActionsWithLogic(macro.actions.sortedBy { it.executionOrder }, macro.id)
+                    }
+                    
+                    repository.logExecution(
+                        ExecutionLogDTO(
+                            macroId = macro.id,
+                            executedAt = startTime,
+                            executionStatus = if (isDryRun) "SIMULATION_SUCCESS" else "SUCCESS",
+                            executionDurationMs = System.currentTimeMillis() - startTime
+                        )
+                    )
+                    ExecutionResult.Success
+                }.getOrElse { throwable ->
+                    repository.logExecution(
+                        ExecutionLogDTO(
+                            macroId = macro.id,
+                            executedAt = startTime,
+                            executionStatus = if (isDryRun) "SIMULATION_FAILURE" else "FAILURE",
+                            errorMessage = throwable.message,
+                            executionDurationMs = System.currentTimeMillis() - startTime
+                        )
+                    )
+                    ExecutionResult.Failure(throwable.message)
+                }
             }
-            
-            repository.logExecution(
-                ExecutionLogDTO(
-                    macroId = macro.id,
-                    executedAt = startTime,
-                    executionStatus = if (isDryRun) "SIMULATION_SUCCESS" else "SUCCESS",
-                    executionDurationMs = System.currentTimeMillis() - startTime
-                )
-            )
-            ExecutionResult.Success
-        }.getOrElse { throwable ->
-            repository.logExecution(
-                ExecutionLogDTO(
-                    macroId = macro.id,
-                    executedAt = startTime,
-                    executionStatus = if (isDryRun) "SIMULATION_FAILURE" else "FAILURE",
-                    errorMessage = throwable.message,
-                    executionDurationMs = System.currentTimeMillis() - startTime
-                )
-            )
-            ExecutionResult.Failure(throwable.message)
+        } catch (e: TimeoutCancellationException) {
+            Timber.e("Macro $macroId execution timed out")
+            ExecutionResult.Failure("Execution timed out after 60 seconds")
         }
     }
 
