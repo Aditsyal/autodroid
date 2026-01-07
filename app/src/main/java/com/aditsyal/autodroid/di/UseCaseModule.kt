@@ -15,6 +15,7 @@ import com.aditsyal.autodroid.domain.usecase.ToggleMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.UpdateMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.EvaluateConstraintsUseCase
 import com.aditsyal.autodroid.domain.usecase.ExecuteActionUseCase
+import com.aditsyal.autodroid.utils.PerformanceMonitor
 import com.aditsyal.autodroid.domain.usecase.GetVariableUseCase
 import com.aditsyal.autodroid.domain.usecase.SetVariableUseCase
 import com.aditsyal.autodroid.domain.usecase.EvaluateVariableUseCase
@@ -134,9 +135,10 @@ object UseCaseModule {
         repository: MacroRepository,
         evaluateConstraintsUseCase: EvaluateConstraintsUseCase,
         executeActionUseCase: ExecuteActionUseCase,
-        evaluateLogicUseCase: EvaluateLogicUseCase
+        evaluateLogicUseCase: EvaluateLogicUseCase,
+        performanceMonitor: PerformanceMonitor
     ): ExecuteMacroUseCase =
-        ExecuteMacroUseCase(repository, evaluateConstraintsUseCase, executeActionUseCase, evaluateLogicUseCase)
+        ExecuteMacroUseCase(repository, evaluateConstraintsUseCase, executeActionUseCase, evaluateLogicUseCase, performanceMonitor)
 
     @Provides
     @Singleton

@@ -2,6 +2,7 @@ package com.aditsyal.autodroid.domain.usecase
 
 import com.aditsyal.autodroid.data.models.ExecutionLogDTO
 import com.aditsyal.autodroid.domain.repository.MacroRepository
+import com.aditsyal.autodroid.utils.PerformanceMonitor
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
@@ -12,27 +13,36 @@ class ExecuteMacroUseCase @Inject constructor(
     private val repository: MacroRepository,
     private val evaluateConstraintsUseCase: EvaluateConstraintsUseCase,
     private val executeActionUseCase: ExecuteActionUseCase,
-    private val evaluateLogicUseCase: EvaluateLogicUseCase
+    private val evaluateLogicUseCase: EvaluateLogicUseCase,
+    private val performanceMonitor: PerformanceMonitor
 ) {
     suspend operator fun invoke(macroId: Long, isDryRun: Boolean = false): ExecutionResult {
+        val executionId = performanceMonitor.startExecution("Macro_$macroId")
         return try {
             withTimeout(60_000L) { // 60 second timeout for the entire macro execution
                 val macro = repository.getMacroById(macroId) ?: return@withTimeout ExecutionResult.NotFound
                 val startTime = System.currentTimeMillis()
+                
+                performanceMonitor.checkpoint(executionId, "Macro_Fetched")
 
                 runCatching {
                     // 1. Evaluate constraints
                     if (!evaluateConstraintsUseCase(macro.constraints)) {
                         Timber.d("Macro $macroId skipped: Constraints not satisfied")
+                        performanceMonitor.checkpoint(executionId, "Constraints_Skipped")
                         return@runCatching ExecutionResult.Skipped("Constraints not satisfied")
                     }
+                    
+                    performanceMonitor.checkpoint(executionId, "Constraints_Passed")
 
                     // 2. Execute actions sequentially with logic control
                     if (!isDryRun) {
                         repository.updateExecutionInfo(macro.id, startTime)
                         
-                        executeActionsWithLogic(macro.actions.sortedBy { it.executionOrder }, macro.id)
+                        executeActionsWithLogic(macro.actions.sortedBy { it.executionOrder }, macro.id, executionId)
                     }
+                    
+                    performanceMonitor.checkpoint(executionId, "Actions_Completed")
                     
                     repository.logExecution(
                         ExecutionLogDTO(
@@ -44,6 +54,7 @@ class ExecuteMacroUseCase @Inject constructor(
                     )
                     ExecutionResult.Success
                 }.getOrElse { throwable ->
+                    performanceMonitor.checkpoint(executionId, "Execution_Error")
                     repository.logExecution(
                         ExecutionLogDTO(
                             macroId = macro.id,
@@ -57,20 +68,28 @@ class ExecuteMacroUseCase @Inject constructor(
                 }
             }
         } catch (e: TimeoutCancellationException) {
+            performanceMonitor.checkpoint(executionId, "Execution_Timeout")
             Timber.e("Macro $macroId execution timed out")
             ExecutionResult.Failure("Execution timed out after 60 seconds")
+        } finally {
+            performanceMonitor.endExecution(executionId, "Macro_$macroId")
         }
     }
 
     /**
      * Execute actions with logic control (if/else, loops)
      */
-    private suspend fun executeActionsWithLogic(actions: List<com.aditsyal.autodroid.data.models.ActionDTO>, macroId: Long) {
+    private suspend fun executeActionsWithLogic(
+        actions: List<com.aditsyal.autodroid.data.models.ActionDTO>, 
+        macroId: Long,
+        executionId: String
+    ) {
         var actionIndex = 0
         val actionStack = mutableListOf<LoopContext>()
         
         while (actionIndex < actions.size) {
             val action = actions[actionIndex]
+            performanceMonitor.checkpoint(executionId, "Action_${actionIndex}_Start_${action.actionType}")
             
             try {
                 when (action.actionType) {

@@ -7,6 +7,7 @@ import com.aditsyal.autodroid.domain.usecase.DeleteMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.ExecuteMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.GetAllMacrosUseCase
 import com.aditsyal.autodroid.domain.usecase.ToggleMacroUseCase
+import com.aditsyal.autodroid.utils.PerformanceMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,8 @@ class MacroListViewModel @Inject constructor(
     private val getAllMacrosUseCase: GetAllMacrosUseCase,
     private val toggleMacroUseCase: ToggleMacroUseCase,
     private val deleteMacroUseCase: DeleteMacroUseCase,
-    private val executeMacroUseCase: ExecuteMacroUseCase
+    private val executeMacroUseCase: ExecuteMacroUseCase,
+    private val performanceMonitor: PerformanceMonitor
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MacroListUiState())
@@ -45,6 +47,9 @@ class MacroListViewModel @Inject constructor(
                     }
                 }
                 .collect { macros ->
+                    performanceMonitor.findActiveExecutionId("Render_MacroList")?.let { id ->
+                        performanceMonitor.checkpoint(id, "Data_Loaded")
+                    }
                     _uiState.update {
                         it.copy(
                             isLoading = false,

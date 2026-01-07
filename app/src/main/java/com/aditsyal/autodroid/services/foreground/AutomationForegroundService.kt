@@ -11,6 +11,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.aditsyal.autodroid.MainActivity
 import com.aditsyal.autodroid.R
+import com.aditsyal.autodroid.utils.MemoryMonitor
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import javax.inject.Inject
@@ -22,6 +23,9 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class AutomationForegroundService : Service() {
 
+    @Inject
+    lateinit var memoryMonitor: MemoryMonitor
+
     companion object {
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "automation_foreground_channel"
@@ -31,6 +35,7 @@ class AutomationForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        memoryMonitor.logMemoryUsage("ForegroundService_Start")
         Timber.d("AutomationForegroundService created")
     }
 

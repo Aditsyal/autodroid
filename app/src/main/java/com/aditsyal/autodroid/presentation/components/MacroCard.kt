@@ -12,6 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aditsyal.autodroid.data.models.MacroDTO
+import com.aditsyal.autodroid.utils.rememberDebouncedClick
 
 @Composable
 fun MacroCard(
@@ -72,7 +73,7 @@ fun MacroCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
-                    onClick = { onExecute(macro.id) },
+                    onClick = rememberDebouncedClick { onExecute(macro.id) },
                     modifier = Modifier.size(48.dp)
                 ) {
                     Icon(

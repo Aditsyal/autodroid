@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityEvent
 import com.aditsyal.autodroid.automation.trigger.providers.AppEventTriggerProvider
 import com.aditsyal.autodroid.domain.usecase.CheckTriggersUseCase
+import com.aditsyal.autodroid.utils.MemoryMonitor
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -26,12 +27,16 @@ class AutomationAccessibilityService : AccessibilityService() {
     @Inject
     lateinit var appEventTriggerProvider: AppEventTriggerProvider
 
+    @Inject
+    lateinit var memoryMonitor: MemoryMonitor
+
     private val serviceScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val accessibilityEvents = MutableSharedFlow<AccessibilityEvent>(extraBufferCapacity = 64)
     private var currentAppPackage: String? = null
 
     override fun onCreate() {
         super.onCreate()
+        memoryMonitor.logMemoryUsage("AccessibilityService_Start")
         observeEvents()
     }
 

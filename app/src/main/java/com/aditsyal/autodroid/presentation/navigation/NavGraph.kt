@@ -1,6 +1,10 @@
 package com.aditsyal.autodroid.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -14,6 +18,7 @@ import com.aditsyal.autodroid.presentation.screens.TemplateLibraryScreen
 import com.aditsyal.autodroid.presentation.ui.ExecutionHistoryScreen
 import com.aditsyal.autodroid.presentation.ui.ConflictDetectionScreen
 import com.aditsyal.autodroid.presentation.screens.SettingsScreen
+import com.aditsyal.autodroid.utils.PerformanceMonitor
 
 private const val MacroListRoute = "macro_list"
 private const val MacroDetailRoute = "macro_detail"
@@ -25,8 +30,26 @@ private const val ConflictDetectionRoute = "conflict_detection"
 private const val SettingsRoute = "settings"
 
 @Composable
+fun TrackRender(
+    performanceMonitor: PerformanceMonitor,
+    screenName: String,
+    content: @Composable () -> Unit
+) {
+    val executionId = remember(screenName) { 
+        performanceMonitor.startExecution("Render_$screenName") 
+    }
+    
+    SideEffect {
+        performanceMonitor.endExecution(executionId, "Render_$screenName")
+    }
+    
+    content()
+}
+
+@Composable
 fun AppNavGraph(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    performanceMonitor: PerformanceMonitor
 ) {
     val navController = rememberNavController()
 
@@ -36,15 +59,17 @@ fun AppNavGraph(
         modifier = modifier
     ) {
         composable(route = MacroListRoute) {
-            MacroListScreen(
-                onAddMacro = { navController.navigate("$MacroEditorRoute/0") },
-                onViewMacro = { id -> navController.navigate("$MacroDetailRoute/$id") },
-                onEditMacro = { id -> navController.navigate("$MacroEditorRoute/$id") },
-                onShowHistory = { navController.navigate(ExecutionHistoryRoute) },
-                onShowConflicts = { navController.navigate(ConflictDetectionRoute) },
-                onShowSettings = { navController.navigate(SettingsRoute) },
-                onShowTemplates = { navController.navigate(TemplateLibraryRoute) }
-            )
+            TrackRender(performanceMonitor, "MacroList") {
+                MacroListScreen(
+                    onAddMacro = { navController.navigate("$MacroEditorRoute/0") },
+                    onViewMacro = { id -> navController.navigate("$MacroDetailRoute/$id") },
+                    onEditMacro = { id -> navController.navigate("$MacroEditorRoute/$id") },
+                    onShowHistory = { navController.navigate(ExecutionHistoryRoute) },
+                    onShowConflicts = { navController.navigate(ConflictDetectionRoute) },
+                    onShowSettings = { navController.navigate(SettingsRoute) },
+                    onShowTemplates = { navController.navigate(TemplateLibraryRoute) }
+                )
+            }
         }
 
         composable(
@@ -56,11 +81,13 @@ fun AppNavGraph(
             )
         ) { backStackEntry ->
             val macroId = backStackEntry.arguments?.getLong("macroId") ?: 0L
-            MacroDetailScreen(
-                macroId = macroId,
-                onBack = { navController.navigateUp() },
-                onEdit = { id -> navController.navigate("$MacroEditorRoute/$id") }
-            )
+            TrackRender(performanceMonitor, "MacroDetail_$macroId") {
+                MacroDetailScreen(
+                    macroId = macroId,
+                    onBack = { navController.navigateUp() },
+                    onEdit = { id -> navController.navigate("$MacroEditorRoute/$id") }
+                )
+            }
         }
 
         composable(
@@ -80,40 +107,50 @@ fun AppNavGraph(
             val macroId = backStackEntry.arguments?.getLong("macroId") ?: 0L
             val templateIdString = backStackEntry.arguments?.getString("templateId")
             val templateId = templateIdString?.toLongOrNull()
-            MacroEditorScreen(
-                macroId = macroId,
-                templateId = templateId,
-                onBack = { navController.navigateUp() },
-                onSaved = { navController.navigateUp() }
-            )
+            TrackRender(performanceMonitor, "MacroEditor_$macroId") {
+                MacroEditorScreen(
+                    macroId = macroId,
+                    templateId = templateId,
+                    onBack = { navController.navigateUp() },
+                    onSaved = { navController.navigateUp() }
+                )
+            }
         }
 
         composable(route = TemplateLibraryRoute) {
-            TemplateLibraryScreen(
-                onBackClick = { navController.navigateUp() },
-                onTemplateSelected = { templateId ->
-                    // Navigate to macro editor with the selected template
-                    navController.navigate("$MacroEditorRoute/0?templateId=$templateId")
-                }
-            )
+            TrackRender(performanceMonitor, "TemplateLibrary") {
+                TemplateLibraryScreen(
+                    onBackClick = { navController.navigateUp() },
+                    onTemplateSelected = { templateId ->
+                        // Navigate to macro editor with the selected template
+                        navController.navigate("$MacroEditorRoute/0?templateId=$templateId")
+                    }
+                )
+            }
         }
 
         composable(route = ExecutionHistoryRoute) {
-            ExecutionHistoryScreen(
-                onBackClick = { navController.navigateUp() }
-            )
+            TrackRender(performanceMonitor, "ExecutionHistory") {
+                ExecutionHistoryScreen(
+                    onBackClick = { navController.navigateUp() }
+                )
+            }
         }
 
         composable(route = ConflictDetectionRoute) {
-            ConflictDetectionScreen(
-                onBackClick = { navController.navigateUp() }
-            )
+            TrackRender(performanceMonitor, "ConflictDetection") {
+                ConflictDetectionScreen(
+                    onBackClick = { navController.navigateUp() }
+                )
+            }
         }
 
         composable(route = SettingsRoute) {
-            SettingsScreen(
-                onBackClick = { navController.navigateUp() }
-            )
+            TrackRender(performanceMonitor, "Settings") {
+                SettingsScreen(
+                    onBackClick = { navController.navigateUp() }
+                )
+            }
         }
     }
 }

@@ -9,6 +9,7 @@ import com.aditsyal.autodroid.domain.usecase.CreateMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.CreateMacroFromTemplateUseCase
 import com.aditsyal.autodroid.domain.usecase.GetMacroByIdUseCase
 import com.aditsyal.autodroid.domain.usecase.UpdateMacroUseCase
+import com.aditsyal.autodroid.utils.PerformanceMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import androidx.lifecycle.ViewModel
@@ -25,7 +26,8 @@ class MacroEditorViewModel @Inject constructor(
     private val getMacroByIdUseCase: GetMacroByIdUseCase,
     private val createMacroUseCase: CreateMacroUseCase,
     private val updateMacroUseCase: UpdateMacroUseCase,
-    private val createMacroFromTemplateUseCase: CreateMacroFromTemplateUseCase
+    private val createMacroFromTemplateUseCase: CreateMacroFromTemplateUseCase,
+    private val performanceMonitor: PerformanceMonitor
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MacroEditorUiState(
@@ -34,6 +36,11 @@ class MacroEditorViewModel @Inject constructor(
     val uiState: StateFlow<MacroEditorUiState> = _uiState.asStateFlow()
 
     private fun updateMacroState(macro: MacroDTO?) {
+        if (macro != null) {
+            performanceMonitor.findActiveExecutionId("Render_MacroEditor")?.let { id ->
+                performanceMonitor.checkpoint(id, "Data_Loaded")
+            }
+        }
         savedStateHandle["current_macro"] = macro
         _uiState.update { it.copy(currentMacro = macro) }
         macro?.let { runValidation(it) }

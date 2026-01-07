@@ -5,6 +5,8 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.aditsyal.autodroid.domain.usecase.InitializeTriggersUseCase
 import com.aditsyal.autodroid.domain.usecase.InitializeDefaultTemplatesUseCase
+import com.aditsyal.autodroid.data.local.database.AutomationDatabase
+import com.aditsyal.autodroid.utils.PerformanceMonitor
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,10 +27,28 @@ class AutodroidApplication : Application(), Configuration.Provider {
     @Inject
     lateinit var initializeDefaultTemplatesUseCase: InitializeDefaultTemplatesUseCase
 
+    @Inject
+    lateinit var database: AutomationDatabase
+
+    @Inject
+    lateinit var performanceMonitor: PerformanceMonitor
+
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onCreate() {
         super.onCreate()
+
+        // Pre-warm database connection on background thread
+        applicationScope.launch {
+            try {
+                database.queryExecutor.execute {
+                    database.openHelper.readableDatabase
+                    Timber.d("Database pre-warmed")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to pre-warm database")
+            }
+        }
 
         // Initialize Timber for logging
         // Check if app is debuggable instead of using BuildConfig
@@ -54,6 +74,14 @@ class AutodroidApplication : Application(), Configuration.Provider {
             } catch (e: Exception) {
                 Timber.e(e, "Failed to initialize default templates")
             }
+        }
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        // Clear performance monitoring data when system is low on memory
+        if (level >= TRIM_MEMORY_BACKGROUND) {
+            performanceMonitor.clear()
         }
     }
 
