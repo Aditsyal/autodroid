@@ -1,11 +1,14 @@
 package com.aditsyal.autodroid.domain.usecase
 
 import android.Manifest
+import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
+import android.text.TextUtils
 import androidx.core.content.ContextCompat
+import com.aditsyal.autodroid.services.accessibility.AutomationAccessibilityService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
@@ -84,22 +87,24 @@ class CheckPermissionsUseCase @Inject constructor(
             return PermissionResult.Denied
         }
 
-        // Check if our specific service is enabled
-        val enabledServices = try {
-            Settings.Secure.getString(
-                context.contentResolver,
-                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-            )
-        } catch (e: Exception) {
-            null
+        val expectedComponentName = ComponentName(context, AutomationAccessibilityService::class.java)
+        val enabledServicesSetting = Settings.Secure.getString(
+            context.contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: return PermissionResult.Denied
+
+        val colonSplitter = TextUtils.SimpleStringSplitter(':')
+        colonSplitter.setString(enabledServicesSetting)
+
+        while (colonSplitter.hasNext()) {
+            val componentNameString = colonSplitter.next()
+            val enabledService = ComponentName.unflattenFromString(componentNameString)
+            if (enabledService != null && enabledService == expectedComponentName) {
+                return PermissionResult.Granted
+            }
         }
 
-        val serviceName = "${context.packageName}/.services.accessibility.AutomationAccessibilityService"
-        return if (enabledServices?.contains(serviceName) == true) {
-            PermissionResult.Granted
-        } else {
-            PermissionResult.Denied
-        }
+        return PermissionResult.Denied
     }
 
     /**

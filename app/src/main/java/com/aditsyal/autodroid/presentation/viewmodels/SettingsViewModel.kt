@@ -8,6 +8,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkQuery
 import com.aditsyal.autodroid.domain.usecase.CheckPermissionsUseCase
 import com.aditsyal.autodroid.domain.usecase.ManageBatteryOptimizationUseCase
+import com.aditsyal.autodroid.workers.MacroTriggerWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,7 +56,7 @@ class SettingsViewModel @Inject constructor(
         return withContext(Dispatchers.IO) {
             try {
                 val workManager = WorkManager.getInstance(context)
-                val workInfos = workManager.getWorkInfosForUniqueWork("MacroTriggerWork").get()
+                val workInfos = workManager.getWorkInfosForUniqueWork(MacroTriggerWorker.WORK_NAME).get()
                 workInfos.any { workInfo ->
                     workInfo.state == WorkInfo.State.RUNNING ||
                     workInfo.state == WorkInfo.State.ENQUEUED
