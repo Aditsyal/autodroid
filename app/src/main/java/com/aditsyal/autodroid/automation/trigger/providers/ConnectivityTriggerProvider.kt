@@ -111,7 +111,7 @@ class ConnectivityTriggerProvider @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.N)
     private fun registerNetworkCallback() {
         if (networkCallback == null) {
-            networkCallback = object : ConnectivityManager.NetworkCallback() {
+            val callback = object : ConnectivityManager.NetworkCallback() {
                 override fun onAvailable(network: Network) {
                     checkMobileDataTriggers(true)
                 }
@@ -120,13 +120,14 @@ class ConnectivityTriggerProvider @Inject constructor(
                     checkMobileDataTriggers(false)
                 }
             }
+            networkCallback = callback
 
             val request = NetworkRequest.Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
                 .build()
 
-            connectivityManager?.registerNetworkCallback(request, networkCallback!!)
+            connectivityManager?.registerNetworkCallback(request, callback)
         }
     }
 

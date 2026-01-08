@@ -132,17 +132,18 @@ fun MacroEditorScreen(
     }
 
     if (pendingTriggerOption != null) {
-        val option = pendingTriggerOption!!
-        ConfigurationEditorDialog(
-            title = "Configure ${option.label}",
-            parameters = option.parameters,
-            initialValues = option.config,
-            onDismiss = { pendingTriggerOption = null },
-            onSave = { config ->
-                viewModel.addTrigger(TriggerDTO(triggerType = option.type, triggerConfig = option.config + config))
-                pendingTriggerOption = null
-            }
-        )
+        pendingTriggerOption?.let { option ->
+            ConfigurationEditorDialog(
+                title = "Configure ${option.label}",
+                parameters = option.parameters,
+                initialValues = option.config,
+                onDismiss = { pendingTriggerOption = null },
+                onSave = { config ->
+                    viewModel.addTrigger(TriggerDTO(triggerType = option.type, triggerConfig = option.config + config))
+                    pendingTriggerOption = null
+                }
+            )
+        }
     }
 
     if (showActionPicker) {
@@ -160,17 +161,18 @@ fun MacroEditorScreen(
     }
 
     if (pendingActionOption != null) {
-        val option = pendingActionOption!!
-        ConfigurationEditorDialog(
-            title = "Configure ${option.label}",
-            parameters = option.parameters,
-            initialValues = option.config,
-            onDismiss = { pendingActionOption = null },
-            onSave = { config ->
-                viewModel.addAction(ActionDTO(actionType = option.type, actionConfig = option.config + config, executionOrder = 0))
-                pendingActionOption = null
-            }
-        )
+        pendingActionOption?.let { option ->
+            ConfigurationEditorDialog(
+                title = "Configure ${option.label}",
+                parameters = option.parameters,
+                initialValues = option.config,
+                onDismiss = { pendingActionOption = null },
+                onSave = { config ->
+                    viewModel.addAction(ActionDTO(actionType = option.type, actionConfig = option.config + config, executionOrder = 0))
+                    pendingActionOption = null
+                }
+            )
+        }
     }
 
     if (showConstraintPicker) {
@@ -188,17 +190,18 @@ fun MacroEditorScreen(
     }
 
     if (pendingConstraintOption != null) {
-        val option = pendingConstraintOption!!
-        ConfigurationEditorDialog(
-            title = "Configure ${option.label}",
-            parameters = option.parameters,
-            initialValues = option.config,
-            onDismiss = { pendingConstraintOption = null },
-            onSave = { config ->
-                viewModel.addConstraint(ConstraintDTO(constraintType = option.type, constraintConfig = option.config + config))
-                pendingConstraintOption = null
-            }
-        )
+        pendingConstraintOption?.let { option ->
+            ConfigurationEditorDialog(
+                title = "Configure ${option.label}",
+                parameters = option.parameters,
+                initialValues = option.config,
+                onDismiss = { pendingConstraintOption = null },
+                onSave = { config ->
+                    viewModel.addConstraint(ConstraintDTO(constraintType = option.type, constraintConfig = option.config + config))
+                    pendingConstraintOption = null
+                }
+            )
+        }
     }
 }
 

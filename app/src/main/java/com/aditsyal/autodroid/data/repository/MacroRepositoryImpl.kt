@@ -39,15 +39,13 @@ class MacroRepositoryImpl @Inject constructor(
 
     private val gson = Gson()
 
-    override fun getAllMacros(): Flow<List<MacroDTO>> {
-        return macroDao.getAllMacrosWithDetails().map { macros ->
+    override fun getAllMacros(): Flow<List<MacroDTO>> =
+        macroDao.getAllMacrosWithDetails().map { macros ->
             macros.map { it.toDTO() }
         }
-    }
 
-    override suspend fun getMacroById(macroId: Long): MacroDTO? {
-        return macroDao.getMacroWithDetailsById(macroId)?.toDTO()
-    }
+    override suspend fun getMacroById(macroId: Long): MacroDTO? =
+        macroDao.getMacroWithDetailsById(macroId)?.toDTO()
 
     override suspend fun createMacro(macro: MacroDTO): Long {
         return database.withTransaction {
@@ -109,17 +107,14 @@ class MacroRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun deleteMacro(macroId: Long) {
+    override suspend fun deleteMacro(macroId: Long) =
         macroDao.deleteMacroById(macroId)
-    }
 
-    override suspend fun toggleMacro(macroId: Long, enabled: Boolean) {
+    override suspend fun toggleMacro(macroId: Long, enabled: Boolean) =
         macroDao.toggleMacro(macroId, enabled)
-    }
 
-    override suspend fun updateExecutionInfo(macroId: Long, timestamp: Long) {
+    override suspend fun updateExecutionInfo(macroId: Long, timestamp: Long) =
         macroDao.updateExecutionInfo(macroId, timestamp)
-    }
 
     override suspend fun addTrigger(macroId: Long, trigger: TriggerDTO): Long {
         // Validate macro exists
@@ -142,17 +137,14 @@ class MacroRepositoryImpl @Inject constructor(
         entity?.let { triggerDao.deleteTrigger(it) }
     }
 
-    override suspend fun getTriggerById(triggerId: Long): TriggerDTO? {
-        return triggerDao.getTriggerById(triggerId)?.toDTO()
-    }
+    override suspend fun getTriggerById(triggerId: Long): TriggerDTO? =
+        triggerDao.getTriggerById(triggerId)?.toDTO()
 
-    override suspend fun getEnabledTriggersByType(triggerType: String): List<TriggerDTO> {
-        return triggerDao.getEnabledTriggersByType(triggerType).map { it.toDTO() }
-    }
+    override suspend fun getEnabledTriggersByType(triggerType: String): List<TriggerDTO> =
+        triggerDao.getEnabledTriggersByType(triggerType).map { it.toDTO() }
 
-    override suspend fun getAllEnabledTriggers(): List<TriggerDTO> {
-        return triggerDao.getAllEnabledTriggers().map { it.toDTO() }
-    }
+    override suspend fun getAllEnabledTriggers(): List<TriggerDTO> =
+        triggerDao.getAllEnabledTriggers().map { it.toDTO() }
 
     override suspend fun addAction(macroId: Long, action: ActionDTO): Long {
         // Validate macro exists
@@ -205,14 +197,13 @@ class MacroRepositoryImpl @Inject constructor(
         executionLogDao.insertExecutionLog(log.toEntity())
     }
 
-    override fun getExecutionLogs(macroId: Long): Flow<List<ExecutionLogDTO>> {
-        return executionLogDao.getExecutionLogsByMacroId(macroId).map { logs ->
+    override fun getExecutionLogs(macroId: Long): Flow<List<ExecutionLogDTO>> =
+        executionLogDao.getExecutionLogsByMacroId(macroId).map { logs ->
             logs.map { it.toDTO() }
         }
-    }
 
-    override fun getMacroConflicts(): Flow<List<ConflictDTO>> {
-        return macroDao.getAllMacros().map { macros ->
+    override fun getMacroConflicts(): Flow<List<ConflictDTO>> =
+        macroDao.getAllMacros().map { macros ->
             macros.groupBy { it.name }
                 .filter { (_, list) -> list.size > 1 }
                 .map { (name, list) ->
@@ -223,21 +214,17 @@ class MacroRepositoryImpl @Inject constructor(
                     )
                 }
         }
-    }
 
-    override fun getAllExecutionLogs(): Flow<List<ExecutionLogDTO>> {
-        return executionLogDao.getAllExecutionLogsWithMacro().map { logs ->
+    override fun getAllExecutionLogs(): Flow<List<ExecutionLogDTO>> =
+        executionLogDao.getAllExecutionLogsWithMacro().map { logs ->
             logs.map { it.toDTO() }
         }
-    }
 
-    override suspend fun getMacrosPaginated(limit: Int, offset: Int): List<MacroDTO> {
-        return macroDao.getMacrosPaginated(limit, offset).map { it.toDTO() }
-    }
+    override suspend fun getMacrosPaginated(limit: Int, offset: Int): List<MacroDTO> =
+        macroDao.getMacrosPaginated(limit, offset).map { it.toDTO() }
 
-    override suspend fun getMacroCount(): Int {
-        return macroDao.getMacroCount()
-    }
+    override suspend fun getMacroCount(): Int =
+        macroDao.getMacroCount()
 
     // Mapper extensions
     private fun MacroWithDetails.toDTO() = macro.toDTO(
