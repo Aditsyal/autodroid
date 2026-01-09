@@ -25,50 +25,34 @@ object DatabaseModule {
     @Singleton
     fun provideAutomationDatabase(
         @ApplicationContext context: Context
-    ): AutomationDatabase {
-        return AutomationDatabase.getDatabase(context)
-    }
+    ): AutomationDatabase = AutomationDatabase.getDatabase(context)
 
     @Provides
     @Singleton
-    fun provideMacroDao(database: AutomationDatabase): MacroDao {
-        return database.macroDao()
-    }
+    fun provideMacroDao(database: AutomationDatabase): MacroDao = database.macroDao()
 
     @Provides
     @Singleton
-    fun provideTriggerDao(database: AutomationDatabase): TriggerDao {
-        return database.triggerDao()
-    }
+    fun provideTriggerDao(database: AutomationDatabase): TriggerDao = database.triggerDao()
 
     @Provides
     @Singleton
-    fun provideActionDao(database: AutomationDatabase): ActionDao {
-        return database.actionDao()
-    }
+    fun provideActionDao(database: AutomationDatabase): ActionDao = database.actionDao()
 
     @Provides
     @Singleton
-    fun provideConstraintDao(database: AutomationDatabase): ConstraintDao {
-        return database.constraintDao()
-    }
+    fun provideConstraintDao(database: AutomationDatabase): ConstraintDao = database.constraintDao()
 
     @Provides
     @Singleton
-    fun provideExecutionLogDao(database: AutomationDatabase): ExecutionLogDao {
-        return database.executionLogDao()
-    }
+    fun provideExecutionLogDao(database: AutomationDatabase): ExecutionLogDao = database.executionLogDao()
 
     @Provides
     @Singleton
-    fun provideVariableDao(database: AutomationDatabase): VariableDao {
-        return database.variableDao()
-    }
+    fun provideVariableDao(database: AutomationDatabase): VariableDao = database.variableDao()
 
     @Provides
     @Singleton
-    fun provideTemplateDao(database: AutomationDatabase): TemplateDao {
-        return database.templateDao()
-    }
+    fun provideTemplateDao(database: AutomationDatabase): TemplateDao = database.templateDao()
 }
 

@@ -5,11 +5,15 @@ import com.aditsyal.autodroid.domain.usecase.DeleteMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.ExecuteMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.GetAllMacrosUseCase
 import com.aditsyal.autodroid.domain.usecase.ToggleMacroUseCase
+import com.aditsyal.autodroid.utils.PerformanceMonitor
 import com.aditsyal.autodroid.util.MainDispatcherRule
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.just
+import io.mockk.runs
 import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -39,10 +43,18 @@ class MacroListViewModelTest {
     @MockK
     lateinit var executeMacroUseCase: ExecuteMacroUseCase
 
+    @MockK
+    lateinit var performanceMonitor: PerformanceMonitor
+
     private lateinit var viewModel: MacroListViewModel
 
     @Before
     fun setUp() {
+        MockKAnnotations.init(this)
+
+        // Mock PerformanceMonitor methods
+        every { performanceMonitor.findActiveExecutionId(any()) } returns null
+        every { performanceMonitor.checkpoint(any(), any()) } just runs
         MockKAnnotations.init(this)
         
         // Default behavior for init
@@ -66,7 +78,8 @@ class MacroListViewModelTest {
             getAllMacrosUseCase,
             toggleMacroUseCase,
             deleteMacroUseCase,
-            executeMacroUseCase
+            executeMacroUseCase,
+            performanceMonitor,
         )
 
         val currentState = viewModel.uiState.value
@@ -81,7 +94,8 @@ class MacroListViewModelTest {
             getAllMacrosUseCase,
             toggleMacroUseCase,
             deleteMacroUseCase,
-            executeMacroUseCase
+            executeMacroUseCase,
+            performanceMonitor,
         )
         
         coEvery { toggleMacroUseCase(1, true) } returns Unit
@@ -97,7 +111,8 @@ class MacroListViewModelTest {
             getAllMacrosUseCase,
             toggleMacroUseCase,
             deleteMacroUseCase,
-            executeMacroUseCase
+            executeMacroUseCase,
+            performanceMonitor,
         )
 
         coEvery { deleteMacroUseCase(1) } returns Unit
@@ -113,7 +128,8 @@ class MacroListViewModelTest {
             getAllMacrosUseCase,
             toggleMacroUseCase,
             deleteMacroUseCase,
-            executeMacroUseCase
+            executeMacroUseCase,
+            performanceMonitor,
         )
 
         coEvery { executeMacroUseCase(1) } returns ExecuteMacroUseCase.ExecutionResult.Success
@@ -132,7 +148,8 @@ class MacroListViewModelTest {
             getAllMacrosUseCase,
             toggleMacroUseCase,
             deleteMacroUseCase,
-            executeMacroUseCase
+            executeMacroUseCase,
+            performanceMonitor,
         )
 
         val errorMessage = "Something went wrong"

@@ -27,7 +27,7 @@ class MacroEditorViewModel @Inject constructor(
     private val createMacroUseCase: CreateMacroUseCase,
     private val updateMacroUseCase: UpdateMacroUseCase,
     private val createMacroFromTemplateUseCase: CreateMacroFromTemplateUseCase,
-    private val performanceMonitor: PerformanceMonitor
+    private val performanceMonitor: PerformanceMonitor,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MacroEditorUiState(

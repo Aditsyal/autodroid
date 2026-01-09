@@ -8,7 +8,11 @@ import com.aditsyal.autodroid.domain.usecase.CreateMacroUseCase
 import com.aditsyal.autodroid.domain.usecase.CreateMacroFromTemplateUseCase
 import com.aditsyal.autodroid.domain.usecase.GetMacroByIdUseCase
 import com.aditsyal.autodroid.domain.usecase.UpdateMacroUseCase
+import com.aditsyal.autodroid.utils.PerformanceMonitor
+import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -25,17 +29,24 @@ class MacroEditorViewModelTest {
     private val createMacroUseCase = mockk<CreateMacroUseCase>()
     private val updateMacroUseCase = mockk<UpdateMacroUseCase>()
     private val createMacroFromTemplateUseCase = mockk<CreateMacroFromTemplateUseCase>()
+    private val performanceMonitor = mockk<PerformanceMonitor>()
     private val savedStateHandle = SavedStateHandle()
 
     @Before
     fun setup() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
+
+        // Mock PerformanceMonitor methods
+        every { performanceMonitor.findActiveExecutionId(any()) } returns null
+        every { performanceMonitor.checkpoint(any(), any()) } just runs
+
         viewModel = MacroEditorViewModel(
             savedStateHandle,
             getMacroByIdUseCase,
             createMacroUseCase,
             updateMacroUseCase,
-            createMacroFromTemplateUseCase
+            createMacroFromTemplateUseCase,
+            performanceMonitor,
         )
     }
 

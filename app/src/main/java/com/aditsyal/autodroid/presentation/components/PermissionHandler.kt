@@ -131,7 +131,7 @@ private fun HandleAccessibilityPermission(
             },
             title = { Text("Enable ${permissionInfo.title}") },
             text = {
-                Text(permissionInfo.description + "\n\n" + permissionInfo.rationale)
+                Text("${permissionInfo.description}\n\n${permissionInfo.rationale}")
             },
             confirmButton = {
                 TextButton(
@@ -261,7 +261,7 @@ fun BatteryOptimizationHandler(
             onDismissRequest = { showDialog = false },
             title = { Text("Disable ${optimizationInfo.title}") },
             text = {
-                Text(optimizationInfo.description + "\n\n" + optimizationInfo.rationale)
+                Text("${optimizationInfo.description}\n\n${optimizationInfo.rationale}")
             },
             confirmButton = {
                 TextButton(

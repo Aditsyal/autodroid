@@ -3,6 +3,7 @@ package com.aditsyal.autodroid.domain.usecase
 import com.aditsyal.autodroid.data.models.ExecutionLogDTO
 import com.aditsyal.autodroid.data.models.MacroDTO
 import com.aditsyal.autodroid.domain.repository.MacroRepository
+import com.aditsyal.autodroid.utils.PerformanceMonitor
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -10,6 +11,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.just
+import io.mockk.runs
 import io.mockk.slot
 import io.mockk.unmockkAll
 import kotlinx.coroutines.test.runTest
@@ -33,16 +35,26 @@ class ExecuteMacroUseCaseTest {
     @MockK
     lateinit var evaluateLogicUseCase: EvaluateLogicUseCase
 
+    @MockK
+    lateinit var performanceMonitor: PerformanceMonitor
+
     private lateinit var useCase: ExecuteMacroUseCase
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
+
+        // Mock PerformanceMonitor methods
+        every { performanceMonitor.startExecution(any()) } returns "test-execution-id"
+        every { performanceMonitor.checkpoint(any(), any()) } just runs
+        every { performanceMonitor.endExecution(any(), any()) } just runs
+
         useCase = ExecuteMacroUseCase(
             repository,
             evaluateConstraintsUseCase,
             executeActionUseCase,
-            evaluateLogicUseCase
+            evaluateLogicUseCase,
+            performanceMonitor,
         )
     }
 

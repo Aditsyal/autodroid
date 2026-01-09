@@ -13,28 +13,18 @@ class VariableRepository @Inject constructor(
     private val variableDao: VariableDao
 ) {
 
-    fun getAllVariables(): Flow<List<VariableDTO>> {
-        return variableDao.getAllVariables()
-            .map { entities -> entities.map { it.toDTO() } }
-    }
+    fun getAllVariables(): Flow<List<VariableDTO>> = variableDao.getAllVariables()
+        .map { entities -> entities.map { it.toDTO() } }
 
-    fun getGlobalVariables(): Flow<List<VariableDTO>> {
-        return variableDao.getAllGlobalVariables()
-            .map { entities -> entities.map { it.toDTO() } }
-    }
+    fun getGlobalVariables(): Flow<List<VariableDTO>> = variableDao.getAllGlobalVariables()
+        .map { entities -> entities.map { it.toDTO() } }
 
-    fun getVariablesByMacroId(macroId: Long): Flow<List<VariableDTO>> {
-        return variableDao.getVariablesByMacroId(macroId)
-            .map { entities -> entities.map { it.toDTO() } }
-    }
+    fun getVariablesByMacroId(macroId: Long): Flow<List<VariableDTO>> = variableDao.getVariablesByMacroId(macroId)
+        .map { entities -> entities.map { it.toDTO() } }
 
-    suspend fun getVariable(id: Long): VariableDTO? {
-        return variableDao.getVariableById(id)?.toDTO()
-    }
+    suspend fun getVariable(id: Long): VariableDTO? = variableDao.getVariableById(id)?.toDTO()
 
-    suspend fun getVariable(name: String, scope: String, macroId: Long?): VariableDTO? {
-        return variableDao.getVariable(name, scope, macroId)?.toDTO()
-    }
+    suspend fun getVariable(name: String, scope: String, macroId: Long?): VariableDTO? = variableDao.getVariable(name, scope, macroId)?.toDTO()
 
     suspend fun createVariable(variable: VariableDTO): Long {
         val entity = variable.toEntity()
@@ -116,9 +106,7 @@ class VariableRepository @Inject constructor(
         amount: Int = 1,
         scope: String = "GLOBAL",
         macroId: Long? = null
-    ): Int {
-        return incrementVariable(name, -amount, scope, macroId)
-    }
+    ): Int = incrementVariable(name, -amount, scope, macroId)
 
     suspend fun appendToVariable(
         name: String,
@@ -170,24 +158,20 @@ class VariableRepository @Inject constructor(
     }
 }
 
-private fun VariableEntity.toDTO(): VariableDTO {
-    return VariableDTO(
-        id = id,
-        name = name,
-        value = value,
-        scope = scope,
-        macroId = macroId,
-        type = type
-    )
-}
+private fun VariableEntity.toDTO(): VariableDTO = VariableDTO(
+    id = id,
+    name = name,
+    value = value,
+    scope = scope,
+    macroId = macroId,
+    type = type
+)
 
-private fun VariableDTO.toEntity(): VariableEntity {
-    return VariableEntity(
-        id = id,
-        name = name,
-        value = value,
-        scope = scope,
-        macroId = macroId,
-        type = type
-    )
-}
+private fun VariableDTO.toEntity(): VariableEntity = VariableEntity(
+    id = id,
+    name = name,
+    value = value,
+    scope = scope,
+    macroId = macroId,
+    type = type
+)
