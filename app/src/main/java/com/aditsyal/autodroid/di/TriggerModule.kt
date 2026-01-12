@@ -2,11 +2,13 @@ package com.aditsyal.autodroid.di
 
 import com.aditsyal.autodroid.automation.trigger.TriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.AppEventTriggerProvider
+import com.aditsyal.autodroid.automation.trigger.providers.CalendarTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.CommunicationTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.ConnectivityTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.DeviceStateTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.LocationTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.MusicTriggerProvider
+import com.aditsyal.autodroid.automation.trigger.providers.RingtoneTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.SensorTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.TimeTriggerProvider
 import com.aditsyal.autodroid.automation.trigger.providers.UsbTriggerProvider
@@ -65,6 +67,16 @@ abstract class TriggerModule {
     @IntoSet
     @Singleton
     abstract fun bindUsbTriggerProvider(provider: UsbTriggerProvider): TriggerProvider
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindCalendarTriggerProvider(provider: CalendarTriggerProvider): TriggerProvider
+
+    @Binds
+    @IntoSet
+    @Singleton
+    abstract fun bindRingtoneTriggerProvider(provider: RingtoneTriggerProvider): TriggerProvider
 }
 
 

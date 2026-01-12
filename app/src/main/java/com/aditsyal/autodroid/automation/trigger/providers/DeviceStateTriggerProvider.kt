@@ -116,6 +116,8 @@ class DeviceStateTriggerProvider @Inject constructor(
                     Intent.ACTION_SCREEN_OFF -> {
                         Timber.d("Screen turned off")
                         notifyTriggers("SCREEN_OFF")
+                        // When screen turns off, device is typically locked
+                        notifyTriggers("DEVICE_LOCKED")
                     }
                     Intent.ACTION_USER_PRESENT -> {
                         Timber.d("Device unlocked")
@@ -133,12 +135,12 @@ class DeviceStateTriggerProvider @Inject constructor(
                         val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
                         val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
                         val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-                        
+
                         if (level >= 0 && scale > 0) {
                             val batteryPct = (level / scale.toFloat() * 100).toInt()
                             checkBatteryLevelTriggers(batteryPct)
                         }
-                        
+
                         if (status == BatteryManager.BATTERY_STATUS_FULL) {
                             Timber.d("Battery fully charged")
                             notifyTriggers("FULLY_CHARGED")
@@ -180,7 +182,7 @@ class DeviceStateTriggerProvider @Inject constructor(
             .forEach { trigger ->
                 val threshold = trigger.triggerConfig["threshold"]?.toString()?.toIntOrNull()
                 val operator = trigger.triggerConfig["operator"]?.toString() ?: "below"
-                
+
                 if (threshold != null) {
                     val shouldTrigger = when (operator.lowercase()) {
                         "below", "less_than" -> currentLevel < threshold
@@ -188,7 +190,7 @@ class DeviceStateTriggerProvider @Inject constructor(
                         "equals" -> currentLevel == threshold
                         else -> false
                     }
-                    
+
                     if (shouldTrigger) {
                         notifyTrigger(trigger, mapOf("level" to currentLevel, "threshold" to threshold))
                     }
@@ -227,4 +229,3 @@ class DeviceStateTriggerProvider @Inject constructor(
         }
     }
 }
-

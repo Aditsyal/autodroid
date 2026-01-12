@@ -100,7 +100,22 @@ object UseCaseModule {
         toastExecutor: com.aditsyal.autodroid.domain.usecase.executors.ToastExecutor,
         vibrateExecutor: com.aditsyal.autodroid.domain.usecase.executors.VibrateExecutor,
         playSoundExecutor: com.aditsyal.autodroid.domain.usecase.executors.PlaySoundExecutor,
-        stopSoundExecutor: com.aditsyal.autodroid.domain.usecase.executors.StopSoundExecutor
+        stopSoundExecutor: com.aditsyal.autodroid.domain.usecase.executors.StopSoundExecutor,
+        // New Phase 1 executors
+        httpRequestExecutor: com.aditsyal.autodroid.domain.usecase.executors.HttpRequestExecutor,
+        lockScreenExecutor: com.aditsyal.autodroid.domain.usecase.executors.LockScreenExecutor,
+        ttsExecutor: com.aditsyal.autodroid.domain.usecase.executors.TtsExecutor,
+        screenTimeoutExecutor: com.aditsyal.autodroid.domain.usecase.executors.ScreenTimeoutExecutor,
+        dndExecutor: com.aditsyal.autodroid.domain.usecase.executors.DndExecutor,
+        mediaControlExecutor: com.aditsyal.autodroid.domain.usecase.executors.MediaControlExecutor,
+        closeAppExecutor: com.aditsyal.autodroid.domain.usecase.executors.CloseAppExecutor,
+        clearCacheExecutor: com.aditsyal.autodroid.domain.usecase.executors.ClearCacheExecutor,
+        unlockScreenExecutor: com.aditsyal.autodroid.domain.usecase.executors.UnlockScreenExecutor,
+        startMusicExecutor: com.aditsyal.autodroid.domain.usecase.executors.StartMusicExecutor,
+        closeNotificationExecutor: com.aditsyal.autodroid.domain.usecase.executors.CloseNotificationExecutor,
+        setRingtoneExecutor: com.aditsyal.autodroid.domain.usecase.executors.SetRingtoneExecutor,
+        deleteSmsExecutor: com.aditsyal.autodroid.domain.usecase.executors.DeleteSmsExecutor,
+        makeCallExecutor: com.aditsyal.autodroid.domain.usecase.executors.MakeCallExecutor
     ): ExecuteActionUseCase =
         ExecuteActionUseCase(
             context,
@@ -121,7 +136,22 @@ object UseCaseModule {
             toastExecutor,
             vibrateExecutor,
             playSoundExecutor,
-            stopSoundExecutor
+            stopSoundExecutor,
+            // New Phase 1 executors
+            httpRequestExecutor,
+            lockScreenExecutor,
+            ttsExecutor,
+            screenTimeoutExecutor,
+            dndExecutor,
+            mediaControlExecutor,
+            closeAppExecutor,
+            clearCacheExecutor,
+            unlockScreenExecutor,
+            startMusicExecutor,
+            closeNotificationExecutor,
+            setRingtoneExecutor,
+            deleteSmsExecutor,
+            makeCallExecutor
         )
 
     @Provides

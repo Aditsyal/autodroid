@@ -58,7 +58,22 @@ class ExecuteActionUseCase @Inject constructor(
     private val toastExecutor: com.aditsyal.autodroid.domain.usecase.executors.ToastExecutor,
     private val vibrateExecutor: com.aditsyal.autodroid.domain.usecase.executors.VibrateExecutor,
     private val playSoundExecutor: com.aditsyal.autodroid.domain.usecase.executors.PlaySoundExecutor,
-    private val stopSoundExecutor: com.aditsyal.autodroid.domain.usecase.executors.StopSoundExecutor
+    private val stopSoundExecutor: com.aditsyal.autodroid.domain.usecase.executors.StopSoundExecutor,
+    // New Phase 1 executors
+    private val httpRequestExecutor: HttpRequestExecutor,
+    private val lockScreenExecutor: LockScreenExecutor,
+    private val ttsExecutor: TtsExecutor,
+    private val screenTimeoutExecutor: ScreenTimeoutExecutor,
+    private val dndExecutor: DndExecutor,
+    private val mediaControlExecutor: MediaControlExecutor,
+    private val closeAppExecutor: CloseAppExecutor,
+    private val clearCacheExecutor: ClearCacheExecutor,
+    private val unlockScreenExecutor: UnlockScreenExecutor,
+    private val startMusicExecutor: StartMusicExecutor,
+    private val closeNotificationExecutor: CloseNotificationExecutor,
+    private val setRingtoneExecutor: SetRingtoneExecutor,
+    private val deleteSmsExecutor: DeleteSmsExecutor,
+    private val makeCallExecutor: MakeCallExecutor
 ) {
     
     companion object {
@@ -92,6 +107,22 @@ class ExecuteActionUseCase @Inject constructor(
                 "DELAY" -> delayExecutor.execute(processedConfig).getOrThrow()
                 "SHOW_TOAST" -> toastExecutor.execute(processedConfig).getOrThrow()
                 "VIBRATE" -> vibrateExecutor.execute(processedConfig).getOrThrow()
+
+                // New Phase 1 actions
+                "HTTP_REQUEST" -> httpRequestExecutor.execute(processedConfig).getOrThrow()
+                "LOCK_SCREEN" -> lockScreenExecutor.execute(processedConfig).getOrThrow()
+                "TTS" -> ttsExecutor.execute(processedConfig).getOrThrow()
+                "SCREEN_TIMEOUT" -> screenTimeoutExecutor.execute(processedConfig).getOrThrow()
+                "DND" -> dndExecutor.execute(processedConfig).getOrThrow()
+                "MEDIA_CONTROL" -> mediaControlExecutor.execute(processedConfig).getOrThrow()
+                "CLOSE_APP" -> closeAppExecutor.execute(processedConfig).getOrThrow()
+                "CLEAR_CACHE" -> clearCacheExecutor.execute(processedConfig).getOrThrow()
+                "UNLOCK_SCREEN" -> unlockScreenExecutor.execute(processedConfig).getOrThrow()
+                "START_MUSIC" -> startMusicExecutor.execute(processedConfig).getOrThrow()
+                "CLOSE_NOTIFICATION" -> closeNotificationExecutor.execute(processedConfig).getOrThrow()
+                "SET_RINGTONE" -> setRingtoneExecutor.execute(processedConfig).getOrThrow()
+                "DELETE_SMS" -> deleteSmsExecutor.execute(processedConfig).getOrThrow()
+                "MAKE_CALL" -> makeCallExecutor.execute(processedConfig).getOrThrow()
 
                 // Existing actions (to be refactored later)
                 "LOG_HISTORY" -> logToHistory(processedConfig)

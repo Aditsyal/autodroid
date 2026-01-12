@@ -120,6 +120,22 @@ val triggerOptions = listOf(
             ParameterSchema("threshold", "Threshold (lux)", ParameterType.NUMBER, 100),
             ParameterSchema("operator", "Operator", ParameterType.DROPDOWN(listOf("above", "below")), "above")
         )
+    ),
+
+    // New Phase 1 triggers
+    TriggerOption("Calendar Event", "CALENDAR_EVENT", mapOf("subType" to "UPCOMING_EVENT"),
+        listOf(
+            ParameterSchema("subType", "Event Type", ParameterType.DROPDOWN(listOf("UPCOMING_EVENT", "SPECIFIC_CALENDAR", "EVENT_TITLE")), "UPCOMING_EVENT"),
+            ParameterSchema("minutesBefore", "Minutes Before", ParameterType.NUMBER, 15),
+            ParameterSchema("maxEvents", "Max Events", ParameterType.NUMBER, 5)
+        )
+    ),
+    TriggerOption("Device Lock State", "DEVICE_STATE", mapOf("event" to "DEVICE_LOCKED")),
+    TriggerOption("Ringtone Profile Change", "RINGTONE_PROFILE", mapOf("profile" to "RINGTONE"),
+        listOf(
+            ParameterSchema("profile", "Profile", ParameterType.DROPDOWN(listOf("RINGTONE", "NOTIFICATION", "ALARM", "MEDIA", "VOICE_CALL", "SYSTEM")), "RINGTONE"),
+            ParameterSchema("targetVolume", "Target Volume (Optional)", ParameterType.NUMBER, null)
+        )
     )
 )
 

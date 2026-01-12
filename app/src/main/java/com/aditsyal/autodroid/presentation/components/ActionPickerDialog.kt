@@ -107,6 +107,90 @@ val actionOptions = listOf(
         listOf(ParameterSchema("message", "Message", ParameterType.TEXT, "Hello from AutoDroid!"))
     ),
     
+    // New Phase 1 actions
+    ActionOption("HTTP Request/Webhook", "HTTP_REQUEST", emptyMap(),
+        listOf(
+            ParameterSchema("url", "URL", ParameterType.TEXT, "https://"),
+            ParameterSchema("method", "Method", ParameterType.DROPDOWN(listOf("GET", "POST", "PUT", "DELETE")), "GET"),
+            ParameterSchema("body", "Request Body (Optional)", ParameterType.TEXT, ""),
+            ParameterSchema("timeout", "Timeout (seconds)", ParameterType.NUMBER, 30)
+        )
+    ),
+    ActionOption("Lock Screen", "LOCK_SCREEN", emptyMap(),
+        listOf(ParameterSchema("forceLock", "Force Lock", ParameterType.TOGGLE, true))
+    ),
+    ActionOption("Text-to-Speech", "TTS", emptyMap(),
+        listOf(
+            ParameterSchema("text", "Text to Speak", ParameterType.TEXT, "Hello from AutoDroid"),
+            ParameterSchema("language", "Language", ParameterType.DROPDOWN(listOf("en", "es", "fr", "de", "it", "ja", "ko", "zh", "pt", "ru")), "en"),
+            ParameterSchema("pitch", "Pitch (0.5-2.0)", ParameterType.NUMBER, 1.0),
+            ParameterSchema("speechRate", "Speech Rate (0.1-5.0)", ParameterType.NUMBER, 1.0)
+        )
+    ),
+    ActionOption("Set Screen Timeout", "SCREEN_TIMEOUT", emptyMap(),
+        listOf(ParameterSchema("timeoutMinutes", "Timeout (minutes)", ParameterType.NUMBER, 5))
+    ),
+    ActionOption("Do Not Disturb", "DND", emptyMap(),
+        listOf(
+            ParameterSchema("action", "Action", ParameterType.DROPDOWN(listOf("enable", "disable", "toggle")), "enable"),
+            ParameterSchema("interruptionFilter", "Filter Level", ParameterType.DROPDOWN(listOf("ALL", "NONE", "PRIORITY", "ALARMS")), "NONE")
+        )
+    ),
+    ActionOption("Media Control", "MEDIA_CONTROL", emptyMap(),
+        listOf(
+            ParameterSchema("action", "Action", ParameterType.DROPDOWN(listOf("play_pause", "next", "previous", "stop")), "play_pause")
+        )
+    ),
+    ActionOption("Close App", "CLOSE_APP", emptyMap(),
+        listOf(
+            ParameterSchema("packageName", "Package Name", ParameterType.TEXT, ""),
+            ParameterSchema("forceStop", "Force Stop", ParameterType.TOGGLE, false)
+        )
+    ),
+    ActionOption("Clear App Cache", "CLEAR_CACHE", emptyMap(),
+        listOf(
+            ParameterSchema("packageName", "Package Name", ParameterType.TEXT, ""),
+            ParameterSchema("clearAllUserData", "Clear All User Data", ParameterType.TOGGLE, false)
+        )
+    ),
+    ActionOption("Unlock Screen", "UNLOCK_SCREEN", emptyMap(),
+        listOf(
+            ParameterSchema("useBiometricPrompt", "Use Biometric", ParameterType.TOGGLE, false),
+            ParameterSchema("dismissKeyguard", "Dismiss Keyguard", ParameterType.TOGGLE, true)
+        )
+    ),
+    ActionOption("Start Music Player", "START_MUSIC", emptyMap(),
+        listOf(
+            ParameterSchema("package", "Music App Package (Optional)", ParameterType.TEXT, ""),
+            ParameterSchema("action", "Action", ParameterType.DROPDOWN(listOf("launch", "play", "search")), "launch")
+        )
+    ),
+    ActionOption("Close Notification", "CLOSE_NOTIFICATION", emptyMap(),
+        listOf(
+            ParameterSchema("action", "Action", ParameterType.DROPDOWN(listOf("dismiss", "cancel_all")), "cancel_all"),
+            ParameterSchema("packageName", "Package Name (Optional)", ParameterType.TEXT, "")
+        )
+    ),
+    ActionOption("Set Ringtone", "SET_RINGTONE", emptyMap(),
+        listOf(
+            ParameterSchema("ringtoneType", "Type", ParameterType.DROPDOWN(listOf("ringtone", "notification", "alarm")), "ringtone"),
+            ParameterSchema("filePath", "File Path", ParameterType.TEXT, "")
+        )
+    ),
+    ActionOption("Delete SMS", "DELETE_SMS", emptyMap(),
+        listOf(
+            ParameterSchema("action", "Action", ParameterType.DROPDOWN(listOf("delete_by_id", "delete_by_number", "delete_by_thread", "delete_all_from_number")), "delete_by_number"),
+            ParameterSchema("phoneNumber", "Phone Number", ParameterType.TEXT, ""),
+            ParameterSchema("messageId", "Message ID (for delete_by_id)", ParameterType.NUMBER, null)
+        )
+    ),
+    ActionOption("Make Call", "MAKE_CALL", emptyMap(),
+        listOf(
+            ParameterSchema("phoneNumber", "Phone Number", ParameterType.TEXT, ""),
+            ParameterSchema("useDialer", "Use Dialer (don't call)", ParameterType.TOGGLE, false)
+        )
+    ),
+
     // Automation
     ActionOption("Delay", "DELAY", emptyMap(),
         listOf(ParameterSchema("delaySeconds", "Delay (Seconds)", ParameterType.NUMBER, 5))
