@@ -4,12 +4,10 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
+import com.aditsyal.autodroid.presentation.theme.MotionTokens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -137,8 +135,8 @@ fun DryRunPreviewScreen(
                 else -> "loading"
             },
             transitionSpec = {
-                fadeIn(animationSpec = tween(300)) togetherWith
-                fadeOut(animationSpec = tween(300))
+                fadeIn(MotionTokens.MotionSpec.ScreenEnter) togetherWith
+                fadeOut(MotionTokens.MotionSpec.ScreenExit)
             },
             modifier = Modifier.padding(padding),
             label = "dry_run_state"
@@ -477,8 +475,8 @@ private fun StepListItem(
     val interactionSource = androidx.compose.runtime.remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.98f else 1f,
-        animationSpec = tween(durationMillis = 100),
+        targetValue = if (isPressed) MotionTokens.Scale.Press else 1f,
+        animationSpec = MotionTokens.MotionSpec.Press,
         label = "step_scale"
     )
 
@@ -491,7 +489,7 @@ private fun StepListItem(
                 indication = null,
                 onClick = onClick
             )
-            .animateContentSize(),
+            .animateContentSize(MotionTokens.MotionSpec.ContentExpandSize),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected)
                 MaterialTheme.colorScheme.primaryContainer

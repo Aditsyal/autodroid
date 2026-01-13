@@ -1,12 +1,13 @@
 package com.aditsyal.autodroid.presentation.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import com.aditsyal.autodroid.presentation.theme.MotionTokens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -118,7 +119,7 @@ fun ConflictDetectionScreen(
                 else -> "conflicts"
             },
             transitionSpec = {
-                fadeIn() togetherWith fadeOut()
+                fadeIn(MotionTokens.MotionSpec.StateChange) togetherWith fadeOut(MotionTokens.MotionSpec.StateChange)
             },
             modifier = Modifier.padding(padding)
         ) { state ->
@@ -267,8 +268,8 @@ private fun ConflictCard(
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(
-        targetValue = if (isExpanded) 1.02f else 1f,
-        animationSpec = tween(durationMillis = 200),
+        targetValue = if (isExpanded) MotionTokens.Scale.Hover else 1f,
+        animationSpec = MotionTokens.MotionSpec.ContentExpand,
         label = "conflict_scale"
     )
 
@@ -277,7 +278,7 @@ private fun ConflictCard(
             .fillMaxWidth()
             .scale(scale)
             .clickable { isExpanded = !isExpanded }
-            .animateContentSize(),
+            .animateContentSize(MotionTokens.MotionSpec.ContentExpandSize),
         colors = CardDefaults.cardColors(
             containerColor = getConflictColor(conflict.severity).copy(alpha = 0.1f)
         ),
@@ -317,7 +318,11 @@ private fun ConflictCard(
 
             if (isExpanded) {
                 Spacer(modifier = Modifier.height(12.dp))
-                androidx.compose.animation.AnimatedVisibility(visible = isExpanded) {
+                AnimatedVisibility(
+                    visible = isExpanded,
+                    enter = fadeIn(MotionTokens.MotionSpec.ContentExpand),
+                    exit = fadeOut(MotionTokens.MotionSpec.ContentExpand)
+                ) {
                     Column {
                         Text(
                             text = "Recommendation:",

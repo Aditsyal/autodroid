@@ -3,11 +3,8 @@ package com.aditsyal.autodroid.presentation.screens
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Easing
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -15,6 +12,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import com.aditsyal.autodroid.presentation.theme.MotionTokens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -109,15 +107,6 @@ fun MacroListScreenContent(
     var pendingDeleteMacroId by remember { mutableStateOf<Long?>(null) }
     var isFabExpanded by remember { mutableStateOf(false) }
 
-    // Custom easing for bouncy FAB animation
-    val bouncyEasing = Easing { fraction ->
-        val bounceFactor = 0.8f
-        val bounceCount = 2
-        val bounceProgress = fraction * bounceCount
-        val bounceValue = kotlin.math.sin(bounceProgress * Math.PI.toFloat()) * bounceFactor
-        fraction + (bounceValue * (1 - fraction))
-    }
-
     val showScrollToTop by remember {
         derivedStateOf {
             listState.firstVisibleItemIndex > 0
@@ -184,7 +173,7 @@ fun MacroListScreenContent(
         floatingActionButton = {
     val fabRotation by animateFloatAsState(
         targetValue = if (isFabExpanded) 45f else 0f,
-        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        animationSpec = MotionTokens.MotionSpec.FabExpand,
         label = "fab_rotation"
     )
 
@@ -195,36 +184,30 @@ fun MacroListScreenContent(
             ) {
                 AnimatedVisibility(
                     visible = isFabExpanded,
-                    enter = fadeIn(animationSpec = tween(200, delayMillis = 50)) +
+                    enter = fadeIn(animationSpec = MotionTokens.MotionSpec.FabExpand) +
                            slideInVertically(
-                               animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f),
-                               initialOffsetY = { it / 2 }
-                           ) +
-                           expandVertically(
-                               animationSpec = tween(300, easing = FastOutSlowInEasing),
-                               expandFrom = Alignment.Bottom
+                               animationSpec = MotionTokens.MotionSpec.FabExpandOffset,
+                               initialOffsetY = { it }
                            ),
-                    exit = fadeOut(animationSpec = tween(150)) +
+                    exit = fadeOut(animationSpec = MotionTokens.MotionSpec.FabExpand) +
                           slideOutVertically(
-                              animationSpec = tween(200, easing = FastOutSlowInEasing),
-                              targetOffsetY = { it / 4 }
-                          ) +
-                          shrinkVertically(
-                              animationSpec = tween(200, easing = FastOutSlowInEasing),
-                              shrinkTowards = Alignment.Bottom
+                              animationSpec = MotionTokens.MotionSpec.FabExpandOffset,
+                              targetOffsetY = { it }
                           )
                 ) {
                     Column(
                         horizontalAlignment = Alignment.End,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        // Export button (appears first)
                         SmallFloatingActionButton(
                             onClick = {
                                 isFabExpanded = false
                                 onExportMacros()
                             },
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.animateContentSize(MotionTokens.MotionSpec.FabExpandSize)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp),
@@ -236,13 +219,15 @@ fun MacroListScreenContent(
                             }
                         }
 
+                        // Import button (delayed appearance)
                         SmallFloatingActionButton(
                             onClick = {
                                 isFabExpanded = false
                                 onImportMacros()
                             },
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.animateContentSize(MotionTokens.MotionSpec.FabExpandSize)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp),
@@ -254,13 +239,15 @@ fun MacroListScreenContent(
                             }
                         }
 
+                        // Create button (most delayed appearance)
                         SmallFloatingActionButton(
                             onClick = {
                                 isFabExpanded = false
                                 onAddMacro()
                             },
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.animateContentSize(MotionTokens.MotionSpec.FabExpandSize)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp),
@@ -287,7 +274,7 @@ fun MacroListScreenContent(
                         AnimatedContent(
                             targetState = isFabExpanded,
                             transitionSpec = {
-                                fadeIn() togetherWith fadeOut()
+                                fadeIn(MotionTokens.MotionSpec.FabExpand) togetherWith fadeOut(MotionTokens.MotionSpec.FabExpand)
                             },
                             label = "fab_text"
                         ) { expanded ->
@@ -325,7 +312,7 @@ fun MacroListScreenContent(
                     else -> "content"
                 },
                 transitionSpec = {
-                    fadeIn() togetherWith fadeOut()
+                    fadeIn(MotionTokens.MotionSpec.StateChange) togetherWith fadeOut(MotionTokens.MotionSpec.StateChange)
                 },
                 label = "screen_state"
             ) { state ->

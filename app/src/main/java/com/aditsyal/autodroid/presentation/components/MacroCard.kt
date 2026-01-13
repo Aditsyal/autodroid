@@ -2,7 +2,7 @@ package com.aditsyal.autodroid.presentation.components
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import com.aditsyal.autodroid.presentation.theme.MotionTokens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -37,8 +37,8 @@ fun MacroCard(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.98f else 1f,
-        animationSpec = tween(durationMillis = 100),
+        targetValue = if (isPressed) MotionTokens.Scale.Press else 1f,
+        animationSpec = MotionTokens.MotionSpec.Press,
         label = "card_scale"
     )
 
@@ -135,8 +135,8 @@ private fun ActionButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val buttonScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.9f else 1f,
-        animationSpec = tween(durationMillis = 100),
+        targetValue = if (isPressed) MotionTokens.Scale.Press else 1f,
+        animationSpec = MotionTokens.MotionSpec.Press,
         label = "button_scale"
     )
 
