@@ -26,6 +26,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun MacroListScreen(
     onAddMacro: () -> Unit,
+    onImportMacros: () -> Unit,
+    onExportMacros: () -> Unit,
     onViewMacro: (Long) -> Unit,
     onEditMacro: (Long) -> Unit,
     onShowHistory: () -> Unit,
@@ -54,6 +56,8 @@ fun MacroListScreen(
         snackbarHostState = snackbarHostState,
         scope = scope,
         onAddMacro = onAddMacro,
+        onImportMacros = onImportMacros,
+        onExportMacros = onExportMacros,
         onViewMacro = onViewMacro,
         onEditMacro = onEditMacro,
         onShowHistory = onShowHistory,
@@ -73,6 +77,8 @@ fun MacroListScreenContent(
     snackbarHostState: SnackbarHostState,
     scope: CoroutineScope,
     onAddMacro: () -> Unit,
+    onImportMacros: () -> Unit,
+    onExportMacros: () -> Unit,
     onViewMacro: (Long) -> Unit,
     onEditMacro: (Long) -> Unit,
     onShowHistory: () -> Unit,
@@ -86,6 +92,7 @@ fun MacroListScreenContent(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val listState = rememberLazyListState()
     var pendingDeleteMacroId by remember { mutableStateOf<Long?>(null) }
+    var isFabExpanded by remember { mutableStateOf(false) }
 
     val showScrollToTop by remember {
         derivedStateOf {
@@ -151,11 +158,82 @@ fun MacroListScreenContent(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onAddMacro,
-                icon = { Icon(Icons.Default.Add, contentDescription = "Create new macro") },
-                text = { Text("Create Macro") }
-            )
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                AnimatedVisibility(visible = isFabExpanded) {
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        SmallFloatingActionButton(
+                            onClick = {
+                                isFabExpanded = false
+                                onExportMacros()
+                            },
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Export", style = MaterialTheme.typography.labelMedium)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(Icons.Default.FileDownload, contentDescription = "Export Macros")
+                            }
+                        }
+
+                        SmallFloatingActionButton(
+                            onClick = {
+                                isFabExpanded = false
+                                onImportMacros()
+                            },
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Import", style = MaterialTheme.typography.labelMedium)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(Icons.Default.FileUpload, contentDescription = "Import Macros")
+                            }
+                        }
+
+                        SmallFloatingActionButton(
+                            onClick = {
+                                isFabExpanded = false
+                                onAddMacro()
+                            },
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Create", style = MaterialTheme.typography.labelMedium)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(Icons.Default.Add, contentDescription = "Create Macro")
+                            }
+                        }
+                    }
+                }
+
+                ExtendedFloatingActionButton(
+                    onClick = { isFabExpanded = !isFabExpanded },
+                    icon = {
+                        Icon(
+                            if (isFabExpanded) Icons.Default.Close else Icons.Default.Add,
+                            contentDescription = if (isFabExpanded) "Close menu" else "Actions"
+                        )
+                    },
+                    text = { Text(if (isFabExpanded) "Close" else "Create") }
+                )
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->

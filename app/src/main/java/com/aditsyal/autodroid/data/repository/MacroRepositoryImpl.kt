@@ -9,6 +9,7 @@ import com.aditsyal.autodroid.data.local.entities.ActionEntity
 import com.aditsyal.autodroid.data.local.entities.ConstraintEntity
 import com.aditsyal.autodroid.data.local.entities.ExecutionLogEntity
 import com.aditsyal.autodroid.data.local.entities.ExecutionLogWithMacro
+import com.aditsyal.autodroid.data.local.entities.ExecutionLogWithMacroDetails
 import com.aditsyal.autodroid.data.local.entities.MacroEntity
 import com.aditsyal.autodroid.data.local.entities.MacroWithDetails
 import com.aditsyal.autodroid.data.local.entities.TriggerEntity
@@ -216,7 +217,7 @@ class MacroRepositoryImpl @Inject constructor(
         }
 
     override fun getAllExecutionLogs(): Flow<List<ExecutionLogDTO>> =
-        executionLogDao.getAllExecutionLogsWithMacro().map { logs ->
+        executionLogDao.getAllExecutionLogsWithMacroDetails().map { logs ->
             logs.map { it.toDTO() }
         }
 
@@ -233,8 +234,9 @@ class MacroRepositoryImpl @Inject constructor(
         constraints = constraints.map { it.toDTO() }
     )
 
-    private fun ExecutionLogWithMacro.toDTO() = log.toDTO().copy(
-        macroName = macro?.name
+    private fun ExecutionLogWithMacroDetails.toDTO() = log.toDTO().copy(
+        macroName = macro?.name,
+        actions = actions.map { it.toDTO() }
     )
 
     private fun MacroEntity.toDTO(

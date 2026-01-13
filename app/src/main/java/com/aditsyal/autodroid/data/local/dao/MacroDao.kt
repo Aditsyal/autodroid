@@ -53,5 +53,19 @@ interface MacroDao {
 
     @Query("SELECT COUNT(*) FROM macros")
     suspend fun getMacroCount(): Int
+
+    // Synchronous methods for import/export operations
+    @Query("SELECT * FROM macros ORDER BY createdAt DESC")
+    fun getAllMacrosSync(): List<MacroEntity>
+
+    @Query("SELECT * FROM macros WHERE name = :name")
+    fun getMacroByNameSync(name: String): MacroEntity?
+
+    @Query("SELECT * FROM macros WHERE enabled = 1")
+    fun getEnabledMacrosSync(): List<MacroEntity>
+
+    @Transaction
+    @Query("SELECT * FROM macros WHERE id = :macroId")
+    fun getMacroWithDetailsByIdSync(macroId: Long): MacroWithDetails?
 }
 

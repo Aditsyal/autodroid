@@ -39,5 +39,12 @@ interface VariableDao {
 
     @Query("DELETE FROM variables WHERE scope = 'GLOBAL' AND name = :name")
     suspend fun deleteGlobalVariable(name: String)
+
+    // Synchronous methods for import/export operations
+    @Query("SELECT * FROM variables WHERE scope = 'GLOBAL'")
+    fun getAllGlobalVariablesSync(): List<VariableEntity>
+
+    @Query("SELECT * FROM variables WHERE name = :name AND scope = 'GLOBAL'")
+    fun getGlobalVariableByNameSync(name: String): VariableEntity?
 }
 

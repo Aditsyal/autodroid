@@ -5,10 +5,12 @@ import android.net.Uri
 import com.aditsyal.autodroid.data.local.dao.MacroDao
 import com.aditsyal.autodroid.data.local.dao.TemplateDao
 import com.aditsyal.autodroid.data.local.dao.VariableDao
+import com.aditsyal.autodroid.data.local.dao.TriggerDao
+import com.aditsyal.autodroid.data.local.dao.ActionDao
+import com.aditsyal.autodroid.data.local.dao.ConstraintDao
+import com.aditsyal.autodroid.data.local.entities.*
 import com.aditsyal.autodroid.data.local.entities.TemplateEntity
-import com.aditsyal.autodroid.data.models.MacroDTO
-import com.aditsyal.autodroid.data.models.TemplateDTO
-import com.aditsyal.autodroid.data.models.VariableDTO
+import com.aditsyal.autodroid.data.models.*
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
@@ -28,20 +30,32 @@ class ImportExportMacrosUseCase @Inject constructor(
     @ApplicationContext private val context: Context,
     private val macroDao: MacroDao,
     private val templateDao: TemplateDao,
-    private val variableDao: VariableDao
+    private val variableDao: VariableDao,
+    private val triggerDao: TriggerDao,
+    private val actionDao: ActionDao,
+    private val constraintDao: ConstraintDao
 ) {
 
-    private val gson = GsonBuilder()
-        .setPrettyPrinting()
-        .create()
+    companion object {
+        val gson = GsonBuilder()
+            .setPrettyPrinting()
+            .create()
+    }
 
     suspend fun exportAllMacros(): ExportResult {
         return withContext(Dispatchers.IO) {
             try {
-                // Note: Using synchronous access for export - would need to add sync DAO methods
-                // For now, using empty lists as placeholder
-                val macros = emptyList<MacroDTO>()
-                val variables = emptyList<VariableDTO>()
+                // Get all macros with details using synchronous DAO methods
+                val macroWithDetailsList = macroDao.getAllMacrosSync().mapNotNull { entity ->
+                    macroDao.getMacroWithDetailsByIdSync(entity.id)
+                }
+                val macros = macroWithDetailsList.map { it.toDTO() }
+
+                // Get all global variables
+                val variableEntities = variableDao.getAllGlobalVariablesSync()
+                val variables = variableEntities.map { it.toDTO() }
+
+                // Get all templates (if templateDao has sync method, otherwise leave empty)
                 val templates = emptyList<TemplateDTO>()
 
                 val exportData = ExportData(
@@ -77,11 +91,38 @@ class ImportExportMacrosUseCase @Inject constructor(
     suspend fun exportSingleMacro(macroId: Long): ExportResult {
         return withContext(Dispatchers.IO) {
             try {
-                // Note: Exporting single macro requires synchronous DAO methods (not yet implemented)
-                // This will be implemented when sync methods are added to MacroDao
-                throw IllegalArgumentException("Export single macro requires synchronous DAO methods - not yet implemented")
+                // Get macro with details using synchronous DAO method
+                val macroWithDetails = macroDao.getMacroWithDetailsByIdSync(macroId)
+                    ?: throw IllegalArgumentException("Macro with ID $macroId not found")
+
+                val macroDTO = macroWithDetails.toDTO()
+
+                // Get related global variables (if any variables are referenced)
+                val variables = emptyList<VariableDTO>() // For single macro, we could filter variables by macroId
+                val templates = emptyList<TemplateDTO>()
+
+                val exportData = ExportData(
+                    version = "1.0",
+                    exportDate = System.currentTimeMillis(),
+                    macros = listOf(macroDTO),
+                    variables = variables,
+                    templates = templates
+                )
+
+                val json = gson.toJson(exportData)
+                val fileName = "autodroid_macro_${macroDTO.name}_${System.currentTimeMillis()}.json"
+                val uri = createExportFile(fileName, json)
+
+                Timber.i("Exported macro '${macroDTO.name}' with ${macroDTO.triggers.size} triggers, ${macroDTO.actions.size} actions")
+                ExportResult(
+                    success = true,
+                    uri = uri,
+                    macroCount = 1,
+                    variableCount = variables.size,
+                    templateCount = templates.size
+                )
             } catch (e: Exception) {
-                Timber.e(e, "Failed to export macro")
+                Timber.e(e, "Failed to export macro $macroId")
                 ExportResult(
                     success = false,
                     error = e.message ?: "Unknown error"
@@ -108,25 +149,37 @@ class ImportExportMacrosUseCase @Inject constructor(
                 var conflictCount = 0
 
                 for (macroJson in exportData.macros) {
-                    // Note: getMacroByNameSync not available, using null check as placeholder
-                    // val existingMacro = macroDao.getMacroByNameSync(macroJson.name)
-                    val existingMacro = null
-                if (existingMacro != null) {
-                    conflictCount++
-                    continue
-                }
+                    // Check for name conflicts using synchronous DAO method
+                    val existingMacro = macroDao.getMacroByNameSync(macroJson.name)
+                    if (existingMacro != null) {
+                        conflictCount++
+                        continue
+                    }
 
-                val macroId = macroDao.insertMacro(macroJson.toEntity())
-                importedMacros.add(macroJson.copy(id = macroId))
+                    val macroId = macroDao.insertMacro(macroJson.toEntity())
+                    importedMacros.add(macroJson.copy(id = macroId))
 
-                // Note: variables not available in MacroDTO, skipping for now
+                    // Import triggers, actions, and constraints for this macro
+                    for (trigger in macroJson.triggers) {
+                        val triggerEntity = trigger.toEntity(macroId)
+                        triggerDao.insertTrigger(triggerEntity)
+                    }
+
+                    for (action in macroJson.actions) {
+                        val actionEntity = action.toEntity(macroId)
+                        actionDao.insertAction(actionEntity)
+                    }
+
+                    for (constraint in macroJson.constraints) {
+                        val constraintEntity = constraint.toEntity(macroId)
+                        constraintDao.insertConstraint(constraintEntity)
+                    }
                 }
 
                 for (variableJson in exportData.variables) {
                     if (variableJson.scope == "GLOBAL") {
-                        // Note: getGlobalVariableByNameSync not available, using null check as placeholder
-                        // val existing = variableDao.getGlobalVariableByNameSync(variableJson.name)
-                        val existing = null
+                        // Check for name conflicts using synchronous DAO method
+                        val existing = variableDao.getGlobalVariableByNameSync(variableJson.name)
                         if (existing != null) {
                             conflictCount++
                             continue
@@ -138,12 +191,6 @@ class ImportExportMacrosUseCase @Inject constructor(
                 }
 
                 for (templateJson in exportData.templates) {
-                    val existing = null
-                    if (existing != null) {
-                        conflictCount++
-                        continue
-                    }
-
                     val templateEntity = templateJson.toEntity()
                     val templateId = templateDao.insertTemplate(templateEntity)
                     val macro = gson.fromJson(templateEntity.macroJson, MacroDTO::class.java)
@@ -211,9 +258,63 @@ data class ImportResult(
     val variableCount: Int = 0,
     val templateCount: Int = 0,
     val conflictCount: Int = 0,
-    val exportDate: Long = 0,
+    val exportDate: Long? = null,
     val error: String? = null
 )
+
+// Extension functions for entity to DTO conversion
+private fun MacroWithDetails.toDTO() = macro.toDTO(
+    triggers = triggers.map { it.toDTO() },
+    actions = actions.map { it.toDTO() },
+    constraints = constraints.map { it.toDTO() }
+)
+
+private fun MacroEntity.toDTO(
+    triggers: List<TriggerDTO>,
+    actions: List<ActionDTO>,
+    constraints: List<ConstraintDTO>
+) = MacroDTO(
+    id = id,
+    name = name,
+    description = description,
+    enabled = enabled,
+    createdAt = createdAt,
+    lastExecuted = lastExecuted,
+    triggers = triggers,
+    actions = actions,
+    constraints = constraints
+)
+
+private fun TriggerEntity.toDTO() = TriggerDTO(
+    id = id,
+    macroId = macroId,
+    triggerType = triggerType,
+    triggerConfig = parseJsonToMap(triggerConfig)
+)
+
+private fun ActionEntity.toDTO() = ActionDTO(
+    id = id,
+    actionType = actionType,
+    actionConfig = parseJsonToMap(actionConfig),
+    executionOrder = executionOrder,
+    delayAfter = delayAfter
+)
+
+private fun ConstraintEntity.toDTO() = ConstraintDTO(
+    id = id,
+    constraintType = constraintType,
+    constraintConfig = parseJsonToMap(constraintConfig)
+)
+
+private fun parseJsonToMap(json: String): Map<String, Any> {
+    return try {
+        val type = object : TypeToken<Map<String, Any>>() {}.type
+        ImportExportMacrosUseCase.gson.fromJson(json, type)
+    } catch (e: Exception) {
+        Timber.w(e, "Failed to parse JSON config")
+        emptyMap()
+    }
+}
 
 private fun MacroDTO.toEntity(): com.aditsyal.autodroid.data.local.entities.MacroEntity {
     return com.aditsyal.autodroid.data.local.entities.MacroEntity(
@@ -237,17 +338,31 @@ private fun VariableDTO.toEntity(): com.aditsyal.autodroid.data.local.entities.V
     )
 }
 
-private fun TemplateDTO.toEntity(): TemplateEntity {
-    return TemplateEntity(
-        id = id,
-        name = name,
-        description = description,
-        category = category,
-        macroJson = Gson().toJson(macro),
-        icon = icon.ifEmpty { null },
-        isBuiltIn = isBuiltIn,
-        enabled = true,
-        createdAt = createdAt,
-        usageCount = popularityScore
-    )
-}
+private fun TriggerDTO.toEntity(macroId: Long) = TriggerEntity(
+    id = id,
+    macroId = macroId,
+    triggerType = triggerType,
+    triggerConfig = ImportExportMacrosUseCase.gson.toJson(triggerConfig),
+    enabled = true,
+    createdAt = System.currentTimeMillis()
+)
+
+private fun ActionDTO.toEntity(macroId: Long) = ActionEntity(
+    id = id,
+    macroId = macroId,
+    actionType = actionType,
+    actionConfig = ImportExportMacrosUseCase.gson.toJson(actionConfig),
+    executionOrder = executionOrder,
+    delayAfter = delayAfter,
+    enabled = true,
+    createdAt = System.currentTimeMillis()
+)
+
+private fun ConstraintDTO.toEntity(macroId: Long) = ConstraintEntity(
+    id = id,
+    macroId = macroId,
+    constraintType = constraintType,
+    constraintConfig = ImportExportMacrosUseCase.gson.toJson(constraintConfig),
+    enabled = true,
+    createdAt = System.currentTimeMillis()
+)

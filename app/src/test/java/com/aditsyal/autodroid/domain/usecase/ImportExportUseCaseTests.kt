@@ -5,6 +5,9 @@ import android.net.Uri
 import com.aditsyal.autodroid.data.local.dao.MacroDao
 import com.aditsyal.autodroid.data.local.dao.TemplateDao
 import com.aditsyal.autodroid.data.local.dao.VariableDao
+import com.aditsyal.autodroid.data.local.dao.TriggerDao
+import com.aditsyal.autodroid.data.local.dao.ActionDao
+import com.aditsyal.autodroid.data.local.dao.ConstraintDao
 import com.aditsyal.autodroid.data.models.MacroDTO
 import com.aditsyal.autodroid.data.models.TemplateDTO
 import io.mockk.coEvery
@@ -67,11 +70,14 @@ class ImportExportMacrosUseCaseTest {
     private val macroDao = mockk<MacroDao>(relaxed = true)
     private val templateDao = mockk<TemplateDao>(relaxed = true)
     private val variableDao = mockk<VariableDao>(relaxed = true)
+    private val triggerDao = mockk<TriggerDao>(relaxed = true)
+    private val actionDao = mockk<ActionDao>(relaxed = true)
+    private val constraintDao = mockk<ConstraintDao>(relaxed = true)
     private lateinit var useCase: ImportExportMacrosUseCase
 
     @Before
     fun setup() {
-        useCase = ImportExportMacrosUseCase(context, macroDao, templateDao, variableDao)
+        useCase = ImportExportMacrosUseCase(context, macroDao, templateDao, variableDao, triggerDao, actionDao, constraintDao)
     }
 
     @Test

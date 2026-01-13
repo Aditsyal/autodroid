@@ -49,7 +49,8 @@ data class ExecutionLogDTO(
     val executedAt: Long = System.currentTimeMillis(),
     val executionStatus: String,
     val errorMessage: String? = null,
-    val executionDurationMs: Long = 0
+    val executionDurationMs: Long = 0,
+    val actions: List<ActionDTO> = emptyList()
 ) : Parcelable
 
 @Parcelize

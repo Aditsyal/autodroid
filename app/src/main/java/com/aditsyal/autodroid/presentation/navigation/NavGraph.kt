@@ -15,6 +15,8 @@ import com.aditsyal.autodroid.presentation.screens.MacroDetailScreen
 import com.aditsyal.autodroid.presentation.screens.MacroEditorScreen
 import com.aditsyal.autodroid.presentation.screens.MacroListScreen
 import com.aditsyal.autodroid.presentation.screens.TemplateLibraryScreen
+import com.aditsyal.autodroid.presentation.screens.ImportMacrosScreen
+import com.aditsyal.autodroid.presentation.screens.ExportMacrosScreen
 import com.aditsyal.autodroid.presentation.ui.ExecutionHistoryScreen
 import com.aditsyal.autodroid.presentation.ui.ConflictDetectionScreen
 import com.aditsyal.autodroid.presentation.screens.SettingsScreen
@@ -25,6 +27,8 @@ private const val MacroDetailRoute = "macro_detail"
 private const val MacroEditorRoute = "macro_editor"
 
 private const val TemplateLibraryRoute = "template_library"
+private const val ImportMacrosRoute = "import_macros"
+private const val ExportMacrosRoute = "export_macros"
 private const val ExecutionHistoryRoute = "execution_history"
 private const val ConflictDetectionRoute = "conflict_detection"
 private const val SettingsRoute = "settings"
@@ -62,6 +66,8 @@ fun AppNavGraph(
             TrackRender(performanceMonitor, "MacroList") {
                 MacroListScreen(
                     onAddMacro = { navController.navigate("$MacroEditorRoute/0") },
+                    onImportMacros = { navController.navigate(ImportMacrosRoute) },
+                    onExportMacros = { navController.navigate(ExportMacrosRoute) },
                     onViewMacro = { id -> navController.navigate("$MacroDetailRoute/$id") },
                     onEditMacro = { id -> navController.navigate("$MacroEditorRoute/$id") },
                     onShowHistory = { navController.navigate(ExecutionHistoryRoute) },
@@ -125,6 +131,22 @@ fun AppNavGraph(
                         // Navigate to macro editor with the selected template
                         navController.navigate("$MacroEditorRoute/0?templateId=$templateId")
                     }
+                )
+            }
+        }
+
+        composable(route = ImportMacrosRoute) {
+            TrackRender(performanceMonitor, "ImportMacros") {
+                ImportMacrosScreen(
+                    onBackClick = { navController.navigateUp() }
+                )
+            }
+        }
+
+        composable(route = ExportMacrosRoute) {
+            TrackRender(performanceMonitor, "ExportMacros") {
+                ExportMacrosScreen(
+                    onBackClick = { navController.navigateUp() }
                 )
             }
         }

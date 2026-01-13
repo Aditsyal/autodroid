@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import com.aditsyal.autodroid.data.local.entities.ExecutionLogEntity
 import com.aditsyal.autodroid.data.local.entities.ExecutionLogWithMacro
+import com.aditsyal.autodroid.data.local.entities.ExecutionLogWithMacroDetails
 import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
@@ -20,6 +21,10 @@ interface ExecutionLogDao {
     @Transaction
     @Query("SELECT * FROM execution_logs ORDER BY executedAt DESC LIMIT :limit")
     fun getAllExecutionLogsWithMacro(limit: Int = 100): Flow<List<ExecutionLogWithMacro>>
+
+    @Transaction
+    @Query("SELECT * FROM execution_logs ORDER BY executedAt DESC LIMIT :limit")
+    fun getAllExecutionLogsWithMacroDetails(limit: Int = 100): Flow<List<ExecutionLogWithMacroDetails>>
 
     @Insert
     suspend fun insertExecutionLog(log: ExecutionLogEntity): Long
