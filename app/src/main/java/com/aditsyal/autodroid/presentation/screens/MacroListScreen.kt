@@ -1,6 +1,20 @@
 package com.aditsyal.autodroid.presentation.screens
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +26,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -94,6 +109,15 @@ fun MacroListScreenContent(
     var pendingDeleteMacroId by remember { mutableStateOf<Long?>(null) }
     var isFabExpanded by remember { mutableStateOf(false) }
 
+    // Custom easing for bouncy FAB animation
+    val bouncyEasing = Easing { fraction ->
+        val bounceFactor = 0.8f
+        val bounceCount = 2
+        val bounceProgress = fraction * bounceCount
+        val bounceValue = kotlin.math.sin(bounceProgress * Math.PI.toFloat()) * bounceFactor
+        fraction + (bounceValue * (1 - fraction))
+    }
+
     val showScrollToTop by remember {
         derivedStateOf {
             listState.firstVisibleItemIndex > 0
@@ -158,11 +182,38 @@ fun MacroListScreenContent(
             )
         },
         floatingActionButton = {
+    val fabRotation by animateFloatAsState(
+        targetValue = if (isFabExpanded) 45f else 0f,
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        label = "fab_rotation"
+    )
+
             Column(
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.animateContentSize()
             ) {
-                AnimatedVisibility(visible = isFabExpanded) {
+                AnimatedVisibility(
+                    visible = isFabExpanded,
+                    enter = fadeIn(animationSpec = tween(200, delayMillis = 50)) +
+                           slideInVertically(
+                               animationSpec = spring(dampingRatio = 0.8f, stiffness = 300f),
+                               initialOffsetY = { it / 2 }
+                           ) +
+                           expandVertically(
+                               animationSpec = tween(300, easing = FastOutSlowInEasing),
+                               expandFrom = Alignment.Bottom
+                           ),
+                    exit = fadeOut(animationSpec = tween(150)) +
+                          slideOutVertically(
+                              animationSpec = tween(200, easing = FastOutSlowInEasing),
+                              targetOffsetY = { it / 4 }
+                          ) +
+                          shrinkVertically(
+                              animationSpec = tween(200, easing = FastOutSlowInEasing),
+                              shrinkTowards = Alignment.Bottom
+                          )
+                ) {
                     Column(
                         horizontalAlignment = Alignment.End,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -227,11 +278,22 @@ fun MacroListScreenContent(
                     onClick = { isFabExpanded = !isFabExpanded },
                     icon = {
                         Icon(
-                            if (isFabExpanded) Icons.Default.Close else Icons.Default.Add,
-                            contentDescription = if (isFabExpanded) "Close menu" else "Actions"
+                            Icons.Default.Add,
+                            contentDescription = if (isFabExpanded) "Close menu" else "Actions",
+                            modifier = Modifier.rotate(fabRotation)
                         )
                     },
-                    text = { Text(if (isFabExpanded) "Close" else "Create") }
+                    text = {
+                        AnimatedContent(
+                            targetState = isFabExpanded,
+                            transitionSpec = {
+                                fadeIn() togetherWith fadeOut()
+                            },
+                            label = "fab_text"
+                        ) { expanded ->
+                            Text(if (expanded) "Close" else "Create")
+                        }
+                    }
                 )
             }
         },
@@ -256,16 +318,21 @@ fun MacroListScreenContent(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            when {
-                uiState.isLoading -> {
-                    LoadingState()
-                }
-
-                uiState.macros.isEmpty() -> {
-                    EmptyState(onAddMacro = onAddMacro)
-                }
-
-                else -> {
+            AnimatedContent(
+                targetState = when {
+                    uiState.isLoading -> "loading"
+                    uiState.macros.isEmpty() -> "empty"
+                    else -> "content"
+                },
+                transitionSpec = {
+                    fadeIn() togetherWith fadeOut()
+                },
+                label = "screen_state"
+            ) { state ->
+                when (state) {
+                    "loading" -> LoadingState()
+                    "empty" -> EmptyState(onAddMacro = onAddMacro)
+                    "content" -> {
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
@@ -292,6 +359,7 @@ fun MacroListScreenContent(
                         }
                     }
                 }
+            }
             }
 
             // Optimized Scroll to Top Button
@@ -324,12 +392,27 @@ private fun LoadingState() {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator()
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(48.dp),
+                strokeWidth = 4.dp
+            )
+            Text(
+                text = "Loading macros...",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
 @Composable
 private fun EmptyState(onAddMacro: () -> Unit) {
+    var isHovered by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -337,18 +420,58 @@ private fun EmptyState(onAddMacro: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Icon(
+            Icons.Default.AutoAwesome,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Text(
             text = "No macros yet",
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurface
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         Text(
-            text = "Create your first automation to get started.",
-            style = MaterialTheme.typography.bodyMedium,
+            text = "Create your first automation to get started with powerful task automation.",
+            style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+            modifier = Modifier.padding(horizontal = 32.dp),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
-        Button(onClick = onAddMacro) {
-            Text("Create macro")
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Button(
+            onClick = onAddMacro,
+            modifier = Modifier.animateContentSize(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isHovered) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Text("Create Your First Macro")
+            }
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Tip: Start with a simple automation like \"When I open WhatsApp, send a quick reply\"",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp)
+        )
     }
 }

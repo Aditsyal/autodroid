@@ -1,10 +1,15 @@
 package com.aditsyal.autodroid.presentation.screens
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,12 +63,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aditsyal.autodroid.data.models.MacroDTO
 import com.aditsyal.autodroid.presentation.viewmodels.DryRunPreviewViewModel
@@ -121,24 +129,31 @@ fun DryRunPreviewScreen(
             )
         }
     ) { padding ->
-        when {
-            uiState.isLoading -> {
-                LoadingScreen(modifier = Modifier.padding(padding))
-            }
-            uiState.error != null -> {
-                ErrorScreen(
+        AnimatedContent(
+            targetState = when {
+                uiState.isLoading -> "loading"
+                uiState.error != null -> "error"
+                uiState.result != null -> "content"
+                else -> "loading"
+            },
+            transitionSpec = {
+                fadeIn(animationSpec = tween(300)) togetherWith
+                fadeOut(animationSpec = tween(300))
+            },
+            modifier = Modifier.padding(padding),
+            label = "dry_run_state"
+        ) { state ->
+            when (state) {
+                "loading" -> LoadingScreen()
+                "error" -> ErrorScreen(
                     error = uiState.error!!,
-                    onRetry = onRetry,
-                    modifier = Modifier.padding(padding)
+                    onRetry = onRetry
                 )
-            }
-            uiState.result != null -> {
-                DryRunContent(
+                "content" -> DryRunContent(
                     result = uiState.result!!,
                     selectedStepIndex = uiState.selectedStepIndex,
                     onStepClick = { viewModel.selectStep(it) },
-                    onStepClose = { viewModel.clearSelection() },
-                    modifier = Modifier.padding(padding)
+                    onStepClose = { viewModel.clearSelection() }
                 )
             }
         }
@@ -459,10 +474,24 @@ private fun StepListItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    val interactionSource = androidx.compose.runtime.remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = tween(durationMillis = 100),
+        label = "step_scale"
+    )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .scale(scale)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .animateContentSize(),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected)
                 MaterialTheme.colorScheme.primaryContainer
