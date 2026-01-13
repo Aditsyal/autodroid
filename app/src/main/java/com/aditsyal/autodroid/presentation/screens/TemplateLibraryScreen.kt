@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.aditsyal.autodroid.data.models.TemplateDTO
 import com.aditsyal.autodroid.data.models.toDTO
 import com.aditsyal.autodroid.data.local.entities.TemplateEntity
+import com.aditsyal.autodroid.presentation.viewmodels.TemplateLibraryUiState
 import com.aditsyal.autodroid.presentation.viewmodels.TemplateLibraryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -224,5 +225,148 @@ private fun TemplatePreviewDialog(
             }
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TemplateLibraryScreenContent(
+    uiState: TemplateLibraryUiState,
+    onBackClick: () -> Unit,
+    onTemplateSelected: (Long) -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onSortByChange: (String) -> Unit,
+    onShowPreview: (TemplateEntity?) -> Unit
+) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    var searchQuery by remember { mutableStateOf("") }
+    var sortBy by remember { mutableStateOf("Popularity") }
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                title = { Text("Templates") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                scrollBehavior = scrollBehavior
+            )
+        }
+    ) { paddingValues ->
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = {
+                            searchQuery = it
+                            onSearchQueryChange(it)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Search templates...") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Search, contentDescription = "Search")
+                        },
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = sortBy == "Popularity",
+                            onClick = {
+                                sortBy = "Popularity"
+                                onSortByChange("Popularity")
+                            },
+                            label = { Text("Popular") }
+                        )
+                        FilterChip(
+                            selected = sortBy == "Name",
+                            onClick = {
+                                sortBy = "Name"
+                                onSortByChange("Name")
+                            },
+                            label = { Text("Name") }
+                        )
+                        FilterChip(
+                            selected = sortBy == "Recent",
+                            onClick = {
+                                sortBy = "Recent"
+                                onSortByChange("Recent")
+                            },
+                            label = { Text("Recent") }
+                        )
+                    }
+                }
+            }
+
+            Box(modifier = Modifier.weight(1f)) {
+                when (val state = uiState) {
+                    is TemplateLibraryUiState.Loading -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                    is TemplateLibraryUiState.Error -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(state.message, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                    is TemplateLibraryUiState.Success -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(
+                                items = state.templates,
+                                key = { it.id }
+                            ) { template ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onShowPreview(template) },
+                                    shape = MaterialTheme.shapes.medium,
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Text(
+                                            text = template.name,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = template.description,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "${template.category} • ${template.usageCount} uses",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 

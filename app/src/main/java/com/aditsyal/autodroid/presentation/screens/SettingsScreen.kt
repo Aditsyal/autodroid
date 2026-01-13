@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.aditsyal.autodroid.presentation.viewmodels.SettingsUiState
 import com.aditsyal.autodroid.presentation.viewmodels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,7 +44,6 @@ fun SettingsScreen(
     var showPermissionDialog by remember { mutableStateOf(false) }
     var pendingToggleState by remember { mutableStateOf(false) }
 
-    // Refresh status when returning to the screen (e.g. from system settings)
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -56,185 +56,27 @@ fun SettingsScreen(
         }
     }
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            LargeTopAppBar(
-                title = { Text("Settings") },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBackClick,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { viewModel.refreshStatus() },
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = "Refresh",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior
-            )
+    SettingsScreenContent(
+        uiState = uiState,
+        scrollBehavior = scrollBehavior,
+        showPermissionDialog = showPermissionDialog,
+        onBackClick = onBackClick,
+        onNavigateToVariables = onNavigateToVariables,
+        onRefreshStatus = { viewModel.refreshStatus() },
+        onToggleSidebar = { newState: Boolean ->
+            viewModel.toggleSidebar(newState)
+        },
+        onSetAmoledMode = { enabled: Boolean -> viewModel.setAmoledMode(enabled) },
+        onSetHapticFeedback = { enabled: Boolean -> viewModel.setHapticFeedbackEnabled(enabled) },
+        onDismissPermissionDialog = { showPermissionDialog = false },
+        onGrantPermission = {
+            showPermissionDialog = false
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                data = android.net.Uri.parse("package:${context.packageName}")
+            }
+            context.startActivity(intent)
         }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            SettingsSectionHeader("Data & Variables")
-
-            ListItem(
-                headlineContent = { Text("Global Variables") },
-                supportingContent = { Text("Manage global variables used in macros") },
-                leadingContent = {
-                    Icon(Icons.Default.List, contentDescription = "Variables")
-                },
-                modifier = Modifier.clickable(
-                    onClick = { onNavigateToVariables() },
-                    indication = LocalIndication.current,
-                    interactionSource = remember { MutableInteractionSource() }
-                )
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
-            ListItem(
-                headlineContent = { Text("Sidebar Launcher") },
-                supportingContent = { Text("Show a floating bubble for quick macro execution") },
-                trailingContent = {
-                    Switch(
-                        checked = uiState.isSidebarEnabled,
-                        onCheckedChange = { newState ->
-                            val success = viewModel.toggleSidebar(newState)
-                            if (!success && newState) {
-                                pendingToggleState = true
-                                showPermissionDialog = true
-                            }
-                        }
-                    )
-                }
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
-            SettingsSectionHeader("Appearance")
-
-            ListItem(
-                headlineContent = { Text("AMOLED Dark Mode") },
-                supportingContent = { Text("Use pure black background for battery saving on OLED screens") },
-                trailingContent = {
-                    Switch(
-                        checked = uiState.isAmoledMode,
-                        onCheckedChange = { viewModel.setAmoledMode(it) }
-                    )
-                }
-            )
-
-            ListItem(
-                headlineContent = { Text("Haptic Feedback") },
-                supportingContent = { Text("Vibrate when tapping buttons and executing macros") },
-                trailingContent = {
-                    Switch(
-                        checked = uiState.isHapticFeedbackEnabled,
-                        onCheckedChange = { viewModel.setHapticFeedbackEnabled(it) }
-                    )
-                }
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
-            SettingsSectionHeader("Service Status")
-
-            StatusListItem(
-                label = "Background Monitoring",
-                description = "Periodic trigger checking via WorkManager",
-                isActive = uiState.isWorkManagerRunning
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-
-            SettingsSectionHeader("Permissions")
-
-            PermissionListItem(
-                label = "Accessibility Service",
-                description = "Required for UI automation and app event detection",
-                isGranted = uiState.isAccessibilityEnabled,
-                onClick = {
-                    val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                    context.startActivity(intent)
-                }
-            )
-
-            PermissionListItem(
-                label = "Battery Optimization",
-                description = "Should be disabled for reliable background operation",
-                isGranted = uiState.isBatteryOptimizationDisabled,
-                onClick = {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                        val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                        context.startActivity(intent)
-                    }
-                }
-            )
-
-            PermissionListItem(
-                label = "Notifications",
-                description = "Required for status and foreground service visibility",
-                isGranted = uiState.isNotificationPermissionGranted,
-                onClick = {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                            putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                        }
-                        context.startActivity(intent)
-                    }
-                }
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-        }
-
-        if (showPermissionDialog) {
-            AlertDialog(
-                onDismissRequest = { showPermissionDialog = false },
-                title = { Text("Grant Overlay Permission") },
-                text = { Text("To show the floating sidebar launcher, you need to grant the \"Draw over other apps\" permission. This allows the app to display a floating bubble on top of other apps.") },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            showPermissionDialog = false
-                            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
-                                data = android.net.Uri.parse("package:${context.packageName}")
-                            }
-                            context.startActivity(intent)
-                        }
-                    ) {
-                        Text("Grant Permission")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showPermissionDialog = false }) {
-                        Text("Cancel")
-                    }
-                }
-            )
-        }
-    }
+    )
 }
 
 @Composable
@@ -297,4 +139,171 @@ private fun PermissionListItem(
         },
         modifier = Modifier.padding(vertical = 4.dp)
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreenContent(
+    uiState: SettingsUiState,
+    scrollBehavior: TopAppBarScrollBehavior,
+    showPermissionDialog: Boolean = false,
+    onBackClick: () -> Unit,
+    onNavigateToVariables: () -> Unit,
+    onRefreshStatus: () -> Unit,
+    onToggleSidebar: (Boolean) -> Boolean,
+    onSetAmoledMode: (Boolean) -> Unit,
+    onSetHapticFeedback: (Boolean) -> Unit,
+    onDismissPermissionDialog: () -> Unit,
+    onGrantPermission: () -> Unit
+) {
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                title = { Text("Settings") },
+                navigationIcon = {
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = onRefreshStatus,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            SettingsSectionHeader("Data & Variables")
+
+            ListItem(
+                headlineContent = { Text("Global Variables") },
+                supportingContent = { Text("Manage global variables used in macros") },
+                leadingContent = {
+                    Icon(Icons.Default.List, contentDescription = "Variables")
+                },
+                modifier = Modifier.clickable(
+                    onClick = onNavigateToVariables,
+                    indication = LocalIndication.current,
+                    interactionSource = remember { MutableInteractionSource() }
+                )
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+            ListItem(
+                headlineContent = { Text("Sidebar Launcher") },
+                supportingContent = { Text("Show a floating bubble for quick macro execution") },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.isSidebarEnabled,
+                        onCheckedChange = { enabled -> onToggleSidebar(enabled) }
+                    )
+                }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+            SettingsSectionHeader("Appearance")
+
+            ListItem(
+                headlineContent = { Text("AMOLED Dark Mode") },
+                supportingContent = { Text("Use pure black background for battery saving on OLED screens") },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.isAmoledMode,
+                        onCheckedChange = onSetAmoledMode
+                    )
+                }
+            )
+
+            ListItem(
+                headlineContent = { Text("Haptic Feedback") },
+                supportingContent = { Text("Vibrate when tapping buttons and executing macros") },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.isHapticFeedbackEnabled,
+                        onCheckedChange = onSetHapticFeedback
+                    )
+                }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+            SettingsSectionHeader("Service Status")
+
+            StatusListItem(
+                label = "Background Monitoring",
+                description = "Periodic trigger checking via WorkManager",
+                isActive = uiState.isWorkManagerRunning
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+            SettingsSectionHeader("Permissions")
+
+            PermissionListItem(
+                label = "Accessibility Service",
+                description = "Required for UI automation and app event detection",
+                isGranted = uiState.isAccessibilityEnabled,
+                onClick = {}
+            )
+
+            PermissionListItem(
+                label = "Battery Optimization",
+                description = "Should be disabled for reliable background operation",
+                isGranted = uiState.isBatteryOptimizationDisabled,
+                onClick = {}
+            )
+
+            PermissionListItem(
+                label = "Notifications",
+                description = "Required for status and foreground service visibility",
+                isGranted = uiState.isNotificationPermissionGranted,
+                onClick = {}
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        if (showPermissionDialog) {
+            AlertDialog(
+                onDismissRequest = onDismissPermissionDialog,
+                title = { Text("Grant Overlay Permission") },
+                text = { Text("To show the floating sidebar launcher, you need to grant the \"Draw over other apps\" permission.") },
+                confirmButton = {
+                    Button(onClick = onGrantPermission) {
+                        Text("Grant Permission")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismissPermissionDialog) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+    }
 }

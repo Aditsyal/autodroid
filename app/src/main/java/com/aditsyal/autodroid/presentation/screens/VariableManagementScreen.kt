@@ -229,3 +229,104 @@ fun VariableDialog(
         }
     )
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun VariableManagementScreenContent(
+    uiState: VariableManagementUiState,
+    dialogState: com.aditsyal.autodroid.presentation.viewmodels.VariableDialogState,
+    onBackClick: () -> Unit,
+    onShowAddDialog: () -> Unit,
+    onShowEditDialog: (VariableDTO) -> Unit,
+    onHideDialog: () -> Unit,
+    onCreateVariable: (String, String, String) -> Unit,
+    onUpdateVariable: (VariableDTO, String, String) -> Unit,
+    onDeleteVariable: (VariableDTO) -> Unit
+) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                title = { Text("Variables") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                scrollBehavior = scrollBehavior
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onShowAddDialog) {
+                Icon(Icons.Default.Add, contentDescription = "Add Variable")
+            }
+        }
+    ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            when (val state = uiState) {
+                is VariableManagementUiState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                is VariableManagementUiState.Error -> {
+                    Text(
+                        text = state.message,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                is VariableManagementUiState.Success -> {
+                    if (state.variables.isEmpty()) {
+                        Text(
+                            text = "No variables found",
+                            modifier = Modifier.align(Alignment.Center),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(state.variables, key = { it.id }) { variable ->
+                                VariableItem(
+                                    variable = variable,
+                                    onEdit = { onShowEditDialog(variable) },
+                                    onDelete = { onDeleteVariable(variable) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    when (val state = dialogState) {
+        is com.aditsyal.autodroid.presentation.viewmodels.VariableDialogState.Add -> {
+            VariableDialog(
+                title = "Add Variable",
+                onDismiss = onHideDialog,
+                onConfirm = onCreateVariable
+            )
+        }
+        is com.aditsyal.autodroid.presentation.viewmodels.VariableDialogState.Edit -> {
+            VariableDialog(
+                title = "Edit Variable",
+                initialName = state.variable.name,
+                initialValue = state.variable.value,
+                initialType = state.variable.type,
+                isNameEditable = false,
+                onDismiss = onHideDialog,
+                onConfirm = { _, value, type ->
+                    onUpdateVariable(state.variable, value, type)
+                }
+            )
+        }
+        com.aditsyal.autodroid.presentation.viewmodels.VariableDialogState.Hidden -> {}
+    }
+}
