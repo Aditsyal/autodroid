@@ -2,6 +2,7 @@ package com.aditsyal.autodroid.presentation.screens
 
 import android.content.Intent
 import android.provider.Settings
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,12 +29,16 @@ import com.aditsyal.autodroid.presentation.viewmodels.SettingsViewModel
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
+    onNavigateToVariables: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    var showPermissionDialog by remember { mutableStateOf(false) }
+    var pendingToggleState by remember { mutableStateOf(false) }
 
     // Refresh status when returning to the screen (e.g. from system settings)
     DisposableEffect(lifecycleOwner) {
@@ -87,6 +93,64 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            SettingsSectionHeader("Data & Variables")
+
+            ListItem(
+                headlineContent = { Text("Global Variables") },
+                supportingContent = { Text("Manage global variables used in macros") },
+                leadingContent = {
+                    Icon(Icons.Default.List, contentDescription = "Variables")
+                },
+                modifier = Modifier.clickable { onNavigateToVariables() }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+            ListItem(
+                headlineContent = { Text("Sidebar Launcher") },
+                supportingContent = { Text("Show a floating bubble for quick macro execution") },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.isSidebarEnabled,
+                        onCheckedChange = { newState ->
+                            val success = viewModel.toggleSidebar(newState)
+                            if (!success && newState) {
+                                pendingToggleState = true
+                                showPermissionDialog = true
+                            }
+                        }
+                    )
+                }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+            SettingsSectionHeader("Appearance")
+
+            ListItem(
+                headlineContent = { Text("AMOLED Dark Mode") },
+                supportingContent = { Text("Use pure black background for battery saving on OLED screens") },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.isAmoledMode,
+                        onCheckedChange = { viewModel.setAmoledMode(it) }
+                    )
+                }
+            )
+
+            ListItem(
+                headlineContent = { Text("Haptic Feedback") },
+                supportingContent = { Text("Vibrate when tapping buttons and executing macros") },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.isHapticFeedbackEnabled,
+                        onCheckedChange = { viewModel.setHapticFeedbackEnabled(it) }
+                    )
+                }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
             SettingsSectionHeader("Service Status")
 
             StatusListItem(
@@ -134,8 +198,34 @@ fun SettingsScreen(
                     }
                 }
             )
-            
+
             Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        if (showPermissionDialog) {
+            AlertDialog(
+                onDismissRequest = { showPermissionDialog = false },
+                title = { Text("Grant Overlay Permission") },
+                text = { Text("To show the floating sidebar launcher, you need to grant the \"Draw over other apps\" permission. This allows the app to display a floating bubble on top of other apps.") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showPermissionDialog = false
+                            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                                data = android.net.Uri.parse("package:${context.packageName}")
+                            }
+                            context.startActivity(intent)
+                        }
+                    ) {
+                        Text("Grant Permission")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showPermissionDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }

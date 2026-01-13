@@ -62,5 +62,9 @@ val md_theme_dark_onSurfaceVariant = Color(0xFFC4B8B1)
 val md_theme_dark_outline = Color(0xFF9D8E84)
 val md_theme_dark_outlineVariant = Color(0xFF52473C)
 
+// AMOLED colors
+val md_theme_amoled_background = Color(0xFF000000)
+val md_theme_amoled_surface = Color(0xFF000000)
+
 // Custom colors (legacy support or extras)
 val Success = Color(0xFF16A34A)

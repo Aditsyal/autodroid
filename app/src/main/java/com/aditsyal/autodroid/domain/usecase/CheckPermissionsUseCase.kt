@@ -48,6 +48,7 @@ class CheckPermissionsUseCase @Inject constructor(
         } else "")
         data object SendSms : PermissionType(Manifest.permission.SEND_SMS)
         data object ReadPhoneState : PermissionType(Manifest.permission.READ_PHONE_STATE)
+        data object SystemOverlay : PermissionType(Manifest.permission.SYSTEM_ALERT_WINDOW)
     }
 
     /**
@@ -56,6 +57,7 @@ class CheckPermissionsUseCase @Inject constructor(
     fun checkPermission(permission: PermissionType): PermissionResult {
         return when (permission) {
             is PermissionType.AccessibilityService -> checkAccessibilityService()
+            is PermissionType.SystemOverlay -> checkSystemOverlayPermission()
             else -> {
                 if (permission.manifestPermission.isEmpty()) {
                     // Permission not applicable for this Android version
@@ -67,6 +69,21 @@ class CheckPermissionsUseCase @Inject constructor(
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Check if system overlay permission is granted
+     */
+    private fun checkSystemOverlayPermission(): PermissionResult {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Settings.canDrawOverlays(context)) {
+                PermissionResult.Granted
+            } else {
+                PermissionResult.Denied
+            }
+        } else {
+            PermissionResult.Granted
         }
     }
 

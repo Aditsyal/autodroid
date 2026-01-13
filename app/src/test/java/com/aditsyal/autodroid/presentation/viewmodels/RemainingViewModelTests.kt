@@ -21,6 +21,14 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
+import com.aditsyal.autodroid.data.repository.UserPreferencesRepository
+
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+
+import kotlinx.coroutines.test.resetMain
+import org.junit.After
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class RemainingViewModelTests {
 
@@ -32,6 +40,11 @@ class RemainingViewModelTests {
         Dispatchers.setMain(testDispatcher)
     }
 
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
     @Test
     fun `ConflictDetectorViewModel should load conflicts`() = runTest {
         val useCase = mockk<ConflictDetectorUseCase>()
@@ -39,11 +52,12 @@ class RemainingViewModelTests {
         every { useCase() } returns flowOf(conflicts)
         
         val viewModel = ConflictDetectorViewModel(useCase)
-        // Access uiState to trigger Flow collection, then advance
-        val initialValue = viewModel.uiState.value
-        testDispatcher.scheduler.advanceTimeBy(100)
-        testDispatcher.scheduler.runCurrent()
-        // Should have conflicts or be empty initially
+        
+        // Ensure collection starts
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
+        // Should have conflicts or be empty initially (depending on flow emission speed)
+        // With UnconfinedTestDispatcher and flowOf, it should be immediate
         assertTrue(viewModel.uiState.value == conflicts || viewModel.uiState.value.isEmpty())
     }
 
@@ -60,11 +74,9 @@ class RemainingViewModelTests {
         every { repository.getAllExecutionLogs() } returns flowOf(logs)
         
         val viewModel = ExecutionHistoryViewModel(repository)
-        // Access uiState to trigger Flow collection, then advance
-        val initialValue = viewModel.uiState.value
-        testDispatcher.scheduler.advanceTimeBy(100)
-        testDispatcher.scheduler.runCurrent()
-        // Should be Success or Loading initially
+        
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         assertTrue(viewModel.uiState.value is ExecutionHistoryUiState.Success || viewModel.uiState.value is ExecutionHistoryUiState.Loading)
     }
 
@@ -74,11 +86,9 @@ class RemainingViewModelTests {
         every { templateDao.getAllTemplates() } returns flowOf(emptyList())
         
         val viewModel = TemplateLibraryViewModel(templateDao)
-        // Access uiState to trigger Flow collection, then advance
-        val initialValue = viewModel.uiState.value
-        testDispatcher.scheduler.advanceTimeBy(100)
-        testDispatcher.scheduler.runCurrent()
-        // Should be Success or Loading initially
+        
+        backgroundScope.launch { viewModel.uiState.collect {} }
+        
         assertTrue(viewModel.uiState.value is TemplateLibraryUiState.Success || viewModel.uiState.value is TemplateLibraryUiState.Loading)
     }
 
@@ -86,7 +96,10 @@ class RemainingViewModelTests {
     fun `SettingsViewModel should update state`() = runTest {
         val checkPermissionsUseCase = mockk<CheckPermissionsUseCase>(relaxed = true)
         val manageBatteryOptimizationUseCase = mockk<ManageBatteryOptimizationUseCase>(relaxed = true)
-        val viewModel = SettingsViewModel(context, checkPermissionsUseCase, manageBatteryOptimizationUseCase)
+        val userPreferencesRepository = mockk<UserPreferencesRepository>(relaxed = true)
+        every { userPreferencesRepository.amoledMode } returns MutableStateFlow(false)
+
+        val viewModel = SettingsViewModel(context, checkPermissionsUseCase, manageBatteryOptimizationUseCase, userPreferencesRepository)
         
         viewModel.refreshStatus()
         // verify state updates

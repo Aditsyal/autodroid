@@ -20,6 +20,8 @@ import com.aditsyal.autodroid.presentation.screens.ExportMacrosScreen
 import com.aditsyal.autodroid.presentation.ui.ExecutionHistoryScreen
 import com.aditsyal.autodroid.presentation.ui.ConflictDetectionScreen
 import com.aditsyal.autodroid.presentation.screens.SettingsScreen
+import com.aditsyal.autodroid.presentation.screens.VariableManagementScreen
+import com.aditsyal.autodroid.presentation.screens.DryRunPreviewScreen
 import com.aditsyal.autodroid.utils.PerformanceMonitor
 
 private const val MacroListRoute = "macro_list"
@@ -32,6 +34,8 @@ private const val ExportMacrosRoute = "export_macros"
 private const val ExecutionHistoryRoute = "execution_history"
 private const val ConflictDetectionRoute = "conflict_detection"
 private const val SettingsRoute = "settings"
+private const val VariableManagementRoute = "variable_management"
+private const val DryRunPreviewRoute = "dry_run_preview"
 
 @Composable
 fun TrackRender(
@@ -91,7 +95,8 @@ fun AppNavGraph(
                 MacroDetailScreen(
                     macroId = macroId,
                     onBack = { navController.navigateUp() },
-                    onEdit = { id -> navController.navigate("$MacroEditorRoute/$id") }
+                    onEdit = { id -> navController.navigate("$MacroEditorRoute/$id") },
+                    onDryRun = { id -> navController.navigate("$DryRunPreviewRoute/$id") }
                 )
             }
         }
@@ -170,6 +175,32 @@ fun AppNavGraph(
         composable(route = SettingsRoute) {
             TrackRender(performanceMonitor, "Settings") {
                 SettingsScreen(
+                    onBackClick = { navController.navigateUp() },
+                    onNavigateToVariables = { navController.navigate(VariableManagementRoute) }
+                )
+            }
+        }
+
+        composable(route = VariableManagementRoute) {
+            TrackRender(performanceMonitor, "VariableManagement") {
+                VariableManagementScreen(
+                    onBackClick = { navController.navigateUp() }
+                )
+            }
+        }
+
+        composable(
+            route = "$DryRunPreviewRoute/{macroId}",
+            arguments = listOf(
+                navArgument("macroId") {
+                    type = NavType.LongType
+                }
+            )
+        ) { backStackEntry ->
+            val macroId = backStackEntry.arguments?.getLong("macroId") ?: 0L
+            TrackRender(performanceMonitor, "DryRunPreview_$macroId") {
+                DryRunPreviewScreen(
+                    macroId = macroId,
                     onBackClick = { navController.navigateUp() }
                 )
             }

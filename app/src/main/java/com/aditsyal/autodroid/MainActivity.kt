@@ -7,6 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import com.aditsyal.autodroid.data.repository.UserPreferencesRepository
 import com.aditsyal.autodroid.presentation.navigation.AppNavGraph
 import com.aditsyal.autodroid.presentation.theme.AutodroidTheme
 import com.aditsyal.autodroid.utils.MemoryMonitor
@@ -24,16 +27,21 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var memoryMonitor: MemoryMonitor
 
+    @Inject
+    lateinit var userPreferencesRepository: UserPreferencesRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         lifecycleScope.launch {
             memoryMonitor.logMemoryUsage("MainActivity_Create")
         }
 
         setContent {
-            AutodroidTheme {
+            val isAmoledMode by userPreferencesRepository.amoledMode.collectAsState(initial = false)
+
+            AutodroidTheme(amoledMode = isAmoledMode) {
                 AppNavGraph(
                     modifier = Modifier.fillMaxSize(),
                     performanceMonitor = performanceMonitor

@@ -6,6 +6,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +29,7 @@ fun MacroDetailScreen(
     macroId: Long,
     onBack: () -> Unit,
     onEdit: (Long) -> Unit,
+    onDryRun: (Long) -> Unit = {},
     viewModel: MacroEditorViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -55,6 +57,16 @@ fun MacroDetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { onDryRun(macroId) },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.PlayArrow,
+                            contentDescription = "Dry Run",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                     IconButton(
                         onClick = { onEdit(macroId) },
                         modifier = Modifier.size(48.dp)
