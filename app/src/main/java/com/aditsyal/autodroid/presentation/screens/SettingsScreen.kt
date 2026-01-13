@@ -2,10 +2,13 @@ package com.aditsyal.autodroid.presentation.screens
 
 import android.content.Intent
 import android.provider.Settings
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.remember
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
@@ -101,7 +104,11 @@ fun SettingsScreen(
                 leadingContent = {
                     Icon(Icons.Default.List, contentDescription = "Variables")
                 },
-                modifier = Modifier.clickable { onNavigateToVariables() }
+                modifier = Modifier.clickable(
+                    onClick = { onNavigateToVariables() },
+                    indication = LocalIndication.current,
+                    interactionSource = remember { MutableInteractionSource() }
+                )
             )
 
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
