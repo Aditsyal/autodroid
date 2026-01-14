@@ -313,7 +313,7 @@ private fun ExecutionLogListItem(log: ExecutionLogDTO) {
                         else -> "Execution failed"
                     },
                     tint = when {
-                        isSuccess -> com.aditsyal.autodroid.presentation.theme.Success
+                        isSuccess -> MaterialTheme.colorScheme.tertiary
                         isSkipped -> MaterialTheme.colorScheme.secondary
                         else -> MaterialTheme.colorScheme.error
                     }

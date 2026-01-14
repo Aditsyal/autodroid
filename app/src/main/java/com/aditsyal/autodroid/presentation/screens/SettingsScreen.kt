@@ -68,6 +68,7 @@ fun SettingsScreen(
         },
         onSetAmoledMode = { enabled: Boolean -> viewModel.setAmoledMode(enabled) },
         onSetHapticFeedback = { enabled: Boolean -> viewModel.setHapticFeedbackEnabled(enabled) },
+        onSetDynamicColor = { enabled: Boolean -> viewModel.setDynamicColorEnabled(enabled) },
         onDismissPermissionDialog = { showPermissionDialog = false },
         onGrantPermission = {
             showPermissionDialog = false
@@ -153,6 +154,7 @@ fun SettingsScreenContent(
     onToggleSidebar: (Boolean) -> Boolean,
     onSetAmoledMode: (Boolean) -> Unit,
     onSetHapticFeedback: (Boolean) -> Unit,
+    onSetDynamicColor: (Boolean) -> Unit,
     onDismissPermissionDialog: () -> Unit,
     onGrantPermission: () -> Unit
 ) {
@@ -229,8 +231,21 @@ fun SettingsScreenContent(
             SettingsSectionHeader("Appearance")
 
             ListItem(
+                headlineContent = { Text("Dynamic Colors") },
+                supportingContent = { Text("Use Material You colors from your wallpaper (Android 12+)") },
+                trailingContent = {
+                    Switch(
+                        checked = uiState.isDynamicColorEnabled,
+                        onCheckedChange = onSetDynamicColor
+                    )
+                }
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+            ListItem(
                 headlineContent = { Text("AMOLED Dark Mode") },
-                supportingContent = { Text("Use pure black background for battery saving on OLED screens") },
+                supportingContent = { Text("Pure black background for maximum battery saving on OLED screens") },
                 trailingContent = {
                     Switch(
                         checked = uiState.isAmoledMode,

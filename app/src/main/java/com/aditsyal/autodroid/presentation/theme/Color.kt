@@ -31,6 +31,10 @@ val md_theme_light_surfaceVariant = Color(0xFFF0EDE5)
 val md_theme_light_onSurfaceVariant = Color(0xFF52473C)
 val md_theme_light_outline = Color(0xFF85746D)
 val md_theme_light_outlineVariant = Color(0xFFC4B8B1)
+val md_theme_light_inverseSurface = Color(0xFF35302B)
+val md_theme_light_inverseOnSurface = Color(0xFFF9EFE7)
+val md_theme_light_inversePrimary = Color(0xFFACD370)
+val md_theme_light_surfaceTint = Color(0xFF476810)
 
 // Dark theme colors
 val md_theme_dark_primary = Color(0xFFACD370)
@@ -61,10 +65,13 @@ val md_theme_dark_surfaceVariant = Color(0xFF52473C)
 val md_theme_dark_onSurfaceVariant = Color(0xFFC4B8B1)
 val md_theme_dark_outline = Color(0xFF9D8E84)
 val md_theme_dark_outlineVariant = Color(0xFF52473C)
+val md_theme_dark_inverseSurface = Color(0xFFE8E0DA)
+val md_theme_dark_inverseOnSurface = Color(0xFF2F312D)
+val md_theme_dark_inversePrimary = Color(0xFF476810)
+val md_theme_dark_surfaceTint = Color(0xFFACD370)
 
 // AMOLED colors
 val md_theme_amoled_background = Color(0xFF000000)
 val md_theme_amoled_surface = Color(0xFF000000)
-
-// Custom colors (legacy support or extras)
-val Success = Color(0xFF16A34A)
+val md_theme_amoled_onBackground = Color(0xFFFFFFFF)
+val md_theme_amoled_onSurface = Color(0xFFFFFFFF)

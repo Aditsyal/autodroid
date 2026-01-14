@@ -10,7 +10,6 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
@@ -39,6 +38,10 @@ private val LightColorScheme = lightColorScheme(
     onSurfaceVariant = md_theme_light_onSurfaceVariant,
     outline = md_theme_light_outline,
     outlineVariant = md_theme_light_outlineVariant,
+    inverseSurface = md_theme_light_inverseSurface,
+    inverseOnSurface = md_theme_light_inverseOnSurface,
+    inversePrimary = md_theme_light_inversePrimary,
+    surfaceTint = md_theme_light_surfaceTint,
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -66,13 +69,17 @@ private val DarkColorScheme = darkColorScheme(
     onSurfaceVariant = md_theme_dark_onSurfaceVariant,
     outline = md_theme_dark_outline,
     outlineVariant = md_theme_dark_outlineVariant,
+    inverseSurface = md_theme_dark_inverseSurface,
+    inverseOnSurface = md_theme_dark_inverseOnSurface,
+    inversePrimary = md_theme_dark_inversePrimary,
+    surfaceTint = md_theme_dark_surfaceTint,
 )
 
 private val AmoledColorScheme = DarkColorScheme.copy(
     background = md_theme_amoled_background,
     surface = md_theme_amoled_surface,
-    onBackground = Color.White,
-    onSurface = Color.White
+    onBackground = md_theme_amoled_onBackground,
+    onSurface = md_theme_amoled_onSurface
 )
 
 val AppShapes = Shapes(

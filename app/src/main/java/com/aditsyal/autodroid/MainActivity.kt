@@ -40,8 +40,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val isAmoledMode by userPreferencesRepository.amoledMode.collectAsState(initial = false)
+            val isDynamicColorEnabled by userPreferencesRepository.dynamicColorEnabled.collectAsState(initial = true)
 
-            AutodroidTheme(amoledMode = isAmoledMode) {
+            AutodroidTheme(
+                amoledMode = isAmoledMode,
+                dynamicColor = isDynamicColorEnabled
+            ) {
                 AppNavGraph(
                     modifier = Modifier.fillMaxSize(),
                     performanceMonitor = performanceMonitor

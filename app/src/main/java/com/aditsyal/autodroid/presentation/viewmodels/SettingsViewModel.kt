@@ -50,6 +50,11 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { it.copy(isSidebarEnabled = isSidebarEnabled) }
             }
         }
+        viewModelScope.launch {
+            userPreferencesRepository.dynamicColorEnabled.collect { isDynamicColorEnabled ->
+                _uiState.update { it.copy(isDynamicColorEnabled = isDynamicColorEnabled) }
+            }
+        }
     }
 
     fun toggleSidebar(enabled: Boolean): Boolean {
@@ -74,6 +79,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setHapticFeedbackEnabled(enabled: Boolean) {
         userPreferencesRepository.setHapticFeedbackEnabled(enabled)
+    }
+
+    fun setDynamicColorEnabled(enabled: Boolean) {
+        userPreferencesRepository.setDynamicColorEnabled(enabled)
     }
 
     fun refreshStatus() {
@@ -117,5 +126,6 @@ data class SettingsUiState(
     val isNotificationPermissionGranted: Boolean = false,
     val isAmoledMode: Boolean = false,
     val isHapticFeedbackEnabled: Boolean = true,
-    val isSidebarEnabled: Boolean = false
+    val isSidebarEnabled: Boolean = false,
+    val isDynamicColorEnabled: Boolean = true
 )

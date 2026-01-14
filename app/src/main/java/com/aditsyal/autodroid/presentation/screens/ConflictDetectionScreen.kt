@@ -398,10 +398,10 @@ private fun ConflictIcon(type: ConflictDetectionUseCase.ConflictType) {
 @Composable
 private fun SeverityChip(severity: ConflictDetectionUseCase.Severity) {
     val (text, color) = when (severity) {
-        ConflictDetectionUseCase.Severity.LOW -> "Low" to Color(0xFF4CAF50)
-        ConflictDetectionUseCase.Severity.MEDIUM -> "Medium" to Color(0xFFFFC107)
-        ConflictDetectionUseCase.Severity.HIGH -> "High" to Color(0xFFFF9800)
-        ConflictDetectionUseCase.Severity.CRITICAL -> "Critical" to Color(0xFFF44336)
+        ConflictDetectionUseCase.Severity.LOW -> "Low" to MaterialTheme.colorScheme.tertiary
+        ConflictDetectionUseCase.Severity.MEDIUM -> "Medium" to MaterialTheme.colorScheme.errorContainer
+        ConflictDetectionUseCase.Severity.HIGH -> "High" to MaterialTheme.colorScheme.errorContainer
+        ConflictDetectionUseCase.Severity.CRITICAL -> "Critical" to MaterialTheme.colorScheme.error
     }
 
     AssistChip(
@@ -418,12 +418,13 @@ private fun SeverityChip(severity: ConflictDetectionUseCase.Severity) {
     )
 }
 
+@Composable
 private fun getConflictColor(severity: ConflictDetectionUseCase.Severity): Color {
     return when (severity) {
-        ConflictDetectionUseCase.Severity.LOW -> Color(0xFF4CAF50)
-        ConflictDetectionUseCase.Severity.MEDIUM -> Color(0xFFFFC107)
-        ConflictDetectionUseCase.Severity.HIGH -> Color(0xFFFF9800)
-        ConflictDetectionUseCase.Severity.CRITICAL -> Color(0xFFF44336)
+        ConflictDetectionUseCase.Severity.LOW -> MaterialTheme.colorScheme.tertiary
+        ConflictDetectionUseCase.Severity.MEDIUM -> MaterialTheme.colorScheme.errorContainer
+        ConflictDetectionUseCase.Severity.HIGH -> MaterialTheme.colorScheme.errorContainer
+        ConflictDetectionUseCase.Severity.CRITICAL -> MaterialTheme.colorScheme.error
     }
 }
 

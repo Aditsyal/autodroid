@@ -399,7 +399,7 @@ private fun StepDetailCard(
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
-                IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
+                IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Close details"
@@ -638,12 +638,13 @@ private fun StepMetric(
     }
 }
 
+@Composable
 private fun getSuccessColor(probability: Float): Color {
     return when {
-        probability >= 0.95f -> Color(0xFF4CAF50) // Green
-        probability >= 0.85f -> Color(0xFF8BC34A) // Light Green
-        probability >= 0.70f -> Color(0xFFFFC107) // Yellow
-        else -> Color(0xFFF44336) // Red
+        probability >= 0.95f -> MaterialTheme.colorScheme.tertiary
+        probability >= 0.85f -> MaterialTheme.colorScheme.tertiaryContainer
+        probability >= 0.70f -> MaterialTheme.colorScheme.errorContainer
+        else -> MaterialTheme.colorScheme.error
     }
 }
 

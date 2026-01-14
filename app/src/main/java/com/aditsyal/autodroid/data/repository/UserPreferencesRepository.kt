@@ -23,6 +23,9 @@ class UserPreferencesRepository @Inject constructor(
     private val _sidebarEnabled = MutableStateFlow(prefs.getBoolean(KEY_SIDEBAR_ENABLED, false))
     val sidebarEnabled: StateFlow<Boolean> = _sidebarEnabled.asStateFlow()
 
+    private val _dynamicColorEnabled = MutableStateFlow(prefs.getBoolean(KEY_DYNAMIC_COLOR, true))
+    val dynamicColorEnabled: StateFlow<Boolean> = _dynamicColorEnabled.asStateFlow()
+
     fun setAmoledMode(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_AMOLED_MODE, enabled).apply()
         _amoledMode.value = enabled
@@ -38,9 +41,15 @@ class UserPreferencesRepository @Inject constructor(
         _sidebarEnabled.value = enabled
     }
 
+    fun setDynamicColorEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_DYNAMIC_COLOR, enabled).apply()
+        _dynamicColorEnabled.value = enabled
+    }
+
     companion object {
         private const val KEY_AMOLED_MODE = "amoled_mode"
         private const val KEY_HAPTIC_FEEDBACK = "haptic_feedback"
         private const val KEY_SIDEBAR_ENABLED = "sidebar_enabled"
+        private const val KEY_DYNAMIC_COLOR = "dynamic_color"
     }
 }
