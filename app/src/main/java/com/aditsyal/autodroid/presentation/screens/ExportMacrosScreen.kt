@@ -1,7 +1,12 @@
 package com.aditsyal.autodroid.presentation.screens
 
 import android.content.Intent
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -16,13 +21,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.aditsyal.autodroid.data.models.MacroDTO
 import com.aditsyal.autodroid.presentation.viewmodels.ExportMacrosViewModel
 import java.io.File
 
-private enum class ExportType {
+enum class ExportType {
     All, Single
 }
 
@@ -33,11 +40,44 @@ fun ExportMacrosScreen(
     viewModel: ExportMacrosViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val macros by viewModel.macros.collectAsState()
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     var selectedExportType by remember { mutableStateOf(ExportType.All) }
     var selectedMacroId by remember { mutableStateOf<Long?>(null) }
+
+    ExportMacrosScreenContent(
+        uiState = uiState,
+        macros = macros,
+        context = context,
+        selectedExportType = selectedExportType,
+        selectedMacroId = selectedMacroId,
+        onExportTypeChange = { selectedExportType = it },
+        onMacroSelect = { selectedMacroId = it },
+        onBackClick = onBackClick,
+        onExportAllMacros = viewModel::exportAllMacros,
+        onExportSingleMacro = viewModel::exportSingleMacro,
+        onShareExport = { ctx, uri -> shareExportFile(ctx, uri) }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExportMacrosScreenContent(
+    uiState: ExportMacrosViewModel.ExportState,
+    macros: List<MacroDTO>,
+    context: android.content.Context,
+    selectedExportType: ExportType = ExportType.All,
+    selectedMacroId: Long? = null,
+    onExportTypeChange: (ExportType) -> Unit = {},
+    onMacroSelect: (Long?) -> Unit = {},
+    onBackClick: () -> Unit = {},
+    onExportAllMacros: () -> Unit = {},
+    onExportSingleMacro: (Long) -> Unit = {},
+    onShareExport: ((android.content.Context, android.net.Uri) -> Unit)? = null
+) {
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -108,7 +148,7 @@ fun ExportMacrosScreen(
                         ) {
                             RadioButton(
                                 selected = selectedExportType == ExportType.All,
-                                onClick = { selectedExportType = ExportType.All }
+                                onClick = { onExportTypeChange(ExportType.All) }
                             )
                             Text(
                                 text = "All Macros",
@@ -121,7 +161,7 @@ fun ExportMacrosScreen(
                         ) {
                             RadioButton(
                                 selected = selectedExportType == ExportType.Single,
-                                onClick = { selectedExportType = ExportType.Single }
+                                onClick = { onExportTypeChange(ExportType.Single) }
                             )
                             Text(
                                 text = "Single Macro",
@@ -131,11 +171,45 @@ fun ExportMacrosScreen(
                     }
 
                     if (selectedExportType == ExportType.Single) {
-                        Text(
-                            text = "Single macro export would include macro selection UI",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        if (macros.isEmpty()) {
+                            Text(
+                                text = "No macros available. Create a macro first.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                ),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = "Select Macro",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    LazyColumn(
+                                        modifier = Modifier.heightIn(max = 300.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        items(macros) { macro ->
+                                            MacroSelectItem(
+                                                macro = macro,
+                                                isSelected = selectedMacroId == macro.id,
+                                                onClick = { onMacroSelect(macro.id) }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -143,15 +217,20 @@ fun ExportMacrosScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Export button
+            val isExportEnabled = when {
+                uiState is ExportMacrosViewModel.ExportState.Exporting -> false
+                selectedExportType == ExportType.Single && selectedMacroId == null -> false
+                else -> true
+            }
             Button(
                 onClick = {
                     when (selectedExportType) {
-                        ExportType.All -> viewModel.exportAllMacros()
-                        ExportType.Single -> selectedMacroId?.let { viewModel.exportSingleMacro(it) }
+                        ExportType.All -> onExportAllMacros()
+                        ExportType.Single -> selectedMacroId?.let { onExportSingleMacro(it) }
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = uiState !is ExportMacrosViewModel.ExportState.Exporting
+                enabled = isExportEnabled
             ) {
                 Text("Export Macros")
             }
@@ -236,7 +315,11 @@ fun ExportMacrosScreen(
                             OutlinedButton(
                                 onClick = {
                                     result.uri?.let { uri ->
-                                        shareExportFile(context, uri)
+                                        if (onShareExport != null) {
+                                            onShareExport(context, uri)
+                                        } else {
+                                            shareExportFile(context, uri)
+                                        }
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth()
@@ -286,6 +369,82 @@ fun ExportMacrosScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MacroSelectItem(
+    macro: MacroDTO,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        ),
+        border = BorderStroke(
+            width = if (isSelected) 2.dp else 1.dp,
+            color = if (isSelected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            }
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            RadioButton(
+                selected = isSelected,
+                onClick = onClick
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = macro.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (macro.description.isNotBlank()) {
+                    Text(
+                        text = macro.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Text(
+                    text = "${macro.actions.size} actions, ${macro.triggers.size} triggers",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (isSelected) {
+                Icon(
+                    Icons.Default.CheckCircle,
+                    contentDescription = "Selected",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

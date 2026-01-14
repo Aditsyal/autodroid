@@ -8,9 +8,13 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import com.aditsyal.autodroid.presentation.theme.MotionTokens
 import androidx.compose.foundation.layout.*
@@ -166,96 +170,134 @@ fun MacroListScreenContent(
                             modifier = Modifier.size(24.dp)
                         )
                     }
+                    IconButton(
+                        onClick = onExportMacros,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.FileDownload,
+                            contentDescription = "Export macros",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 },
                 scrollBehavior = scrollBehavior
             )
         },
         floatingActionButton = {
-    val fabRotation by animateFloatAsState(
-        targetValue = if (isFabExpanded) 45f else 0f,
-        animationSpec = MotionTokens.MotionSpec.FabExpand,
-        label = "fab_rotation"
-    )
+            val fabRotation by animateFloatAsState(
+                targetValue = if (isFabExpanded) 45f else 0f,
+                animationSpec = MotionTokens.MotionSpec.FabExpand,
+                label = "fab_rotation"
+            )
 
             Column(
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.animateContentSize()
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+               
             ) {
                 AnimatedVisibility(
                     visible = isFabExpanded,
                     enter = fadeIn(animationSpec = MotionTokens.MotionSpec.FabExpand) +
-                           slideInVertically(
-                               animationSpec = MotionTokens.MotionSpec.FabExpandOffset,
-                               initialOffsetY = { it }
-                           ),
+                            scaleIn(
+                                animationSpec = MotionTokens.MotionSpec.FabExpand,
+                                initialScale = 0.8f
+                            ) +
+                            slideInVertically(
+                                animationSpec = MotionTokens.MotionSpec.FabExpandOffset,
+                                initialOffsetY = { it / 2 }
+                            ),
                     exit = fadeOut(animationSpec = MotionTokens.MotionSpec.FabExpand) +
-                          slideOutVertically(
-                              animationSpec = MotionTokens.MotionSpec.FabExpandOffset,
-                              targetOffsetY = { it }
-                          )
+                            scaleOut(
+                                animationSpec = MotionTokens.MotionSpec.FabExpand,
+                                targetScale = 0.8f
+                            ) +
+                            slideOutVertically(
+                                animationSpec = MotionTokens.MotionSpec.FabExpandOffset,
+                                targetOffsetY = { it / 2 }
+                            )
                 ) {
                     Column(
                         horizontalAlignment = Alignment.End,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Export button (appears first)
-                        SmallFloatingActionButton(
-                            onClick = {
-                                isFabExpanded = false
-                                onExportMacros()
-                            },
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.animateContentSize(MotionTokens.MotionSpec.FabExpandSize)
+                        AnimatedVisibility(
+                            visible = isFabExpanded,
+                            enter = fadeIn(MotionTokens.MotionSpec.FabExpand) +
+                                    scaleIn(
+                                        animationSpec = MotionTokens.MotionSpec.FabExpand,
+                                        initialScale = 0.8f
+                                    ) +
+                                    slideInHorizontally(
+                                        animationSpec = MotionTokens.MotionSpec.FabExpandOffset,
+                                        initialOffsetX = { it / 4 }
+                                    ),
+                            exit = fadeOut(MotionTokens.MotionSpec.FabExpand) +
+                                    scaleOut(
+                                        animationSpec = MotionTokens.MotionSpec.FabExpand,
+                                        targetScale = 0.8f
+                                    ) +
+                                    slideOutHorizontally(
+                                        animationSpec = MotionTokens.MotionSpec.FabExpandOffset,
+                                        targetOffsetX = { it / 4 }
+                                    )
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            SmallFloatingActionButton(
+                                onClick = {
+                                    isFabExpanded = false
+                                    onImportMacros()
+                                },
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                             ) {
-                                Text("Export", style = MaterialTheme.typography.labelMedium)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Icon(Icons.Default.FileDownload, contentDescription = "Export Macros")
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Import", style = MaterialTheme.typography.labelMedium)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Icon(Icons.Default.FileUpload, contentDescription = "Import Macros")
+                                }
                             }
                         }
 
-                        // Import button (delayed appearance)
-                        SmallFloatingActionButton(
-                            onClick = {
-                                isFabExpanded = false
-                                onImportMacros()
-                            },
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.animateContentSize(MotionTokens.MotionSpec.FabExpandSize)
+                        AnimatedVisibility(
+                            visible = isFabExpanded,
+                            enter = fadeIn(MotionTokens.MotionSpec.FabExpand) +
+                                    scaleIn(
+                                        animationSpec = MotionTokens.MotionSpec.FabExpand,
+                                        initialScale = 0.8f
+                                    ) +
+                                    slideInHorizontally(
+                                        animationSpec = MotionTokens.MotionSpec.FabExpandOffset,
+                                        initialOffsetX = { it / 4 }
+                                    ),
+                            exit = fadeOut(MotionTokens.MotionSpec.FabExpand) +
+                                    scaleOut(
+                                        animationSpec = MotionTokens.MotionSpec.FabExpand,
+                                        targetScale = 0.8f
+                                    ) +
+                                    slideOutHorizontally(
+                                        animationSpec = MotionTokens.MotionSpec.FabExpandOffset,
+                                        targetOffsetX = { it / 4 }
+                                    )
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            SmallFloatingActionButton(
+                                onClick = {
+                                    isFabExpanded = false
+                                    onAddMacro()
+                                },
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             ) {
-                                Text("Import", style = MaterialTheme.typography.labelMedium)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Icon(Icons.Default.FileUpload, contentDescription = "Import Macros")
-                            }
-                        }
-
-                        // Create button (most delayed appearance)
-                        SmallFloatingActionButton(
-                            onClick = {
-                                isFabExpanded = false
-                                onAddMacro()
-                            },
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.animateContentSize(MotionTokens.MotionSpec.FabExpandSize)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text("Create", style = MaterialTheme.typography.labelMedium)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Icon(Icons.Default.Add, contentDescription = "Create Macro")
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("Create", style = MaterialTheme.typography.labelMedium)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Icon(Icons.Default.Add, contentDescription = "Create Macro")
+                                }
                             }
                         }
                     }
@@ -274,7 +316,17 @@ fun MacroListScreenContent(
                         AnimatedContent(
                             targetState = isFabExpanded,
                             transitionSpec = {
-                                fadeIn(MotionTokens.MotionSpec.FabExpand) togetherWith fadeOut(MotionTokens.MotionSpec.FabExpand)
+                                (fadeIn(MotionTokens.MotionSpec.FabExpand) +
+                                        slideInHorizontally(
+                                            animationSpec = MotionTokens.MotionSpec.FabExpandOffset,
+                                            initialOffsetX = { it / 4 }
+                                        )).togetherWith(
+                                    fadeOut(MotionTokens.MotionSpec.FabExpand) +
+                                            slideOutHorizontally(
+                                                animationSpec = MotionTokens.MotionSpec.FabExpandOffset,
+                                                targetOffsetX = { it / 4 }
+                                            )
+                                )
                             },
                             label = "fab_text"
                         ) { expanded ->

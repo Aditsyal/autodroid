@@ -1,11 +1,12 @@
 package com.aditsyal.autodroid.presentation.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -38,10 +39,14 @@ fun ActionPickerDialog(
                     items = actionOptions,
                     key = { it.label }
                 ) { option ->
+                    val interactionSource = remember { MutableInteractionSource() }
                     ListItem(
                         headlineContent = { Text(option.label) },
                         supportingContent = { Text(option.type.replace("_", " ").lowercase().capitalize()) },
-                        modifier = Modifier.clickable {
+                        modifier = Modifier.clickable(
+                            interactionSource = interactionSource,
+                            indication = null
+                        ) {
                             onActionSelected(option)
                         },
                         colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)

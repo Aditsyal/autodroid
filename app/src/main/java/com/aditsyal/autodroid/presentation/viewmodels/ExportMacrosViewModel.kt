@@ -2,10 +2,11 @@ package com.aditsyal.autodroid.presentation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aditsyal.autodroid.data.models.MacroDTO
+import com.aditsyal.autodroid.domain.repository.MacroRepository
 import com.aditsyal.autodroid.domain.usecase.ExportResult
 import com.aditsyal.autodroid.domain.usecase.ImportExportMacrosUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import com.aditsyal.autodroid.domain.usecase.ImportResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,11 +17,27 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ExportMacrosViewModel @Inject constructor(
-    private val importExportMacrosUseCase: ImportExportMacrosUseCase
+    private val importExportMacrosUseCase: ImportExportMacrosUseCase,
+    private val macroRepository: MacroRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ExportState>(ExportState.Idle)
     val uiState: StateFlow<ExportState> = _uiState.asStateFlow()
+
+    private val _macros = MutableStateFlow<List<MacroDTO>>(emptyList())
+    val macros: StateFlow<List<MacroDTO>> = _macros.asStateFlow()
+
+    init {
+        loadMacros()
+    }
+
+    private fun loadMacros() {
+        viewModelScope.launch {
+            macroRepository.getAllMacros().collect { macroList ->
+                _macros.value = macroList
+            }
+        }
+    }
 
     fun exportAllMacros() {
         _uiState.update { ExportState.Exporting }
