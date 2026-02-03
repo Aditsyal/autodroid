@@ -12,6 +12,8 @@
 - [Testing Constraints](#testing-constraints)
 - [Testing Variables](#testing-variables)
 - [Testing Use Cases](#testing-use-cases)
+- [Testing Dry-Run Simulation](#testing-dry-run-simulation)
+- [Automated UI Testing](#automated-ui-testing)
 - [Test Coverage](#test-coverage)
 - [Mocking Dependencies](#mocking-dependencies)
 - [Running Tests](#running-tests)
@@ -1021,6 +1023,48 @@ class MacroExecutionFlowTest {
     }
 }
 ```
+
+## Testing Dry-Run Simulation
+
+The Dry-Run system (`DryRunUseCase`) requires special testing to ensure it correctly simulates execution without actually performing side effects.
+
+### Simulation Logic Testing
+
+```kotlin
+@Test
+fun `dry run identifies failing constraints`() = runTest {
+    // Given
+    val macroId = 1L
+    val constraints = listOf(ConstraintDTO(type = "BATTERY_LEVEL", config = mapOf("min" to 50)))
+    coEvery { repository.getConstraintsByMacroId(macroId) } returns constraints
+    coEvery { evaluateConstraintsUseCase.check(any()) } returns false
+
+    // When
+    val result = dryRunUseCase(macroId)
+
+    // Then
+    assertFalse(result.overallSuccess)
+    assertEquals("BATTERY_LEVEL", result.failedConstraints.first().type)
+}
+```
+
+### Impact Estimation Testing
+
+- **Battery Impact**: Verify that different actions contribute correct weights to the total estimated drain.
+- **Time Estimation**: Test that delays and network timeouts are correctly accounted for in the total duration.
+
+## Automated UI Testing
+
+AutoDroid uses a combination of Compose Test Rule and Hilt for comprehensive UI testing.
+
+- **Guide**: See [Automated UI Testing Guide](automated_ui_testing_guide.md) for detailed instructions.
+- **Summary**: Refer to [Automated UI Testing Summary](../automated_ui_testing_summary.md) for recent test results and coverage.
+
+Key test areas:
+
+1. **Navigation**: Verify all screens are reachable and predictive back works.
+2. **Editor Flow**: Test adding/removing components and saving macros.
+3. **Sidebar**: Test overlay visibility and manual macro execution.
 
 ## Test Coverage
 

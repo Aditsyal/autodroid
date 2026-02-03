@@ -1015,7 +1015,6 @@ class ConsentManager @Inject constructor(
 
     private fun clearDataForConsent(type: ConsentType) {
         when (type) {
-            ConsentType.ANALYTICS -> clearAnalyticsData()
             ConsentType.CRASH_REPORTING -> clearCrashData()
             ConsentType.USAGE_DATA -> clearUsageData()
             // Other types may not require data clearing
@@ -1024,10 +1023,6 @@ class ConsentManager @Inject constructor(
 
     private fun logConsentEvent(type: ConsentType, granted: Boolean) {
         Timber.i("Consent ${if (granted) "granted" else "revoked"} for $type")
-    }
-
-    private fun clearAnalyticsData() {
-        secureDataStore.clearData("analytics_data")
     }
 
     private fun clearCrashData() {

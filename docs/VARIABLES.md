@@ -11,6 +11,7 @@
 - [Using Variables in Constraints](#using-variables-in-constraints)
 - [Variable Scope](#variable-scope)
 - [Variable Lifecycle](#variable-lifecycle)
+- [Variable Management UI](#variable-management-ui)
 - [Best Practices](#best-practices)
 - [Common Issues](#common-issues)
 
@@ -816,6 +817,24 @@ ActionDTO(
     )
 )
 ```
+
+## Variable Management UI
+
+AutoDroid provides a centralized interface for managing global variables, accessible via **Settings > Variable Management**.
+
+### Key Features
+
+- **Global View**: See all persistent global variables in one list.
+- **CRUD Operations**: Create, Read, Update, and Delete global variables without needing to run a macro.
+- **Usage Tracking**: Identify which macros are currently referencing a specific global variable.
+- **Type Awareness**: Visual indicators for String, Number, and Boolean variable types.
+
+### Managing Variables
+
+1. **Adding**: Tap the **+** button, provide a unique name and initial value.
+2. **Editing**: Tap an existing variable to modify its value.
+3. **Deleting**: Swipe left on a variable or use the delete icon to remove it. **Warning**: This may break macros that depend on this variable.
+4. **Search**: Quickly find variables by name or value using the search bar.
 
 ## Best Practices
 

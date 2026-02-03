@@ -27,7 +27,7 @@
 
 ## Overview
 
-Actions are operations that execute when a macro's trigger fires and constraints are satisfied. AutoDroid supports 35+ action types organized into categories.
+Actions are operations that execute when a macro's trigger fires and constraints are satisfied. AutoDroid supports 49+ action types organized into categories.
 
 Actions can:
 
@@ -1069,7 +1069,48 @@ ActionDTO(
 
 ---
 
-#### HTTP_REQUEST
+#### UNLOCK_SCREEN
+
+Wake up the device and dismiss the keyguard (if not secured with PIN/Pattern).
+
+**Configuration**:
+
+```kotlin
+mapOf() // No configuration needed
+```
+
+---
+
+#### MEDIA_CONTROL
+
+Control active media playback.
+
+**Configuration**:
+
+```kotlin
+mapOf(
+    "command" to "PLAY_PAUSE" // "PLAY_PAUSE", "NEXT", "PREVIOUS", "STOP"
+)
+```
+
+---
+
+#### DELETE_SMS
+
+Delete SMS messages matching criteria (requires default SMS app permissions).
+
+**Configuration**:
+
+```kotlin
+mapOf(
+    "phoneNumber" to "12345",
+    "messageContains" to "OTP"
+)
+```
+
+---
+
+#### HTTP_REQUEST (Webhook)
 
 Send an HTTP request.
 

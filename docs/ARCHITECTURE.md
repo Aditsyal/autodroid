@@ -42,32 +42,45 @@ AutoDroid is an Android automation app built with **Clean Architecture** princip
 
 **Components**:
 
-- **Screens**: Composable UI screens
-  - `MacroListScreen`: Main macro list
-  - `MacroEditorScreen`: Create/edit macros
-  - `ExecutionHistoryScreen`: View past executions
-  - `TemplateLibraryScreen`: Browse templates
-  - `SettingsScreen`: App settings
-  - `ConflictDetectionScreen`: View conflicts
+- **Screens**: Composable UI screens (located in `presentation/screens/` and `presentation/ui/`)
+  - `MacroListScreen`: Main macro list with physics-based card animations
+  - `MacroEditorScreen`: Create/edit macros with reactive state
+  - `MacroDetailScreen`: View macro details
+  - `ExecutionHistoryScreen`: View past executions with action breakdown
+  - `TemplateLibraryScreen`: Browse templates with search and recommendations
+  - `SettingsScreen`: App settings including AMOLED and Dynamic Color toggles
+  - `ConflictDetectionScreen`: View real-time resource contention
+  - `VariableManagementScreen`: Manage global variables CRUD
+  - `ImportMacrosScreen`: Import macros with conflict resolution strategies
+  - `ExportMacrosScreen`: Export macros to JSON/XML
+  - `DryRunPreviewScreen`: Step-by-step physics-based execution simulation
 
 - **ViewModels**: State management using StateFlow and coroutines
   - `MacroListViewModel`: Manages macro list state
   - `MacroEditorViewModel`: Manages macro editing
-  - `ExecutionHistoryViewModel`: Manages execution history
-  - `SettingsViewModel`: Manages settings
-  - `TemplateLibraryViewModel`: Manages templates
+  - `MacroDetailViewModel`: Manages macro detail state
+  - `ExecutionHistoryViewModel`: Manages execution history with auto-cleanup logic
+  - `SettingsViewModel`: Manages user preferences and theme state
+  - `TemplateLibraryViewModel`: Manages templates and recommendations
+  - `ConflictDetectorViewModel`: Manages real-time conflict analysis
+  - `VariableManagementViewModel`: Manages global variable state
+  - `ImportMacrosViewModel`: Manages file-based macro import
+  - `ExportMacrosViewModel`: Manages macro serialization and export
+  - `DryRunPreviewViewModel`: Manages execution simulation state
 
 - **Components**: Reusable UI components
   - `TriggerPickerDialog`: Trigger selection dialog
   - `ActionPickerDialog`: Action selection dialog
   - `ConstraintPickerDialog`: Constraint selection dialog
-  - `MacroCard`: Display macro in list
+  - `MacroCard`: Display macro in list with expressive motion
+  - `SidebarView`: Overlay menu for manual execution
 
-- **Navigation**: `NavGraph` for screen navigation using Jetpack Navigation Compose
+- **Navigation**: `NavGraph` for screen navigation using Jetpack Navigation Compose with Predictive Back support
 
-- **Theme**: Material Design 3 theming system
+- **Theme**: Material Design 3 theming system with MotionTokens for physics-based spring animations
 
 **Responsibilities**:
+
 - Display UI to users
 - Handle user interactions
 - Observe and present data from ViewModels
@@ -109,6 +122,8 @@ AutoDroid is an Android automation app built with **Clean Architecture** princip
     - `CheckPermissionsUseCase`: Check app permissions
     - `ManageBatteryOptimizationUseCase`: Handle battery optimization
     - `ConflictDetectorUseCase`: Detect macro conflicts
+    - `DryRunUseCase`: Simulate macro execution without side effects
+    - `EstimateImpactUseCase`: Estimate battery and time impact of macros
 
 - **Repository Interface**: `MacroRepository` - Data access abstraction
 
@@ -124,9 +139,10 @@ AutoDroid is an Android automation app built with **Clean Architecture** princip
 - **Action Executors**: Specialized executors for each action type
   - Located in `domain/usecase/executors/`
   - Each executor implements `ActionExecutor` interface
-  - Examples: `WifiToggleExecutor`, `LaunchAppExecutor`, etc.
+  - Examples: `WifiToggleExecutor`, `LaunchAppExecutor`, `HttpRequestExecutor`, `TtsExecutor`, `LockScreenExecutor`, `DndExecutor`, `MediaControlExecutor`
 
 **Responsibilities**:
+
 - Contain business logic
 - Define use cases
 - Abstract data access via repository interfaces
@@ -163,6 +179,7 @@ AutoDroid is an Android automation app built with **Clean Architecture** princip
 - **Models**: Entity-to-DTO mappers
 
 **Responsibilities**:
+
 - Provide data to domain layer
 - Implement repository interfaces
 - Handle data storage (Room database)
@@ -182,10 +199,13 @@ AutoDroid is an Android automation app built with **Clean Architecture** princip
   - `ConnectivityTriggerProvider`: WiFi, Bluetooth, mobile data events
   - `AppEventTriggerProvider`: App lifecycle events (launch, close, install)
   - `CommunicationTriggerProvider`: Call and SMS events
+  - `CalendarTriggerProvider`: Calendar event detection via ContentProvider
+  - `AudioTriggerProvider`: Ringtone mode and volume level monitoring
 
 - **Trigger Manager**: `TriggerManager` - Manages all trigger providers
 
 **Responsibilities**:
+
 - Detect system events
 - Call `CheckTriggersUseCase` when events occur
 - Register/unregister triggers
@@ -200,6 +220,7 @@ AutoDroid is an Android automation app built with **Clean Architecture** princip
 - **Services**:
   - `AutomationAccessibilityService`: Handles accessibility events for UI automation
   - `AutomationForegroundService`: Ensures reliable background execution
+  - `SidebarService`: Overlay service for the manual macro launcher
 
 - **Broadcast Receivers**:
   - `BootReceiver`: Re-initializes triggers on device boot
@@ -216,6 +237,7 @@ AutoDroid is an Android automation app built with **Clean Architecture** princip
   - `SoundPlayer`: Plays sounds
 
 **Responsibilities**:
+
 - Interact with Android platform
 - Handle system events
 - Provide platform-specific functionality
@@ -344,6 +366,7 @@ AutoDroid is an Android automation app built with **Clean Architecture** princip
 ## Dependency Injection
 
 AutoDroid uses **Hilt** (Dagger) for compile-time dependency injection, providing:
+
 - Compile-time validation
 - Zero reflection
 - Easy testing
@@ -352,6 +375,7 @@ AutoDroid uses **Hilt** (Dagger) for compile-time dependency injection, providin
 ### Modules
 
 **`DatabaseModule`**
+
 ```kotlin
 @Module
 @InstallIn(SingletonComponent::class)
@@ -361,11 +385,13 @@ object DatabaseModule {
     fun provideDatabase(@ApplicationContext context: Context): AutomationDatabase
 }
 ```
+
 - Provides Room database instance
 - Provides all DAOs
 - Configured as singleton
 
 **`UseCaseModule`**
+
 ```kotlin
 @Module
 @InstallIn(ViewModelComponent::class)
@@ -378,11 +404,13 @@ object UseCaseModule {
     ): ExecuteMacroUseCase
 }
 ```
+
 - Provides all use cases
 - Scoped to ViewModelComponent
 - Allows ViewModels to inject use cases
 
 **`TriggerModule`**
+
 ```kotlin
 @Module
 @InstallIn(SingletonComponent::class)
@@ -394,11 +422,13 @@ abstract class TriggerModule {
     ): TriggerProvider
 }
 ```
+
 - Binds all trigger providers into a Set
 - TriggerManager receives all providers
 - Easy to add new trigger types
 
 **`RepositoryModule`**
+
 ```kotlin
 @Module
 @InstallIn(SingletonComponent::class)
@@ -410,6 +440,7 @@ abstract class RepositoryModule {
     ): MacroRepository
 }
 ```
+
 - Binds repository implementations to interfaces
 - Configured as singleton
 
@@ -441,7 +472,7 @@ class MacroListViewModel @Inject constructor(
 
 - **WorkManager**: Periodic trigger checking (`MacroTriggerWorker`)
 - **Foreground Service**: `AutomationForegroundService` ensures reliable background execution
-- **Broadcast Receivers**: 
+- **Broadcast Receivers**:
   - `BootReceiver`: Re-initializes triggers on device boot
   - `DeviceStateReceiver`: Handles system events
   - `TriggerAlarmReceiver`: Handles time-based triggers
@@ -517,6 +548,7 @@ class MacroListViewModel @Inject constructor(
 ### Tables
 
 **`macros`**: Macro definitions
+
 - `id`: Primary key
 - `name`: Macro name (unique)
 - `enabled`: Boolean (whether macro is active)
@@ -525,6 +557,7 @@ class MacroListViewModel @Inject constructor(
 - `updatedAt`: Last update timestamp
 
 **`triggers`**: Trigger configurations (foreign key to macros)
+
 - `id`: Primary key
 - `macroId`: Foreign key to macros table
 - `type`: Trigger type (TIME, LOCATION, SENSOR, etc.)
@@ -532,6 +565,7 @@ class MacroListViewModel @Inject constructor(
 - `createdAt`: Creation timestamp
 
 **`actions`**: Action configurations (foreign key to macros)
+
 - `id`: Primary key
 - `macroId`: Foreign key to macros table
 - `type`: Action type (WIFI_TOGGLE, LAUNCH_APP, etc.)
@@ -540,12 +574,14 @@ class MacroListViewModel @Inject constructor(
 - `delayAfter`: Delay in milliseconds after this action
 
 **`constraints`**: Constraint configurations (foreign key to macros)
+
 - `id`: Primary key
 - `macroId`: Foreign key to macros table
 - `type`: Constraint type (TIME_RANGE, BATTERY_LEVEL, etc.)
 - `config`: JSON configuration for constraint
 
 **`variables`**: Variable storage
+
 - `id`: Primary key
 - `macroId`: Foreign key to macros (null for GLOBAL scope)
 - `name`: Variable name
@@ -553,6 +589,7 @@ class MacroListViewModel @Inject constructor(
 - `scope`: Scope (LOCAL or GLOBAL)
 
 **`execution_logs`**: Execution history
+
 - `id`: Primary key
 - `macroId`: Foreign key to macros
 - `status`: Execution status (SUCCESS, FAILURE, SKIPPED)
@@ -561,12 +598,14 @@ class MacroListViewModel @Inject constructor(
 - `errorMessage`: Error message (if any)
 
 **`templates`**: Pre-configured macro templates
+
 - `id`: Primary key
 - `name`: Template name
 - `description`: Template description
 - `macroConfig`: JSON of complete macro configuration
 
 **`logic_blocks`**: Logic control blocks (if/else, loops)
+
 - `id`: Primary key
 - `macroId`: Foreign key to macros table
 - `type`: Logic block type (IF, WHILE, FOR)
@@ -576,6 +615,7 @@ class MacroListViewModel @Inject constructor(
 ### Indexing Strategy
 
 Tables have indexes on:
+
 - `macros`: `enabled`, `name`
 - `triggers`: `macroId`, `type`
 - `actions`: `macroId`, `executionOrder`
@@ -722,6 +762,7 @@ class MacroRepositoryImpl @Inject constructor(
 ## Permissions
 
 The app requires various permissions for different features:
+
 - `ACCESS_FINE_LOCATION`: Geofencing triggers
 - `POST_NOTIFICATIONS`: Notification actions
 - `SEND_SMS`: SMS actions
@@ -731,4 +772,3 @@ The app requires various permissions for different features:
 - And more...
 
 See `AndroidManifest.xml` for complete list.
-

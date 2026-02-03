@@ -11,9 +11,13 @@
   - [Sensor-Based Triggers](#sensor-based-triggers)
   - [Device State Triggers](#device-state-triggers)
   - [Connectivity Triggers](#connectivity-triggers)
-  - [App Event Triggers](#app-event-triggers)
-  - [Communication Triggers](#communication-triggers)
+- [App Event Triggers](#app-event-triggers)
+- [Communication Triggers](#communication-triggers)
+- [Calendar Triggers](#calendar-triggers)
+- [Audio Profile Triggers](#audio-profile-triggers)
+- [Device Lock Triggers](#device-lock-triggers)
 - [Adding a New Trigger](#adding-a-new-trigger)
+
 - [Trigger Event Data](#trigger-event-data)
 - [Performance Considerations](#performance-considerations)
 - [Testing Triggers](#testing-triggers)
@@ -1317,6 +1321,60 @@ TriggerDTO(
 **Implementation**: Uses `BroadcastReceiver` for `ACTION_PHONE_STATE_CHANGED`
 
 **Permissions**: `READ_PHONE_STATE`, `READ_CALL_LOG`
+
+---
+
+### Calendar Triggers
+
+**Provider**: `CalendarTriggerProvider`
+
+#### CALENDAR_EVENT_STARTED
+
+Trigger when a calendar event begins.
+
+**Configuration**:
+
+```kotlin
+mapOf(
+    "calendarId" to 1,          // Optional: filter by calendar
+    "titleContains" to "Work",  // Optional: filter by title
+    "descriptionContains" to "" // Optional: filter by description
+)
+```
+
+**Implementation**: Uses `ContentObserver` on `CalendarContract` and `AlarmManager` for scheduling.
+
+---
+
+### Audio Profile Triggers
+
+**Provider**: `AudioTriggerProvider`
+
+#### RINGTONE_MODE_CHANGED
+
+Trigger when ringtone mode (Silent, Vibrate, Normal) changes.
+
+**Configuration**:
+
+```kotlin
+mapOf(
+    "mode" to "SILENT" // "SILENT", "VIBRATE", "NORMAL"
+)
+```
+
+**Implementation**: Uses `BroadcastReceiver` for `RINGER_MODE_CHANGED_ACTION`.
+
+---
+
+### Device Lock Triggers
+
+**Provider**: `DeviceStateTriggerProvider`
+
+#### DEVICE_LOCKED_SECURE
+
+Trigger when device is locked with a secure method (PIN, Pattern, Biometric).
+
+**Implementation**: Uses `KeyguardManager.isDeviceLocked()`.
 
 ---
 
