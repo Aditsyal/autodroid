@@ -376,24 +376,12 @@ See **[CONTRIBUTING.md](docs/CONTRIBUTING.md)** for:
 - Update documentation for new features
 - Run tests and lint before submitting
 
-### Areas Where Help Is Needed
-
-- 📝 **Documentation**: Improve existing docs, add examples
-- 🐛 **Bug Fixes**: Check open issues for bugs to fix
-- ✨ **New Features**: Implement features from roadmap
-- 🧪 **Testing**: Improve test coverage
-- 🎨 **UI/UX**: Improve user interface and experience
-- 🌍 **Internationalization**: Help translate to other languages
-- 🔌 **Integration**: Add integrations with other apps/services
-
 ## 📄 License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU License 3.0 - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
 - Inspired by Tasker, MacroDroid, and Automate.
 
 ---
-
-**Ready to automate your Android experience?** Download AutoDroid and start creating powerful automations today! 🤖
